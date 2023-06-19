@@ -1,0 +1,9 @@
+address: no0sas
+privatekey: FjeFfxM7jQN9Geaww6XraGMvVfaxAn5DrVUp4FyRjc35mpr
+network_id: mitum
+network:
+  bind: 0.0.0.0:4320
+  tls_insecure: true
+storage:
+  base: ./mitum-data
+  database: leveldb://
