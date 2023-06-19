@@ -10,6 +10,7 @@ import (
 	currencystate "github.com/ProtoconNet/mitum-currency/v3/state/currency"
 	extensionstate "github.com/ProtoconNet/mitum-currency/v3/state/extension"
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
+	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/launch"
 	"github.com/ProtoconNet/mitum2/util/encoder"
 	"github.com/pkg/errors"
@@ -56,6 +57,10 @@ var hinters = []encoder.DecodeDetail{
 	{Hint: currencytypes.RatioFeeerHint, Instance: currencytypes.RatioFeeer{}},
 	{Hint: extensionstate.ContractAccountStateValueHint, Instance: extensionstate.ContractAccountStateValue{}},
 	{Hint: currencystate.CurrencyDesignStateValueHint, Instance: currencystate.CurrencyDesignStateValue{}},
+
+	{Hint: types.WhitelistHint, Instance: types.Whitelist{}},
+	{Hint: types.DesignHint, Instance: types.Design{}},
+	{Hint: types.PolicyHint, Instance: types.Policy{}},
 
 	{Hint: digestisaac.ManifestHint, Instance: digestisaac.Manifest{}},
 	{Hint: digest.AccountValueHint, Instance: digest.AccountValue{}},

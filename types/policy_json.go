@@ -1,1 +1,104 @@
 package types
+
+import (
+	"encoding/json"
+
+	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
+	"github.com/ProtoconNet/mitum2/base"
+	"github.com/ProtoconNet/mitum2/util"
+	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
+	"github.com/ProtoconNet/mitum2/util/hint"
+)
+
+type WhitelistJSONMarshaler struct {
+	hint.BaseHinter
+	Active   bool           `json:"active"`
+	Accounts []base.Address `json:"accounts"`
+}
+
+func (wl Whitelist) MarshalJSON() ([]byte, error) {
+	return util.MarshalJSON(WhitelistJSONMarshaler{
+		BaseHinter: wl.BaseHinter,
+		Active:     wl.active,
+		Accounts:   wl.accounts,
+	})
+}
+
+type WhitelistJSONUnmarshaler struct {
+	Hint     hint.Hint       `json:"_hint"`
+	Active   bool            `json:"active"`
+	Accounts json.RawMessage `json:"accounts"`
+}
+
+func (wl *Whitelist) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+	e := util.StringErrorFunc("failed to decode json of Whitelist")
+
+	var uw WhitelistJSONUnmarshaler
+	if err := enc.Unmarshal(b, &uw); err != nil {
+		return e(err, "")
+	}
+
+	return wl.unpack(enc, uw.Hint, uw.Active, uw.Accounts)
+}
+
+type PolicyJSONMarshaler struct {
+	hint.BaseHinter
+	Token     currencytypes.CurrencyID `json:"token"`
+	Threshold currencytypes.Amount     `json:"threshold"`
+	Fee       currencytypes.Amount     `json:"fee"`
+	Whitelist Whitelist                `json:"whitelist"`
+	Delaytime uint64                   `json:"delaytime"`
+	Snaptime  uint64                   `json:"snaptime"`
+	Timelock  uint64                   `json:"timelock"`
+	Turnout   float64                  `json:"turnout"`
+	Quorum    float64                  `json:"quorum"`
+}
+
+func (po Policy) MarshalJSON() ([]byte, error) {
+	return util.MarshalJSON(PolicyJSONMarshaler{
+		BaseHinter: po.BaseHinter,
+		Token:      po.token,
+		Threshold:  po.threshold,
+		Fee:        po.fee,
+		Whitelist:  po.whitelist,
+		Delaytime:  po.delaytime,
+		Snaptime:   po.snaptime,
+		Timelock:   po.timelock,
+		Turnout:    po.turnout,
+		Quorum:     po.quorum,
+	})
+}
+
+type PolicyJSONUnmarshaler struct {
+	Hint      hint.Hint       `json:"_hint"`
+	Token     string          `json:"token"`
+	Threshold json.RawMessage `json:"threshold"`
+	Fee       json.RawMessage `json:"fee"`
+	Whitelist json.RawMessage `json:"whitelist"`
+	Delaytime uint64          `json:"delaytime"`
+	Snaptime  uint64          `json:"snaptime"`
+	Timelock  uint64          `json:"timelock"`
+	Turnout   float64         `json:"turnout"`
+	Quorum    float64         `json:"quorum"`
+}
+
+func (po *Policy) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+	e := util.StringErrorFunc("failed to decode json of Policy")
+
+	var upo PolicyJSONUnmarshaler
+	if err := enc.Unmarshal(b, &upo); err != nil {
+		return e(err, "")
+	}
+
+	return po.unpack(enc, upo.Hint,
+		upo.Token,
+		upo.Threshold,
+		upo.Fee,
+		upo.Whitelist,
+		upo.Delaytime,
+		upo.Snaptime,
+		upo.Timelock,
+		upo.Turnout,
+		upo.Quorum,
+	)
+}
