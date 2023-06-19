@@ -58,6 +58,14 @@ func (wl Whitelist) IsValid([]byte) error {
 	return nil
 }
 
+func (wl Whitelist) Active() bool {
+	return wl.active
+}
+
+func (wl Whitelist) Accounts() []base.Address {
+	return wl.accounts
+}
+
 var PolicyHint = hint.MustNewHint("mitum-dao-policy-v0.0.1")
 
 type Policy struct {

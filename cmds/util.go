@@ -23,6 +23,7 @@ import (
 	mitumcurrency "github.com/ProtoconNet/mitum-currency/v3/operation/currency"
 	extensioncurrency "github.com/ProtoconNet/mitum-currency/v3/operation/extension"
 	isaacoperation "github.com/ProtoconNet/mitum-currency/v3/operation/isaac"
+	"github.com/ProtoconNet/mitum-dao/operation/dao"
 	"github.com/ProtoconNet/mitum-dao/operation/processor"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/isaac"
@@ -174,6 +175,7 @@ func POperationProcessorsMap(ctx context.Context) (context.Context, error) {
 	opr.SetProcessor(mitumcurrency.SuffrageInflationHint, mitumcurrency.NewSuffrageInflationProcessor(params.Threshold()))
 	opr.SetProcessor(extensioncurrency.CreateContractAccountsHint, extensioncurrency.NewCreateContractAccountsProcessor())
 	opr.SetProcessor(extensioncurrency.WithdrawsHint, extensioncurrency.NewWithdrawsProcessor())
+	opr.SetProcessor(dao.CreateDAOHint, dao.NewCreateDAOProcessor())
 
 	_ = set.Add(mitumcurrency.CreateAccountsHint, func(height base.Height) (base.OperationProcessor, error) {
 		return opr.New(
@@ -239,6 +241,15 @@ func POperationProcessorsMap(ctx context.Context) (context.Context, error) {
 	})
 
 	_ = set.Add(extensioncurrency.WithdrawsHint, func(height base.Height) (base.OperationProcessor, error) {
+		return opr.New(
+			height,
+			db.State,
+			nil,
+			nil,
+		)
+	})
+
+	_ = set.Add(dao.CreateDAOHint, func(height base.Height) (base.OperationProcessor, error) {
 		return opr.New(
 			height,
 			db.State,

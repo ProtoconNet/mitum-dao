@@ -10,6 +10,7 @@ type OperationCommand struct {
 	Transfer              currencycmds.TransferCommand              `cmd:"" name:"transfer" help:"transfer amounts to receiver"`
 	CreateContractAccount currencycmds.CreateContractAccountCommand `cmd:"" name:"create-contract-account" help:"create new contract account"`
 	Withdraw              currencycmds.WithdrawCommand              `cmd:"" name:"withdraw" help:"withdraw amounts from target contract account"`
+	CreateDAO             CreateDAOCommand                          `cmd:"" name:"create-dao" help:"create dao to contract account"`
 	CurrencyRegister      currencycmds.CurrencyRegisterCommand      `cmd:"" name:"currency-register" help:"register new currency"`
 	CurrencyPolicyUpdater currencycmds.CurrencyPolicyUpdaterCommand `cmd:"" name:"currency-policy-updater" help:"update currency policy"`
 	SuffrageInflation     currencycmds.SuffrageInflationCommand     `cmd:"" name:"suffrage-inflation" help:"suffrage inflation operation"`
@@ -25,6 +26,7 @@ func NewOperationCommand() OperationCommand {
 		Transfer:              currencycmds.NewTransferCommand(),
 		CreateContractAccount: currencycmds.NewCreateContractAccountCommand(),
 		Withdraw:              currencycmds.NewWithdrawCommand(),
+		CreateDAO:             NewCreateDAOCommand(),
 		CurrencyRegister:      currencycmds.NewCurrencyRegisterCommand(),
 		CurrencyPolicyUpdater: currencycmds.NewCurrencyPolicyUpdaterCommand(),
 		SuffrageInflation:     currencycmds.NewSuffrageInflationCommand(),

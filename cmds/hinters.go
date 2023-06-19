@@ -10,6 +10,8 @@ import (
 	currencystate "github.com/ProtoconNet/mitum-currency/v3/state/currency"
 	extensionstate "github.com/ProtoconNet/mitum-currency/v3/state/extension"
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
+	"github.com/ProtoconNet/mitum-dao/operation/dao"
+	"github.com/ProtoconNet/mitum-dao/state"
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/launch"
 	"github.com/ProtoconNet/mitum2/util/encoder"
@@ -62,6 +64,10 @@ var hinters = []encoder.DecodeDetail{
 	{Hint: types.DesignHint, Instance: types.Design{}},
 	{Hint: types.PolicyHint, Instance: types.Policy{}},
 
+	{Hint: state.DesignStateValueHint, Instance: state.DesignStateValue{}},
+
+	{Hint: dao.CreateDAOHint, Instance: dao.CreateDAO{}},
+
 	{Hint: digestisaac.ManifestHint, Instance: digestisaac.Manifest{}},
 	{Hint: digest.AccountValueHint, Instance: digest.AccountValue{}},
 	{Hint: digest.OperationValueHint, Instance: digest.OperationValue{}},
@@ -87,6 +93,8 @@ var supportedProposalOperationFactHinters = []encoder.DecodeDetail{
 	{Hint: mitumcurrency.CurrencyPolicyUpdaterFactHint, Instance: mitumcurrency.CurrencyPolicyUpdaterFact{}},
 	{Hint: extensioncurrency.CreateContractAccountsFactHint, Instance: extensioncurrency.CreateContractAccountsFact{}},
 	{Hint: extensioncurrency.WithdrawsFactHint, Instance: extensioncurrency.WithdrawsFact{}},
+
+	{Hint: dao.CreateDAOFactHint, Instance: dao.CreateDAOFact{}},
 
 	{Hint: isaacoperation.GenesisNetworkPolicyFactHint, Instance: isaacoperation.GenesisNetworkPolicyFact{}},
 	{Hint: isaacoperation.SuffrageCandidateFactHint, Instance: isaacoperation.SuffrageCandidateFact{}},
