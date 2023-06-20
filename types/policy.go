@@ -66,6 +66,16 @@ func (wl Whitelist) Accounts() []base.Address {
 	return wl.accounts
 }
 
+func (wl Whitelist) IsExist(a base.Address) bool {
+	for _, ac := range wl.accounts {
+		if ac.Equal(a) {
+			return true
+		}
+	}
+
+	return false
+}
+
 var PolicyHint = hint.MustNewHint("mitum-dao-policy-v0.0.1")
 
 type Policy struct {

@@ -176,6 +176,7 @@ func POperationProcessorsMap(ctx context.Context) (context.Context, error) {
 	opr.SetProcessor(extensioncurrency.CreateContractAccountsHint, extensioncurrency.NewCreateContractAccountsProcessor())
 	opr.SetProcessor(extensioncurrency.WithdrawsHint, extensioncurrency.NewWithdrawsProcessor())
 	opr.SetProcessor(dao.CreateDAOHint, dao.NewCreateDAOProcessor())
+	opr.SetProcessor(dao.ProposeHint, dao.NewProposeProcessor())
 
 	_ = set.Add(mitumcurrency.CreateAccountsHint, func(height base.Height) (base.OperationProcessor, error) {
 		return opr.New(
@@ -250,6 +251,15 @@ func POperationProcessorsMap(ctx context.Context) (context.Context, error) {
 	})
 
 	_ = set.Add(dao.CreateDAOHint, func(height base.Height) (base.OperationProcessor, error) {
+		return opr.New(
+			height,
+			db.State,
+			nil,
+			nil,
+		)
+	})
+
+	_ = set.Add(dao.ProposeHint, func(height base.Height) (base.OperationProcessor, error) {
 		return opr.New(
 			height,
 			db.State,

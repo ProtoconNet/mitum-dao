@@ -77,3 +77,66 @@ func IsStateDesignKey(key string) bool {
 func StateKeyDesign(ca base.Address, daoid currencytypes.ContractID) string {
 	return fmt.Sprintf("%s%s", StateKeyDAOPrefix(ca, daoid), DesignSuffix)
 }
+
+var (
+	ProposalStateValueHint = hint.MustNewHint("mitum-dao-proposal-state-value-v0.0.1")
+	ProposalSuffix         = ":dao-proposal"
+)
+
+type ProposalStateValue struct {
+	hint.BaseHinter
+	Proposal types.Proposal
+}
+
+func NewProposalStateValue(proposal types.Proposal) ProposalStateValue {
+	return ProposalStateValue{
+		BaseHinter: hint.NewBaseHinter(ProposalStateValueHint),
+		Proposal:   proposal,
+	}
+}
+
+func (p ProposalStateValue) Hint() hint.Hint {
+	return p.BaseHinter.Hint()
+}
+
+func (p ProposalStateValue) IsValid([]byte) error {
+	e := util.ErrInvalid.Errorf("invalid p ProposalStateValue")
+
+	if err := p.BaseHinter.IsValid(ProposalStateValueHint.Type().Bytes()); err != nil {
+		return e.Wrap(err)
+	}
+
+	if err := p.Proposal.IsValid(nil); err != nil {
+		return e.Wrap(err)
+	}
+
+	return nil
+}
+
+func (p ProposalStateValue) HashBytes() []byte {
+	return p.Proposal.Bytes()
+}
+
+func StateProposalValue(st base.State) (*types.Proposal, error) {
+	v := st.Value()
+	if v == nil {
+		return nil, util.ErrNotFound.Errorf("proposal not found in State")
+	}
+
+	d, ok := v.(ProposalStateValue)
+	if !ok {
+		return nil, errors.Errorf("invalid proposal value found, %T", v)
+	}
+
+	p := d.Proposal
+
+	return &p, nil
+}
+
+func IsStateProposalKey(key string) bool {
+	return strings.HasPrefix(key, DAOPrefix) && strings.HasSuffix(key, ProposalSuffix)
+}
+
+func StateKeyProposal(ca base.Address, daoid currencytypes.ContractID, pid string) string {
+	return fmt.Sprintf("%s-%s%s", StateKeyDAOPrefix(ca, daoid), pid, ProposalSuffix)
+}

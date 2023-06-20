@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/hint"
 )
@@ -45,7 +46,7 @@ type Proposal interface {
 	hint.Hinter
 	Type() string
 	Bytes() []byte
-	Calldata() Calldata
+	Addresses() []base.Address
 }
 
 type CryptoProposal struct {
@@ -82,6 +83,10 @@ func (p CryptoProposal) IsValid([]byte) error {
 	}
 
 	return nil
+}
+
+func (p CryptoProposal) Addresses() []base.Address {
+	return p.calldata.Addresses()
 }
 
 type BizProposal struct {
@@ -128,4 +133,8 @@ func (p BizProposal) IsValid([]byte) error {
 	}
 
 	return nil
+}
+
+func (p BizProposal) Addresses() []base.Address {
+	return []base.Address{}
 }
