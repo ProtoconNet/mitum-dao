@@ -35,11 +35,10 @@ func (fact CreateDAOFact) MarshalBSON() ([]byte, error) {
 }
 
 type CreateDAOFactBSONUnmarshaler struct {
-	Hint     string `bson:"_hint"`
-	Sender   string `bson:"sender"`
-	Contract string `bson:"contract"`
-	DAOID    string `bson:"daoid"`
-
+	Hint             string   `bson:"_hint"`
+	Sender           string   `bson:"sender"`
+	Contract         string   `bson:"contract"`
+	DAOID            string   `bson:"daoid"`
 	Option           string   `bson:"option"`
 	VotingPowerToken string   `bson:"voting_power_token"`
 	Threshold        bson.Raw `bson:"threshold"`
@@ -48,10 +47,9 @@ type CreateDAOFactBSONUnmarshaler struct {
 	Delaytime        uint64   `bson:"delaytime"`
 	Snaptime         uint64   `bson:"snaptime"`
 	Timelock         uint64   `bson:"timelock"`
-	Turnout          float64  `bson:"turnout"`
-	Quorum           float64  `bson:"quorum"`
-
-	Currency string `bson:"currency"`
+	Turnout          uint     `bson:"turnout"`
+	Quorum           uint     `bson:"quorum"`
+	Currency         string   `bson:"currency"`
 }
 
 func (fact *CreateDAOFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {

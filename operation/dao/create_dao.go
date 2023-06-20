@@ -28,8 +28,8 @@ type CreateDAOFact struct {
 	delaytime        uint64
 	snaptime         uint64
 	timelock         uint64
-	turnout          float64
-	quorum           float64
+	turnout          types.PercentRatio
+	quorum           types.PercentRatio
 	currency         currencytypes.CurrencyID
 }
 
@@ -43,7 +43,7 @@ func NewCreateDAOFact(
 	threshold, fee currencytypes.Amount,
 	whitelist types.Whitelist,
 	delaytime, snaptime, timelock uint64,
-	turnout, quorum float64,
+	turnout, quorum types.PercentRatio,
 	currency currencytypes.CurrencyID,
 ) CreateDAOFact {
 	bf := base.NewBaseFact(CreateDAOFactHint, token)
@@ -90,8 +90,8 @@ func (fact CreateDAOFact) Bytes() []byte {
 		util.Uint64ToBytes(fact.delaytime),
 		util.Uint64ToBytes(fact.snaptime),
 		util.Uint64ToBytes(fact.timelock),
-		util.Float64ToBytes(fact.turnout),
-		util.Float64ToBytes(fact.quorum),
+		fact.turnout.Bytes(),
+		fact.quorum.Bytes(),
 		fact.currency.Bytes(),
 	)
 }
@@ -113,6 +113,8 @@ func (fact CreateDAOFact) IsValid(b []byte) error {
 		fact.fee,
 		fact.threshold,
 		fact.whitelist,
+		fact.turnout,
+		fact.quorum,
 		fact.currency,
 	); err != nil {
 		return err
@@ -169,11 +171,11 @@ func (fact CreateDAOFact) TimeLock() uint64 {
 	return fact.timelock
 }
 
-func (fact CreateDAOFact) Turnout() float64 {
+func (fact CreateDAOFact) Turnout() types.PercentRatio {
 	return fact.turnout
 }
 
-func (fact CreateDAOFact) Quorum() float64 {
+func (fact CreateDAOFact) Quorum() types.PercentRatio {
 	return fact.quorum
 }
 

@@ -24,8 +24,8 @@ type CreateDAOFactJSONMarshaler struct {
 	Delaytime        uint64                   `json:"delaytime"`
 	Snaptime         uint64                   `json:"snaptime"`
 	Timelock         uint64                   `json:"timelock"`
-	Turnout          float64                  `json:"turnout"`
-	Quorum           float64                  `json:"quorum"`
+	Turnout          types.PercentRatio       `json:"turnout"`
+	Quorum           types.PercentRatio       `json:"quorum"`
 
 	Currency currencytypes.CurrencyID `json:"currency"`
 }
@@ -63,8 +63,8 @@ type CreateDAOFactJSONUnMarshaler struct {
 	Delaytime        uint64          `json:"delaytime"`
 	Snaptime         uint64          `json:"snaptime"`
 	Timelock         uint64          `json:"timelock"`
-	Turnout          float64         `json:"turnout"`
-	Quorum           float64         `json:"quorum"`
+	Turnout          uint            `json:"turnout"`
+	Quorum           uint            `json:"quorum"`
 	Currency         string          `json:"currency"`
 }
 

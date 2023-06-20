@@ -25,8 +25,8 @@ type CreateDAOCommand struct {
 	Delaytime        uint64             `arg:"" name:"delaytime" help:"delaytime" required:"true"`
 	Snaptime         uint64             `arg:"" name:"snaptime" help:"snaptime" required:"true"`
 	Timelock         uint64             `arg:"" name:"timelock" help:"timelock" required:"true"`
-	Turnout          float64            `arg:"" name:"turnout" help:"turnout" required:"true"`
-	Quorum           float64            `arg:"" name:"quorum" help:"quorum" required:"true"`
+	Turnout          uint               `arg:"" name:"turnout" help:"turnout" required:"true"`
+	Quorum           uint               `arg:"" name:"quorum" help:"quorum" required:"true"`
 	Whitelist        AddressFlag        `name:"whitelist" help:"whitelist account"`
 	Currency         CurrencyIDFlag     `arg:"" name:"currency-id" help:"currency id" required:"true"`
 	sender           base.Address
@@ -114,8 +114,8 @@ func (cmd *CreateDAOCommand) createOperation() (base.Operation, error) { // noli
 		cmd.Delaytime,
 		cmd.Snaptime,
 		cmd.Timelock,
-		cmd.Turnout,
-		cmd.Quorum,
+		types.PercentRatio(cmd.Turnout),
+		types.PercentRatio(cmd.Quorum),
 		cmd.Currency.CID,
 	)
 

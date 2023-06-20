@@ -12,7 +12,7 @@ func (fact *CreateDAOFact) unpack(enc encoder.Encoder,
 	sa, ca, did, op, tk string,
 	bth, bf, bw []byte,
 	dt, st, tl uint64,
-	to, qou float64,
+	to, qou uint,
 	cid string,
 ) error {
 	e := util.StringErrorFunc("failed to unmarshal CreateDAOFact")
@@ -24,8 +24,8 @@ func (fact *CreateDAOFact) unpack(enc encoder.Encoder,
 	fact.delaytime = dt
 	fact.snaptime = st
 	fact.timelock = tl
-	fact.turnout = to
-	fact.quorum = qou
+	fact.turnout = types.PercentRatio(to)
+	fact.quorum = types.PercentRatio(qou)
 
 	switch a, err := base.DecodeAddress(sa, enc); {
 	case err != nil:

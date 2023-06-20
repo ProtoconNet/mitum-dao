@@ -36,7 +36,7 @@ func (po *Policy) unpack(enc encoder.Encoder, ht hint.Hint,
 	cr string,
 	bth, bf, bw []byte,
 	dt, st, tl uint64,
-	to, qou float64,
+	to, qou uint,
 ) error {
 	e := util.StringErrorFunc("failed to decode bson of Policy")
 
@@ -45,8 +45,8 @@ func (po *Policy) unpack(enc encoder.Encoder, ht hint.Hint,
 	po.delaytime = dt
 	po.snaptime = st
 	po.timelock = tl
-	po.turnout = to
-	po.quorum = qou
+	po.turnout = PercentRatio(to)
+	po.quorum = PercentRatio(qou)
 
 	if hinter, err := enc.Decode(bth); err != nil {
 		return e(err, "")
