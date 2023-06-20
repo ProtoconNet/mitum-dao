@@ -63,6 +63,10 @@ var hinters = []encoder.DecodeDetail{
 	{Hint: types.WhitelistHint, Instance: types.Whitelist{}},
 	{Hint: types.DesignHint, Instance: types.Design{}},
 	{Hint: types.PolicyHint, Instance: types.Policy{}},
+	{Hint: types.TransferCalldataHint, Instance: types.TransferCalldata{}},
+	{Hint: types.GovernanceCalldataHint, Instance: types.GovernanceCalldata{}},
+	{Hint: types.CryptoProposalHint, Instance: types.CryptoProposal{}},
+	{Hint: types.BizProposalHint, Instance: types.BizProposal{}},
 
 	{Hint: state.DesignStateValueHint, Instance: state.DesignStateValue{}},
 
