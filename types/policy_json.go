@@ -50,8 +50,8 @@ type PolicyJSONMarshaler struct {
 	Delaytime uint64                   `json:"delaytime"`
 	Snaptime  uint64                   `json:"snaptime"`
 	Timelock  uint64                   `json:"timelock"`
-	Turnout   float64                  `json:"turnout"`
-	Quorum    float64                  `json:"quorum"`
+	Turnout   PercentRatio             `json:"turnout"`
+	Quorum    PercentRatio             `json:"quorum"`
 }
 
 func (po Policy) MarshalJSON() ([]byte, error) {
@@ -78,8 +78,8 @@ type PolicyJSONUnmarshaler struct {
 	Delaytime uint64          `json:"delaytime"`
 	Snaptime  uint64          `json:"snaptime"`
 	Timelock  uint64          `json:"timelock"`
-	Turnout   float64         `json:"turnout"`
-	Quorum    float64         `json:"quorum"`
+	Turnout   uint            `json:"turnout"`
+	Quorum    uint            `json:"quorum"`
 }
 
 func (po *Policy) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {

@@ -66,8 +66,8 @@ type PolicyBSONUnmarshaler struct {
 	Delaytime uint64   `bson:"delaytime"`
 	Snaptime  uint64   `bson:"snaptime"`
 	Timelock  uint64   `bson:"timelock"`
-	Turnout   float64  `bson:"turnout"`
-	Quorum    float64  `bson:"quorum"`
+	Turnout   uint     `bson:"turnout"`
+	Quorum    uint     `bson:"quorum"`
 }
 
 func (po *Policy) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {

@@ -10,6 +10,7 @@ import (
 	currency "github.com/ProtoconNet/mitum-currency/v3/operation/currency"
 	extensioncurrency "github.com/ProtoconNet/mitum-currency/v3/operation/extension"
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
+	"github.com/ProtoconNet/mitum-dao/operation/dao"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/hint"
@@ -228,6 +229,13 @@ func (opr *OperationProcessor) checkDuplication(op base.Operation) error {
 		did = fact.Currency().String()
 		didtype = DuplicationTypeCurrency
 	case currency.SuffrageInflation:
+	case dao.CreateDAO:
+		fact, ok := t.Fact().(dao.CreateDAOFact)
+		if !ok {
+			return errors.Errorf("expected CreateDAOFact, not %T", t.Fact())
+		}
+		did = fact.Sender().String()
+		didtype = DuplicationTypeSender
 	default:
 		return nil
 	}
@@ -304,7 +312,8 @@ func (opr *OperationProcessor) getNewProcessor(op base.Operation) (base.Operatio
 		extensioncurrency.Withdraws,
 		currency.CurrencyRegister,
 		currency.CurrencyPolicyUpdater,
-		currency.SuffrageInflation:
+		currency.SuffrageInflation,
+		dao.CreateDAO:
 		return nil, false, errors.Errorf("%T needs SetProcessor", t)
 	default:
 		return nil, false, nil

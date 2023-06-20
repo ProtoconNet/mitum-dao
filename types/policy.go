@@ -58,6 +58,14 @@ func (wl Whitelist) IsValid([]byte) error {
 	return nil
 }
 
+func (wl Whitelist) Active() bool {
+	return wl.active
+}
+
+func (wl Whitelist) Accounts() []base.Address {
+	return wl.accounts
+}
+
 var PolicyHint = hint.MustNewHint("mitum-dao-policy-v0.0.1")
 
 type Policy struct {
@@ -69,8 +77,8 @@ type Policy struct {
 	delaytime uint64
 	snaptime  uint64
 	timelock  uint64
-	turnout   float64
-	quorum    float64
+	turnout   PercentRatio
+	quorum    PercentRatio
 }
 
 func NewPolicy(
@@ -78,7 +86,7 @@ func NewPolicy(
 	fee, threshold currencytypes.Amount,
 	whitelist Whitelist,
 	delaytime, snaptime, timelock uint64,
-	turnout, quorum float64,
+	turnout, quorum PercentRatio,
 ) Policy {
 	return Policy{
 		BaseHinter: hint.NewBaseHinter(PolicyHint),
@@ -103,8 +111,8 @@ func (po Policy) Bytes() []byte {
 		util.Uint64ToBytes(po.delaytime),
 		util.Uint64ToBytes(po.snaptime),
 		util.Uint64ToBytes(po.timelock),
-		util.Float64ToBytes(po.turnout),
-		util.Float64ToBytes(po.quorum),
+		po.turnout.Bytes(),
+		po.quorum.Bytes(),
 	)
 }
 
@@ -117,6 +125,8 @@ func (po Policy) IsValid([]byte) error {
 		po.fee,
 		po.threshold,
 		po.whitelist,
+		po.turnout,
+		po.quorum,
 	); err != nil {
 		return e(err, "")
 	}
@@ -152,10 +162,10 @@ func (po Policy) TimeLock() uint64 {
 	return po.timelock
 }
 
-func (po Policy) Turnout() float64 {
+func (po Policy) Turnout() PercentRatio {
 	return po.turnout
 }
 
-func (po Policy) Quorum() float64 {
+func (po Policy) Quorum() PercentRatio {
 	return po.quorum
 }
