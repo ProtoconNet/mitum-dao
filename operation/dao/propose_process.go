@@ -15,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var ProposeProcessorPool = sync.Pool{
+var proposeProcessorPool = sync.Pool{
 	New: func() interface{} {
 		return new(ProposeProcessor)
 	},
@@ -40,7 +40,7 @@ func NewProposeProcessor() currencytypes.GetNewProcessor {
 	) (base.OperationProcessor, error) {
 		e := util.StringErrorFunc("failed to create new ProposeProcessor")
 
-		nopp := ProposeProcessorPool.Get()
+		nopp := proposeProcessorPool.Get()
 		opp, ok := nopp.(*ProposeProcessor)
 		if !ok {
 			return nil, errors.Errorf("expected ProposeProcessor, not %T", nopp)
@@ -222,7 +222,7 @@ func (opp *ProposeProcessor) Process(
 }
 
 func (opp *ProposeProcessor) Close() error {
-	ProposeProcessorPool.Put(opp)
+	proposeProcessorPool.Put(opp)
 
 	return nil
 }

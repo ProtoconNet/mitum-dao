@@ -16,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var CreateDAOProcessorPool = sync.Pool{
+var createDAOProcessorPool = sync.Pool{
 	New: func() interface{} {
 		return new(CreateDAOProcessor)
 	},
@@ -41,7 +41,7 @@ func NewCreateDAOProcessor() currencytypes.GetNewProcessor {
 	) (base.OperationProcessor, error) {
 		e := util.StringErrorFunc("failed to create new CreateDAOProcessor")
 
-		nopp := CreateDAOProcessorPool.Get()
+		nopp := createDAOProcessorPool.Get()
 		opp, ok := nopp.(*CreateDAOProcessor)
 		if !ok {
 			return nil, errors.Errorf("expected CreateDAOProcessor, not %T", nopp)
@@ -167,7 +167,7 @@ func (opp *CreateDAOProcessor) Process(
 }
 
 func (opp *CreateDAOProcessor) Close() error {
-	CreateDAOProcessorPool.Put(opp)
+	createDAOProcessorPool.Put(opp)
 
 	return nil
 }
