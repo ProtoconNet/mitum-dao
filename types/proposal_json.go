@@ -10,19 +10,22 @@ import (
 
 type CryptoProposalJSONMarshaler struct {
 	hint.BaseHinter
-	Calldata Calldata `json:"calldata"`
+	StartTime uint64   `json:"starttime"`
+	Calldata  Calldata `json:"calldata"`
 }
 
 func (p CryptoProposal) MarshalJSON() ([]byte, error) {
 	return util.MarshalJSON(CryptoProposalJSONMarshaler{
 		BaseHinter: p.BaseHinter,
 		Calldata:   p.calldata,
+		StartTime:  p.starttime,
 	})
 }
 
 type CryptoProposalJSONUnmarshaler struct {
-	Hint     hint.Hint       `json:"_hint"`
-	Calldata json.RawMessage `json:"calldata"`
+	Hint      hint.Hint       `json:"_hint"`
+	StartTime uint64          `json:"starttime"`
+	Calldata  json.RawMessage `json:"calldata"`
 }
 
 func (p *CryptoProposal) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
@@ -33,27 +36,30 @@ func (p *CryptoProposal) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		return e(err, "")
 	}
 
-	return p.unpack(enc, up.Hint, up.Calldata)
+	return p.unpack(enc, up.Hint, up.StartTime, up.Calldata)
 }
 
 type BizProposalJSONMarshaler struct {
 	hint.BaseHinter
-	Url  URL    `json:"url"`
-	Hash string `json:"hash"`
+	StartTime uint64 `json:"starttime"`
+	Url       URL    `json:"url"`
+	Hash      string `json:"hash"`
 }
 
 func (p BizProposal) MarshalJSON() ([]byte, error) {
 	return util.MarshalJSON(BizProposalJSONMarshaler{
 		BaseHinter: p.BaseHinter,
+		StartTime:  p.starttime,
 		Url:        p.url,
 		Hash:       p.hash,
 	})
 }
 
 type BizProposalJSONUnmarshaler struct {
-	Hint hint.Hint `json:"_hint"`
-	Url  string    `json:"url"`
-	Hash string    `json:"hash"`
+	Hint      hint.Hint `json:"_hint"`
+	StartTime uint64    `json:"starttime"`
+	Url       string    `json:"url"`
+	Hash      string    `json:"hash"`
 }
 
 func (p *BizProposal) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
@@ -64,5 +70,5 @@ func (p *BizProposal) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		return e(err, "")
 	}
 
-	return p.unpack(enc, up.Hint, up.Url, up.Hash)
+	return p.unpack(enc, up.Hint, up.StartTime, up.Url, up.Hash)
 }

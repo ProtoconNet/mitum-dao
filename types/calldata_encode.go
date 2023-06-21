@@ -11,6 +11,8 @@ import (
 func (cd *TransferCalldata) unpack(enc encoder.Encoder, ht hint.Hint, sd, rc string, bam []byte) error {
 	e := util.StringErrorFunc("failed to decode bson of TransferCalldata")
 
+	cd.BaseHinter = hint.NewBaseHinter(ht)
+
 	switch a, err := base.DecodeAddress(sd, enc); {
 	case err != nil:
 		return e(err, "")
@@ -38,6 +40,8 @@ func (cd *TransferCalldata) unpack(enc encoder.Encoder, ht hint.Hint, sd, rc str
 
 func (cd *GovernanceCalldata) unpack(enc encoder.Encoder, ht hint.Hint, bpo []byte) error {
 	e := util.StringErrorFunc("failed to decode bson of GovernanceCalldata")
+
+	cd.BaseHinter = hint.NewBaseHinter(ht)
 
 	if hinter, err := enc.Decode(bpo); err != nil {
 		return e(err, "")

@@ -10,15 +10,17 @@ import (
 func (p CryptoProposal) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
-			"_hint":    p.Hint().String(),
-			"calldata": p.calldata,
+			"_hint":     p.Hint().String(),
+			"starttime": p.starttime,
+			"calldata":  p.calldata,
 		},
 	)
 }
 
 type CryptoProposalBSONUnmarshaler struct {
-	Hint     string   `bson:"_hint"`
-	Calldata bson.Raw `bson:"calldata"`
+	Hint      string   `bson:"_hint"`
+	StartTime uint64   `bson:"starttime"`
+	Calldata  bson.Raw `bson:"calldata"`
 }
 
 func (p *CryptoProposal) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
@@ -34,23 +36,25 @@ func (p *CryptoProposal) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		return e(err, "")
 	}
 
-	return p.unpack(enc, ht, up.Calldata)
+	return p.unpack(enc, ht, up.StartTime, up.Calldata)
 }
 
 func (p BizProposal) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
-			"_hint": p.Hint().String(),
-			"url":   p.url,
-			"hash":  p.hash,
+			"_hint":     p.Hint().String(),
+			"starttime": p.starttime,
+			"url":       p.url,
+			"hash":      p.hash,
 		},
 	)
 }
 
 type BizProposalBSONUnmarshaler struct {
-	Hint string `bson:"_hint"`
-	Url  string `bson:"url"`
-	Hash string `bson:"hash"`
+	Hint      string `bson:"_hint"`
+	StartTime uint64 `bson:"starttime"`
+	Url       string `bson:"url"`
+	Hash      string `bson:"hash"`
 }
 
 func (p *BizProposal) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
@@ -66,5 +70,5 @@ func (p *BizProposal) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		return e(err, "")
 	}
 
-	return p.unpack(enc, ht, up.Url, up.Hash)
+	return p.unpack(enc, ht, up.StartTime, up.Url, up.Hash)
 }
