@@ -99,7 +99,7 @@ func (cmd *CreateDAOCommand) parseFlags() error {
 }
 
 func (cmd *CreateDAOCommand) createOperation() (base.Operation, error) { // nolint:dupl}
-	e := util.StringErrorFunc("failed to create create-credential-service operation")
+	e := util.StringErrorFunc("failed to create create-dao operation")
 
 	fact := dao.NewCreateDAOFact(
 		[]byte(cmd.Token),
