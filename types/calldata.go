@@ -22,6 +22,7 @@ type Calldata interface {
 	hint.Hinter
 	Type() string
 	Bytes() []byte
+	Addresses() []base.Address
 }
 
 type TransferCalldata struct {
@@ -80,6 +81,15 @@ func (cd TransferCalldata) IsValid([]byte) error {
 	return nil
 }
 
+func (cd TransferCalldata) Addresses() []base.Address {
+	as := make([]base.Address, 2)
+
+	as[0] = cd.sender
+	as[1] = cd.receiver
+
+	return as
+}
+
 type GovernanceCalldata struct {
 	hint.BaseHinter
 	policy Policy
@@ -114,4 +124,8 @@ func (cd GovernanceCalldata) IsValid([]byte) error {
 	}
 
 	return nil
+}
+
+func (cd GovernanceCalldata) Addresses() []base.Address {
+	return cd.policy.whitelist.accounts
 }

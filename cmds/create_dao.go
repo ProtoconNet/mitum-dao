@@ -17,7 +17,7 @@ type CreateDAOCommand struct {
 	OperationFlags
 	Sender           AddressFlag        `arg:"" name:"sender" help:"sender address" required:"true"`
 	Contract         AddressFlag        `arg:"" name:"contract" help:"contract address of credential" required:"true"`
-	DAO              ContractIDFlag     `arg:"" name:"dao-id" help:"credential id" required:"true"`
+	DAO              ContractIDFlag     `arg:"" name:"dao-id" help:"dao id" required:"true"`
 	Option           string             `arg:"" name:"dao-option" help:"dao option" required:"true"`
 	VotingPowerToken CurrencyIDFlag     `arg:"" name:"voting-power-token" help:"voting power token" required:"true"`
 	Threshold        CurrencyAmountFlag `arg:"" name:"threshold" help:"threshold to propose" required:"true"`
@@ -99,7 +99,7 @@ func (cmd *CreateDAOCommand) parseFlags() error {
 }
 
 func (cmd *CreateDAOCommand) createOperation() (base.Operation, error) { // nolint:dupl}
-	e := util.StringErrorFunc("failed to create create-credential-service operation")
+	e := util.StringErrorFunc("failed to create create-dao operation")
 
 	fact := dao.NewCreateDAOFact(
 		[]byte(cmd.Token),

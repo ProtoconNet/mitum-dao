@@ -69,8 +69,10 @@ var hinters = []encoder.DecodeDetail{
 	{Hint: types.BizProposalHint, Instance: types.BizProposal{}},
 
 	{Hint: state.DesignStateValueHint, Instance: state.DesignStateValue{}},
+	{Hint: state.ProposalStateValueHint, Instance: state.ProposalStateValue{}},
 
 	{Hint: dao.CreateDAOHint, Instance: dao.CreateDAO{}},
+	{Hint: dao.ProposeHint, Instance: dao.Propose{}},
 
 	{Hint: digestisaac.ManifestHint, Instance: digestisaac.Manifest{}},
 	{Hint: digest.AccountValueHint, Instance: digest.AccountValue{}},
@@ -99,6 +101,7 @@ var supportedProposalOperationFactHinters = []encoder.DecodeDetail{
 	{Hint: extensioncurrency.WithdrawsFactHint, Instance: extensioncurrency.WithdrawsFact{}},
 
 	{Hint: dao.CreateDAOFactHint, Instance: dao.CreateDAOFact{}},
+	{Hint: dao.ProposeFactHint, Instance: dao.ProposeFact{}},
 
 	{Hint: isaacoperation.GenesisNetworkPolicyFactHint, Instance: isaacoperation.GenesisNetworkPolicyFact{}},
 	{Hint: isaacoperation.SuffrageCandidateFactHint, Instance: isaacoperation.SuffrageCandidateFact{}},

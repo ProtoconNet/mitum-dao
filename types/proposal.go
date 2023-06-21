@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/hint"
 )
@@ -45,17 +46,20 @@ type Proposal interface {
 	hint.Hinter
 	Type() string
 	Bytes() []byte
-	Calldata() Calldata
+	StartTime() uint64
+	Addresses() []base.Address
 }
 
 type CryptoProposal struct {
 	hint.BaseHinter
-	calldata Calldata
+	starttime uint64
+	calldata  Calldata
 }
 
-func NewCryptoProposal(calldata Calldata) CryptoProposal {
+func NewCryptoProposal(starttime uint64, calldata Calldata) CryptoProposal {
 	return CryptoProposal{
 		BaseHinter: hint.NewBaseHinter(CryptoProposalHint),
+		starttime:  starttime,
 		calldata:   calldata,
 	}
 }
@@ -65,7 +69,11 @@ func (CryptoProposal) Type() string {
 }
 
 func (p CryptoProposal) Bytes() []byte {
-	return util.ConcatBytesSlice(p.calldata.Bytes())
+	return util.ConcatBytesSlice(util.Uint64ToBytes(p.starttime), p.calldata.Bytes())
+}
+
+func (p CryptoProposal) StartTime() uint64 {
+	return p.starttime
 }
 
 func (p CryptoProposal) Calldata() Calldata {
@@ -84,15 +92,21 @@ func (p CryptoProposal) IsValid([]byte) error {
 	return nil
 }
 
-type BizProposal struct {
-	hint.BaseHinter
-	url  URL
-	hash string
+func (p CryptoProposal) Addresses() []base.Address {
+	return p.calldata.Addresses()
 }
 
-func NewBizProposal(url URL, hash string) BizProposal {
+type BizProposal struct {
+	hint.BaseHinter
+	starttime uint64
+	url       URL
+	hash      string
+}
+
+func NewBizProposal(starttime uint64, url URL, hash string) BizProposal {
 	return BizProposal{
 		BaseHinter: hint.NewBaseHinter(BizProposalHint),
+		starttime:  starttime,
 		url:        url,
 		hash:       hash,
 	}
@@ -103,7 +117,11 @@ func (BizProposal) Type() string {
 }
 
 func (p BizProposal) Bytes() []byte {
-	return util.ConcatBytesSlice(p.url.Bytes(), []byte(p.hash))
+	return util.ConcatBytesSlice(util.Uint64ToBytes(p.starttime), p.url.Bytes(), []byte(p.hash))
+}
+
+func (p BizProposal) StartTime() uint64 {
+	return p.starttime
 }
 
 func (p BizProposal) Url() URL {
@@ -128,4 +146,8 @@ func (p BizProposal) IsValid([]byte) error {
 	}
 
 	return nil
+}
+
+func (p BizProposal) Addresses() []base.Address {
+	return []base.Address{}
 }

@@ -176,11 +176,14 @@ func POperationProcessorsMap(ctx context.Context) (context.Context, error) {
 	opr.SetProcessor(extensioncurrency.CreateContractAccountsHint, extensioncurrency.NewCreateContractAccountsProcessor())
 	opr.SetProcessor(extensioncurrency.WithdrawsHint, extensioncurrency.NewWithdrawsProcessor())
 	opr.SetProcessor(dao.CreateDAOHint, dao.NewCreateDAOProcessor())
+	opr.SetProcessor(dao.ProposeHint, dao.NewProposeProcessor())
+	// opr.SetProcessor(dao.ApproveHint, dao.NewApproveProcessor(db.LastBlockMap))
 
 	_ = set.Add(mitumcurrency.CreateAccountsHint, func(height base.Height) (base.OperationProcessor, error) {
 		return opr.New(
 			height,
 			db.State,
+			nil,
 			nil,
 			nil,
 		)
@@ -192,6 +195,7 @@ func POperationProcessorsMap(ctx context.Context) (context.Context, error) {
 			db.State,
 			nil,
 			nil,
+			nil,
 		)
 	})
 
@@ -199,6 +203,7 @@ func POperationProcessorsMap(ctx context.Context) (context.Context, error) {
 		return opr.New(
 			height,
 			db.State,
+			nil,
 			nil,
 			nil,
 		)
@@ -210,6 +215,7 @@ func POperationProcessorsMap(ctx context.Context) (context.Context, error) {
 			db.State,
 			nil,
 			nil,
+			nil,
 		)
 	})
 
@@ -217,6 +223,7 @@ func POperationProcessorsMap(ctx context.Context) (context.Context, error) {
 		return opr.New(
 			height,
 			db.State,
+			nil,
 			nil,
 			nil,
 		)
@@ -228,6 +235,7 @@ func POperationProcessorsMap(ctx context.Context) (context.Context, error) {
 			db.State,
 			nil,
 			nil,
+			nil,
 		)
 	})
 
@@ -235,6 +243,7 @@ func POperationProcessorsMap(ctx context.Context) (context.Context, error) {
 		return opr.New(
 			height,
 			db.State,
+			nil,
 			nil,
 			nil,
 		)
@@ -246,6 +255,7 @@ func POperationProcessorsMap(ctx context.Context) (context.Context, error) {
 			db.State,
 			nil,
 			nil,
+			nil,
 		)
 	})
 
@@ -255,8 +265,29 @@ func POperationProcessorsMap(ctx context.Context) (context.Context, error) {
 			db.State,
 			nil,
 			nil,
+			nil,
 		)
 	})
+
+	_ = set.Add(dao.ProposeHint, func(height base.Height) (base.OperationProcessor, error) {
+		return opr.New(
+			height,
+			db.State,
+			nil,
+			nil,
+			nil,
+		)
+	})
+
+	// _ = set.Add(dao.ApproveHint, func(height base.Height) (base.OperationProcessor, error) {
+	// 	return opr.New(
+	// 		height,
+	// 		db.State,
+	// 		db.LastBlockMap,
+	// 		nil,
+	// 		nil,
+	// 	)
+	// })
 
 	_ = set.Add(isaacoperation.SuffrageCandidateHint, func(height base.Height) (base.OperationProcessor, error) {
 		policy := db.LastNetworkPolicy()

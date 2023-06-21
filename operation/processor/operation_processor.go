@@ -11,6 +11,7 @@ import (
 	extensioncurrency "github.com/ProtoconNet/mitum-currency/v3/operation/extension"
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum-dao/operation/dao"
+	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/hint"
@@ -24,8 +25,6 @@ var operationProcessorPool = sync.Pool{
 		return new(OperationProcessor)
 	},
 }
-
-type GetLastBlockFunc func() (base.BlockMap, bool, error)
 
 type DuplicationType string
 
@@ -44,6 +43,7 @@ type OperationProcessor struct {
 	duplicated           map[string]DuplicationType
 	duplicatedNewAddress map[string]struct{}
 	processorClosers     *sync.Map
+	GetLastBlockFunc     types.GetLastBlockFunc
 	GetStateFunc         base.GetStateFunc
 }
 
@@ -64,6 +64,7 @@ func NewOperationProcessor() *OperationProcessor {
 func (opr *OperationProcessor) New(
 	height base.Height,
 	getStateFunc base.GetStateFunc,
+	getLastBlockFunc types.GetLastBlockFunc,
 	newPreProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 	newProcessConstraintFunc base.NewOperationProcessorProcessFunc) (*OperationProcessor, error) {
 	e := util.StringErrorFunc("failed to create new OperationProcessor")
@@ -97,6 +98,7 @@ func (opr *OperationProcessor) New(
 
 	nopr.BaseOperationProcessor = b
 	nopr.GetStateFunc = getStateFunc
+	nopr.GetLastBlockFunc = getLastBlockFunc
 	return nopr, nil
 }
 
@@ -236,6 +238,13 @@ func (opr *OperationProcessor) checkDuplication(op base.Operation) error {
 		}
 		did = fact.Sender().String()
 		didtype = DuplicationTypeSender
+	case dao.Propose:
+		fact, ok := t.Fact().(dao.ProposeFact)
+		if !ok {
+			return errors.Errorf("expected ProposeFact, not %T", t.Fact())
+		}
+		did = fact.Sender().String()
+		didtype = DuplicationTypeSender
 	default:
 		return nil
 	}
@@ -313,7 +322,8 @@ func (opr *OperationProcessor) getNewProcessor(op base.Operation) (base.Operatio
 		currency.CurrencyRegister,
 		currency.CurrencyPolicyUpdater,
 		currency.SuffrageInflation,
-		dao.CreateDAO:
+		dao.CreateDAO,
+		dao.Propose:
 		return nil, false, errors.Errorf("%T needs SetProcessor", t)
 	default:
 		return nil, false, nil
