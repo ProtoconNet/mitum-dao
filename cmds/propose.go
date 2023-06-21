@@ -46,7 +46,7 @@ type ProposeCommand struct {
 	OperationFlags
 	Sender    AddressFlag    `arg:"" name:"sender" help:"sender address" required:"true"`
 	Contract  AddressFlag    `arg:"" name:"contract" help:"contract address of credential" required:"true"`
-	DAO       ContractIDFlag `arg:"" name:"dao-id" help:"credential id" required:"true"`
+	DAO       ContractIDFlag `arg:"" name:"dao-id" help:"dao id" required:"true"`
 	Option    string         `arg:"" name:"option" help:"propose option; crypto | biz" required:"true"`
 	ProposeID string         `arg:"" name:"propose-id" help:"propose id" required:"true"`
 	StartTime uint64         `arg:"" name:"starttime" help:"start time to register" required:"true"`
