@@ -123,7 +123,7 @@ func (cmd *ProposeCommand) parseFlags() error {
 				return err
 			}
 
-			proposal := types.NewCryptoProposal(calldata)
+			proposal := types.NewCryptoProposal(cmd.StartTime, calldata)
 			if err := proposal.IsValid(nil); err != nil {
 				return err
 			}
@@ -157,7 +157,7 @@ func (cmd *ProposeCommand) parseFlags() error {
 				return err
 			}
 
-			proposal := types.NewCryptoProposal(calldata)
+			proposal := types.NewCryptoProposal(cmd.StartTime, calldata)
 			if err := proposal.IsValid(nil); err != nil {
 				return err
 			}
@@ -166,7 +166,7 @@ func (cmd *ProposeCommand) parseFlags() error {
 			return errors.Errorf("invalid calldata option, %s", cmd.CalldataOption)
 		}
 	} else if cmd.Option == types.ProposalBiz {
-		proposal := types.NewBizProposal(cmd.URL, cmd.Hash)
+		proposal := types.NewBizProposal(cmd.StartTime, cmd.URL, cmd.Hash)
 		if err := proposal.IsValid(nil); err != nil {
 			return err
 		}
