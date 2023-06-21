@@ -70,9 +70,13 @@ var hinters = []encoder.DecodeDetail{
 
 	{Hint: state.DesignStateValueHint, Instance: state.DesignStateValue{}},
 	{Hint: state.ProposalStateValueHint, Instance: state.ProposalStateValue{}},
+	{Hint: state.ApprovingListStateValueHint, Instance: state.ApprovingListStateValue{}},
+	{Hint: state.RegisterInfoHint, Instance: state.RegisterInfo{}},
+	{Hint: state.RegisterListStateValueHint, Instance: state.RegisterListStateValue{}},
 
 	{Hint: dao.CreateDAOHint, Instance: dao.CreateDAO{}},
 	{Hint: dao.ProposeHint, Instance: dao.Propose{}},
+	{Hint: dao.ApproveHint, Instance: dao.Approve{}},
 
 	{Hint: digestisaac.ManifestHint, Instance: digestisaac.Manifest{}},
 	{Hint: digest.AccountValueHint, Instance: digest.AccountValue{}},
@@ -102,6 +106,7 @@ var supportedProposalOperationFactHinters = []encoder.DecodeDetail{
 
 	{Hint: dao.CreateDAOFactHint, Instance: dao.CreateDAOFact{}},
 	{Hint: dao.ProposeFactHint, Instance: dao.ProposeFact{}},
+	{Hint: dao.ApproveFactHint, Instance: dao.ApproveFact{}},
 
 	{Hint: isaacoperation.GenesisNetworkPolicyFactHint, Instance: isaacoperation.GenesisNetworkPolicyFact{}},
 	{Hint: isaacoperation.SuffrageCandidateFactHint, Instance: isaacoperation.SuffrageCandidateFact{}},
