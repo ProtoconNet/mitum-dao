@@ -156,6 +156,24 @@ func (opp *RegisterProcessor) PreProcess(
 		}
 	}
 
+	if fact.Approved() != nil {
+		switch st, found, err := getStateFunc(state.StateKeyApprovingList(fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender())); {
+		case err != nil:
+			return nil, base.NewBaseOperationProcessReasonError("failed to find approving list, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
+		case found:
+			approving, err := state.StateApprovingListValue(st)
+			if err != nil {
+				return nil, base.NewBaseOperationProcessReasonError("failed to find approving list value, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
+			}
+
+			for _, acc := range approving {
+				if acc.Equal(fact.Approved()) {
+					return nil, base.NewBaseOperationProcessReasonError("already approved account, %q approved by %q", fact.Approved(), fact.Sender()), nil
+				}
+			}
+		}
+	}
+
 	if err := currencystate.CheckFactSignsByState(fact.Sender(), op.Signs(), getStateFunc); err != nil {
 		return ctx, base.NewBaseOperationProcessReasonError("invalid signing: %w", err), nil
 	}
@@ -174,7 +192,7 @@ func (opp *RegisterProcessor) Process(
 		return nil, nil, e(nil, "expected RegisterFact, not %T", op.Fact())
 	}
 
-	sts := make([]base.StateMergeValue, 2)
+	sts := make([]base.StateMergeValue, 3)
 
 	switch st, found, err := getStateFunc(state.StateKeyRegisterList(fact.Contract(), fact.DAOID(), fact.ProposeID())); {
 	case err != nil:
@@ -223,6 +241,28 @@ func (opp *RegisterProcessor) Process(
 		)
 	}
 
+	switch st, found, err := getStateFunc(state.StateKeyApprovingList(fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender())); {
+	case err != nil:
+		return nil, base.NewBaseOperationProcessReasonError("failed to find approving list, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
+	case found:
+		approving, err := state.StateApprovingListValue(st)
+		if err != nil {
+			return nil, base.NewBaseOperationProcessReasonError("failed to find approving list value, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
+		}
+
+		approving = append(approving, fact.Approved())
+
+		sts[1] = currencystate.NewStateMergeValue(
+			st.Key(),
+			state.NewApprovingListStateValue(approving),
+		)
+	default:
+		sts[1] = currencystate.NewStateMergeValue(
+			st.Key(),
+			state.NewApprovingListStateValue([]base.Address{fact.Approved()}),
+		)
+	}
+
 	currencyPolicy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("currency not found, %q: %w", fact.Currency(), err), nil
@@ -250,7 +290,7 @@ func (opp *RegisterProcessor) Process(
 	if !ok {
 		return nil, base.NewBaseOperationProcessReasonError("expected BalanceStateValue, not %T", sb.Value()), nil
 	}
-	sts[1] = currencystate.NewStateMergeValue(sb.Key(), currency.NewBalanceStateValue(v.Amount.WithBig(v.Amount.Big().Sub(fee))))
+	sts[2] = currencystate.NewStateMergeValue(sb.Key(), currency.NewBalanceStateValue(v.Amount.WithBig(v.Amount.Big().Sub(fee))))
 
 	return sts, nil, nil
 }
