@@ -16,36 +16,36 @@ import (
 	"github.com/pkg/errors"
 )
 
-var approveProcessorPool = sync.Pool{
+var registerProcessorPool = sync.Pool{
 	New: func() interface{} {
-		return new(ApproveProcessor)
+		return new(RegisterProcessor)
 	},
 }
 
-func (Approve) Process(
+func (Register) Process(
 	ctx context.Context, getStateFunc base.GetStateFunc,
 ) ([]base.StateMergeValue, base.OperationProcessReasonError, error) {
 	return nil, nil, nil
 }
 
-type ApproveProcessor struct {
+type RegisterProcessor struct {
 	*base.BaseOperationProcessor
 	getLastBlockFunc types.GetLastBlockFunc
 }
 
-func NewApproveProcessor(getLastBlockFunc types.GetLastBlockFunc) currencytypes.GetNewProcessor {
+func NewRegisterProcessor(getLastBlockFunc types.GetLastBlockFunc) currencytypes.GetNewProcessor {
 	return func(
 		height base.Height,
 		getStateFunc base.GetStateFunc,
 		newPreProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 		newProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 	) (base.OperationProcessor, error) {
-		e := util.StringErrorFunc("failed to create new ApproveProcessor")
+		e := util.StringErrorFunc("failed to create new RegisterProcessor")
 
-		nopp := approveProcessorPool.Get()
-		opp, ok := nopp.(*ApproveProcessor)
+		nopp := registerProcessorPool.Get()
+		opp, ok := nopp.(*RegisterProcessor)
 		if !ok {
-			return nil, errors.Errorf("expected ApproveProcessor, not %T", nopp)
+			return nil, errors.Errorf("expected RegisterProcessor, not %T", nopp)
 		}
 
 		b, err := base.NewBaseOperationProcessor(
@@ -61,14 +61,14 @@ func NewApproveProcessor(getLastBlockFunc types.GetLastBlockFunc) currencytypes.
 	}
 }
 
-func (opp *ApproveProcessor) PreProcess(
+func (opp *RegisterProcessor) PreProcess(
 	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc,
 ) (context.Context, base.OperationProcessReasonError, error) {
-	e := util.StringErrorFunc("failed to preprocess Approve")
+	e := util.StringErrorFunc("failed to preprocess Register")
 
-	fact, ok := op.Fact().(ApproveFact)
+	fact, ok := op.Fact().(RegisterFact)
 	if !ok {
-		return ctx, nil, e(nil, "not ApproveFact, %T", op.Fact())
+		return ctx, nil, e(nil, "not RegisterFact, %T", op.Fact())
 	}
 
 	if err := fact.IsValid(nil); err != nil {
@@ -80,7 +80,7 @@ func (opp *ApproveProcessor) PreProcess(
 	}
 
 	if err := currencystate.CheckNotExistsState(extensioncurrency.StateKeyContractAccount(fact.Sender()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("contract account cannot approve, %q: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("contract account cannot register and approve, %q: %w", fact.Sender(), err), nil
 	}
 
 	if err := currencystate.CheckExistsState(extensioncurrency.StateKeyContractAccount(fact.Contract()), getStateFunc); err != nil {
@@ -125,18 +125,33 @@ func (opp *ApproveProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("not registration period, must in %d <= block(%d) < %d", starttime, blocktime, endtime), nil
 	}
 
-	switch st, found, err := getStateFunc(state.StateKeyApprovingList(fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender())); {
+	switch st, found, err := getStateFunc(state.StateKeyRegisterList(fact.Contract(), fact.DAOID(), fact.ProposeID())); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find approving list, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find register list, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
 	case found:
-		accounts, err := state.StateApprovingListValue(st)
+		registers, err := state.StateRegisterListValue(st)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find approving list value, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find register list value, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
 		}
 
-		for _, acc := range accounts {
-			if acc.Equal(fact.Target()) {
-				return nil, base.NewBaseOperationProcessReasonError("target already approved, %q approved by %q", fact.Target(), fact.Sender()), nil
+		var target base.Address
+		if fact.Approved() != nil {
+			target = fact.Approved()
+		} else {
+			target = fact.Sender()
+		}
+
+		for _, info := range registers {
+			if info.Account.Equal(target) {
+				if fact.Approved() != nil {
+					for _, acc := range info.ApprovedBy {
+						if acc.Equal(fact.Sender()) {
+							return nil, base.NewBaseOperationProcessReasonError("sender already approve the account, %q approved by %q", fact.Approved(), fact.Sender()), nil
+						}
+					}
+				} else {
+					return nil, base.NewBaseOperationProcessReasonError("already registered sender, %q", fact.Sender()), nil
+				}
 			}
 		}
 	}
@@ -148,38 +163,18 @@ func (opp *ApproveProcessor) PreProcess(
 	return ctx, nil, nil
 }
 
-func (opp *ApproveProcessor) Process(
+func (opp *RegisterProcessor) Process(
 	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc) (
 	[]base.StateMergeValue, base.OperationProcessReasonError, error,
 ) {
-	e := util.StringErrorFunc("failed to process Approve")
+	e := util.StringErrorFunc("failed to process Register")
 
-	fact, ok := op.Fact().(ApproveFact)
+	fact, ok := op.Fact().(RegisterFact)
 	if !ok {
-		return nil, nil, e(nil, "expected ApproveFact, not %T", op.Fact())
+		return nil, nil, e(nil, "expected RegisterFact, not %T", op.Fact())
 	}
 
-	sts := make([]base.StateMergeValue, 3)
-
-	switch st, found, err := getStateFunc(state.StateKeyApprovingList(fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender())); {
-	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find approving list, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
-	case found:
-		accounts, err := state.StateApprovingListValue(st)
-		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find approving list value, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
-		}
-		accounts = append(accounts, fact.Target())
-		sts[0] = currencystate.NewStateMergeValue(
-			st.Key(),
-			state.NewApprovingListStateValue(accounts),
-		)
-	default:
-		sts[0] = currencystate.NewStateMergeValue(
-			st.Key(),
-			state.NewApprovingListStateValue([]base.Address{fact.Target()}),
-		)
-	}
+	sts := make([]base.StateMergeValue, 2)
 
 	switch st, found, err := getStateFunc(state.StateKeyRegisterList(fact.Contract(), fact.DAOID(), fact.ProposeID())); {
 	case err != nil:
@@ -189,26 +184,42 @@ func (opp *ApproveProcessor) Process(
 		if err != nil {
 			return nil, base.NewBaseOperationProcessReasonError("failed to find register list value, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
 		}
-		for i, rg := range registers {
-			if rg.Account.Equal(fact.Target()) {
-				rg.ApprovedBy = append(rg.ApprovedBy, fact.Sender())
-				break
-			}
 
-			if i == len(registers)-1 {
-				registers = append(registers, state.NewRegisterInfo(fact.Target(), []base.Address{fact.Sender()}))
+		if fact.Approved() != nil {
+			for i, info := range registers {
+				if info.Account.Equal(fact.Approved()) {
+					accs := info.ApprovedBy
+					accs = append(accs, fact.Sender())
+
+					registers = []state.RegisterInfo{
+						state.NewRegisterInfo(fact.Approved(), accs),
+					}
+
+					break
+				}
+
+				if i == len(registers)-1 {
+					registers = append(registers, state.NewRegisterInfo(fact.Approved(), []base.Address{fact.Sender()}))
+				}
 			}
+		} else {
+			registers = append(registers, state.NewRegisterInfo(fact.Sender(), []base.Address{}))
 		}
-		sts[1] = currencystate.NewStateMergeValue(
+
+		sts[0] = currencystate.NewStateMergeValue(
 			st.Key(),
 			state.NewRegisterListStateValue(registers),
 		)
 	default:
-		sts[1] = currencystate.NewStateMergeValue(
+		registers := make([]state.RegisterInfo, 1)
+		if fact.Approved() != nil {
+			registers[0] = state.NewRegisterInfo(fact.Approved(), []base.Address{fact.Sender()})
+		} else {
+			registers[0] = state.NewRegisterInfo(fact.Sender(), []base.Address{})
+		}
+		sts[0] = currencystate.NewStateMergeValue(
 			st.Key(),
-			state.NewRegisterListStateValue([]state.RegisterInfo{
-				state.NewRegisterInfo(fact.Target(), []base.Address{fact.Sender()}),
-			}),
+			state.NewRegisterListStateValue(registers),
 		)
 	}
 
@@ -239,13 +250,13 @@ func (opp *ApproveProcessor) Process(
 	if !ok {
 		return nil, base.NewBaseOperationProcessReasonError("expected BalanceStateValue, not %T", sb.Value()), nil
 	}
-	sts[2] = currencystate.NewStateMergeValue(sb.Key(), currency.NewBalanceStateValue(v.Amount.WithBig(v.Amount.Big().Sub(fee))))
+	sts[1] = currencystate.NewStateMergeValue(sb.Key(), currency.NewBalanceStateValue(v.Amount.WithBig(v.Amount.Big().Sub(fee))))
 
 	return sts, nil, nil
 }
 
-func (opp *ApproveProcessor) Close() error {
-	approveProcessorPool.Put(opp)
+func (opp *RegisterProcessor) Close() error {
+	registerProcessorPool.Put(opp)
 
 	return nil
 }

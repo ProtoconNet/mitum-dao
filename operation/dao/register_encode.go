@@ -7,10 +7,10 @@ import (
 	"github.com/ProtoconNet/mitum2/util/encoder"
 )
 
-func (fact *ApproveFact) unpack(enc encoder.Encoder,
+func (fact *RegisterFact) unpack(enc encoder.Encoder,
 	sa, ca, did, pid, ta, cid string,
 ) error {
-	e := util.StringErrorFunc("failed to unmarshal ApproveFact")
+	e := util.StringErrorFunc("failed to unmarshal RegisterFact")
 
 	fact.daoID = currencytypes.ContractID(did)
 	fact.proposeID = pid
@@ -30,11 +30,15 @@ func (fact *ApproveFact) unpack(enc encoder.Encoder,
 		fact.contract = a
 	}
 
-	switch a, err := base.DecodeAddress(ta, enc); {
-	case err != nil:
-		return e(err, "")
-	default:
-		fact.target = a
+	if ta != "" {
+		switch a, err := base.DecodeAddress(ta, enc); {
+		case err != nil:
+			return e(err, "")
+		default:
+			fact.approved = a
+		}
+	} else {
+		fact.approved = nil
 	}
 
 	return nil

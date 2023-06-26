@@ -10,37 +10,37 @@ import (
 )
 
 var (
-	ApproveFactHint = hint.MustNewHint("mitum-dao-approve-operation-fact-v0.0.1")
-	ApproveHint     = hint.MustNewHint("mitum-dao-approve-operation-v0.0.1")
+	RegisterFactHint = hint.MustNewHint("mitum-dao-register-operation-fact-v0.0.1")
+	RegisterHint     = hint.MustNewHint("mitum-dao-register-operation-v0.0.1")
 )
 
-type ApproveFact struct {
+type RegisterFact struct {
 	base.BaseFact
 	sender    base.Address
 	contract  base.Address
 	daoID     currencytypes.ContractID
 	proposeID string
-	target    base.Address
+	approved  base.Address
 	currency  currencytypes.CurrencyID
 }
 
-func NewApproveFact(
+func NewRegisterFact(
 	token []byte,
 	sender base.Address,
 	contract base.Address,
 	daoID currencytypes.ContractID,
 	proposeID string,
-	target base.Address,
+	approved base.Address,
 	currency currencytypes.CurrencyID,
-) ApproveFact {
-	bf := base.NewBaseFact(ApproveFactHint, token)
-	fact := ApproveFact{
+) RegisterFact {
+	bf := base.NewBaseFact(RegisterFactHint, token)
+	fact := RegisterFact{
 		BaseFact:  bf,
 		sender:    sender,
 		contract:  contract,
 		daoID:     daoID,
 		proposeID: proposeID,
-		target:    target,
+		approved:  approved,
 		currency:  currency,
 	}
 	fact.SetHash(fact.GenerateHash())
@@ -48,27 +48,27 @@ func NewApproveFact(
 	return fact
 }
 
-func (fact ApproveFact) Hash() util.Hash {
+func (fact RegisterFact) Hash() util.Hash {
 	return fact.BaseFact.Hash()
 }
 
-func (fact ApproveFact) GenerateHash() util.Hash {
+func (fact RegisterFact) GenerateHash() util.Hash {
 	return valuehash.NewSHA256(fact.Bytes())
 }
 
-func (fact ApproveFact) Bytes() []byte {
+func (fact RegisterFact) Bytes() []byte {
 	return util.ConcatBytesSlice(
 		fact.Token(),
 		fact.sender.Bytes(),
 		fact.contract.Bytes(),
 		fact.daoID.Bytes(),
 		[]byte(fact.proposeID),
-		fact.target.Bytes(),
+		fact.approved.Bytes(),
 		fact.currency.Bytes(),
 	)
 }
 
-func (fact ApproveFact) IsValid(b []byte) error {
+func (fact RegisterFact) IsValid(b []byte) error {
 	if err := fact.BaseHinter.IsValid(nil); err != nil {
 		return err
 	}
@@ -81,7 +81,6 @@ func (fact ApproveFact) IsValid(b []byte) error {
 		fact.sender,
 		fact.daoID,
 		fact.contract,
-		fact.target,
 		fact.currency,
 	); err != nil {
 		return err
@@ -95,64 +94,73 @@ func (fact ApproveFact) IsValid(b []byte) error {
 		return util.ErrInvalid.Errorf("contract address is same with sender, %q", fact.sender)
 	}
 
-	if fact.sender.Equal(fact.target) {
-		return util.ErrInvalid.Errorf("sender cannot approve itself, %q", fact.sender)
-	}
+	if fact.approved != nil {
+		if err := fact.approved.IsValid(nil); err != nil {
+			return err
+		}
 
-	if fact.target.Equal(fact.contract) {
-		return util.ErrInvalid.Errorf("contract address is same with target, %q", fact.target)
+		if fact.sender.Equal(fact.approved) {
+			return util.ErrInvalid.Errorf("sender cannot approve itself, %q", fact.sender)
+		}
+
+		if fact.approved.Equal(fact.contract) {
+			return util.ErrInvalid.Errorf("contract address is same with approved, %q", fact.approved)
+		}
 	}
 
 	return nil
 }
 
-func (fact ApproveFact) Token() base.Token {
+func (fact RegisterFact) Token() base.Token {
 	return fact.BaseFact.Token()
 }
 
-func (fact ApproveFact) Sender() base.Address {
+func (fact RegisterFact) Sender() base.Address {
 	return fact.sender
 }
 
-func (fact ApproveFact) Contract() base.Address {
+func (fact RegisterFact) Contract() base.Address {
 	return fact.contract
 }
 
-func (fact ApproveFact) DAOID() currencytypes.ContractID {
+func (fact RegisterFact) DAOID() currencytypes.ContractID {
 	return fact.daoID
 }
 
-func (fact ApproveFact) ProposeID() string {
+func (fact RegisterFact) ProposeID() string {
 	return fact.proposeID
 }
 
-func (fact ApproveFact) Target() base.Address {
-	return fact.target
+func (fact RegisterFact) Approved() base.Address {
+	return fact.approved
 }
 
-func (fact ApproveFact) Currency() currencytypes.CurrencyID {
+func (fact RegisterFact) Currency() currencytypes.CurrencyID {
 	return fact.currency
 }
 
-func (fact ApproveFact) Addresses() ([]base.Address, error) {
-	as := make([]base.Address, 3)
+func (fact RegisterFact) Addresses() ([]base.Address, error) {
+	as := make([]base.Address, 2)
 
 	as[0] = fact.sender
 	as[1] = fact.contract
-	as[2] = fact.target
+
+	if fact.approved != nil {
+		as = append(as, fact.approved)
+	}
 
 	return as, nil
 }
 
-type Approve struct {
+type Register struct {
 	common.BaseOperation
 }
 
-func NewApprove(fact ApproveFact) (Approve, error) {
-	return Approve{BaseOperation: common.NewBaseOperation(ApproveHint, fact)}, nil
+func NewRegister(fact RegisterFact) (Register, error) {
+	return Register{BaseOperation: common.NewBaseOperation(RegisterHint, fact)}, nil
 }
 
-func (op *Approve) HashSign(priv base.Privatekey, networkID base.NetworkID) error {
+func (op *Register) HashSign(priv base.Privatekey, networkID base.NetworkID) error {
 	err := op.Sign(priv, networkID)
 	if err != nil {
 		return err

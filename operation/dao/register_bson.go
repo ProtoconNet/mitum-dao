@@ -10,7 +10,7 @@ import (
 	"github.com/ProtoconNet/mitum2/util/valuehash"
 )
 
-func (fact ApproveFact) MarshalBSON() ([]byte, error) {
+func (fact RegisterFact) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
 			"_hint":     fact.Hint().String(),
@@ -18,7 +18,7 @@ func (fact ApproveFact) MarshalBSON() ([]byte, error) {
 			"contract":  fact.contract,
 			"daoid":     fact.daoID,
 			"proposeid": fact.proposeID,
-			"target":    fact.target,
+			"approved":  fact.approved,
 			"currency":  fact.currency,
 			"hash":      fact.BaseFact.Hash().String(),
 			"token":     fact.BaseFact.Token(),
@@ -26,18 +26,18 @@ func (fact ApproveFact) MarshalBSON() ([]byte, error) {
 	)
 }
 
-type ApproveFactBSONUnmarshaler struct {
+type RegisterFactBSONUnmarshaler struct {
 	Hint      string `bson:"_hint"`
 	Sender    string `bson:"sender"`
 	Contract  string `bson:"contract"`
 	DAOID     string `bson:"daoid"`
 	ProposeID string `bson:"proposeid"`
-	Target    string `bson:"target"`
+	Approved  string `bson:"approved"`
 	Currency  string `bson:"currency"`
 }
 
-func (fact *ApproveFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of ApproveFact")
+func (fact *RegisterFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
+	e := util.StringErrorFunc("failed to decode bson of RegisterFact")
 
 	var ubf common.BaseFactBSONUnmarshaler
 
@@ -48,7 +48,7 @@ func (fact *ApproveFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 	fact.BaseFact.SetHash(valuehash.NewBytesFromString(ubf.Hash))
 	fact.BaseFact.SetToken(ubf.Token)
 
-	var uf ApproveFactBSONUnmarshaler
+	var uf RegisterFactBSONUnmarshaler
 	if err := bson.Unmarshal(b, &uf); err != nil {
 		return e(err, "")
 	}
@@ -64,12 +64,12 @@ func (fact *ApproveFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		uf.Contract,
 		uf.DAOID,
 		uf.ProposeID,
-		uf.Target,
+		uf.Approved,
 		uf.Currency,
 	)
 }
 
-func (op Approve) MarshalBSON() ([]byte, error) {
+func (op Register) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
 			"_hint": op.Hint().String(),
@@ -79,8 +79,8 @@ func (op Approve) MarshalBSON() ([]byte, error) {
 		})
 }
 
-func (op *Approve) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of Approve")
+func (op *Register) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
+	e := util.StringErrorFunc("failed to decode bson of Register")
 
 	var ubo common.BaseOperation
 	if err := ubo.DecodeBSON(b, enc); err != nil {

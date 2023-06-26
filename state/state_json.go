@@ -80,44 +80,6 @@ func (p *ProposalStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 	return nil
 }
 
-type ApprovingListStateValueJSONMarshaler struct {
-	hint.BaseHinter
-	Accounts []base.Address `json:"accounts"`
-}
-
-func (ap ApprovingListStateValue) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(ApprovingListStateValueJSONMarshaler{
-		BaseHinter: ap.BaseHinter,
-		Accounts:   ap.Accounts,
-	})
-}
-
-type ApprovingListStateValueJSONUnmarshaler struct {
-	Accounts []string `json:"accounts"`
-}
-
-func (ap *ApprovingListStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of ApprovingListStateValue")
-
-	var u ApprovingListStateValueJSONUnmarshaler
-	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
-	}
-
-	acc := make([]base.Address, len(u.Accounts))
-	for i, ba := range u.Accounts {
-		ac, err := base.DecodeAddress(ba, enc)
-		if err != nil {
-			return e(err, "")
-		}
-		acc[i] = ac
-
-	}
-	ap.Accounts = acc
-
-	return nil
-}
-
 type RegisterInfoJSONMarshaler struct {
 	hint.BaseHinter
 	Account    base.Address   `json:"account"`

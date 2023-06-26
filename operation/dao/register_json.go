@@ -9,44 +9,44 @@ import (
 	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
 )
 
-type ApproveFactJSONMarshaler struct {
+type RegisterFactJSONMarshaler struct {
 	base.BaseFactJSONMarshaler
 	Owner     base.Address             `json:"sender"`
 	Contract  base.Address             `json:"contract"`
 	DAOID     currencytypes.ContractID `json:"daoid"`
 	ProposeID string                   `json:"proposeid"`
-	Target    base.Address             `json:"target"`
+	Approved  base.Address             `json:"approved"`
 	Quorum    types.PercentRatio       `json:"quorum"`
 
 	Currency currencytypes.CurrencyID `json:"currency"`
 }
 
-func (fact ApproveFact) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(ApproveFactJSONMarshaler{
+func (fact RegisterFact) MarshalJSON() ([]byte, error) {
+	return util.MarshalJSON(RegisterFactJSONMarshaler{
 		BaseFactJSONMarshaler: fact.BaseFact.JSONMarshaler(),
 		Owner:                 fact.sender,
 		Contract:              fact.contract,
 		DAOID:                 fact.daoID,
 		ProposeID:             fact.proposeID,
-		Target:                fact.target,
+		Approved:              fact.approved,
 		Currency:              fact.currency,
 	})
 }
 
-type ApproveFactJSONUnMarshaler struct {
+type RegisterFactJSONUnMarshaler struct {
 	base.BaseFactJSONUnmarshaler
 	Owner     string `json:"sender"`
 	Contract  string `json:"contract"`
 	DAOID     string `json:"daoid"`
 	ProposeID string `json:"proposeid"`
-	Target    string `json:"target"`
+	Approved  string `json:"approved"`
 	Currency  string `json:"currency"`
 }
 
-func (fact *ApproveFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of ApproveFact")
+func (fact *RegisterFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+	e := util.StringErrorFunc("failed to decode json of RegisterFact")
 
-	var uf ApproveFactJSONUnMarshaler
+	var uf RegisterFactJSONUnMarshaler
 	if err := enc.Unmarshal(b, &uf); err != nil {
 		return e(err, "")
 	}
@@ -58,23 +58,23 @@ func (fact *ApproveFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		uf.Contract,
 		uf.DAOID,
 		uf.ProposeID,
-		uf.Target,
+		uf.Approved,
 		uf.Currency,
 	)
 }
 
-type ApproveMarshaler struct {
+type RegisterMarshaler struct {
 	common.BaseOperationJSONMarshaler
 }
 
-func (op Approve) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(ApproveMarshaler{
+func (op Register) MarshalJSON() ([]byte, error) {
+	return util.MarshalJSON(RegisterMarshaler{
 		BaseOperationJSONMarshaler: op.BaseOperation.JSONMarshaler(),
 	})
 }
 
-func (op *Approve) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of Approve")
+func (op *Register) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+	e := util.StringErrorFunc("failed to decode json of Register")
 
 	var ubo common.BaseOperation
 	if err := ubo.DecodeJSON(b, enc); err != nil {

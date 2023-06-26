@@ -10,28 +10,28 @@ import (
 	"github.com/ProtoconNet/mitum2/util"
 )
 
-type ApproveCommand struct {
+type RegisterCommand struct {
 	baseCommand
 	OperationFlags
 	Sender    AddressFlag    `arg:"" name:"sender" help:"sender address" required:"true"`
 	Contract  AddressFlag    `arg:"" name:"contract" help:"contract address of credential" required:"true"`
 	DAO       ContractIDFlag `arg:"" name:"dao-id" help:"dao id" required:"true"`
 	ProposeID string         `arg:"" name:"propose-id" help:"propose id" required:"true"`
-	Target    AddressFlag    `arg:"" name:"target" help:"target address to approve" required:"true"`
 	Currency  CurrencyIDFlag `arg:"" name:"currency-id" help:"currency id" required:"true"`
+	Approved  AddressFlag    `name:"approved" help:"target address to approve"`
 	sender    base.Address
 	contract  base.Address
-	target    base.Address
+	approved  base.Address
 }
 
-func NewApproveCommand() ApproveCommand {
+func NewRegisterCommand() RegisterCommand {
 	cmd := NewbaseCommand()
-	return ApproveCommand{
+	return RegisterCommand{
 		baseCommand: *cmd,
 	}
 }
 
-func (cmd *ApproveCommand) Run(pctx context.Context) error { // nolint:dupl
+func (cmd *RegisterCommand) Run(pctx context.Context) error { // nolint:dupl
 	if _, err := cmd.prepare(pctx); err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func (cmd *ApproveCommand) Run(pctx context.Context) error { // nolint:dupl
 	return nil
 }
 
-func (cmd *ApproveCommand) parseFlags() error {
+func (cmd *RegisterCommand) parseFlags() error {
 	if err := cmd.OperationFlags.IsValid(nil); err != nil {
 		return err
 	}
@@ -70,29 +70,33 @@ func (cmd *ApproveCommand) parseFlags() error {
 	}
 	cmd.contract = contract
 
-	target, err := cmd.Target.Encode(enc)
-	if err != nil {
-		return errors.Wrapf(err, "invalid target account format, %q", cmd.Target.String())
+	if cmd.Approved.s != "" {
+		ap, err := cmd.Approved.Encode(enc)
+		if err != nil {
+			return errors.Wrapf(err, "invalid approved account format, %q", cmd.Approved.String())
+		}
+		cmd.approved = ap
+	} else {
+		cmd.approved = nil
 	}
-	cmd.target = target
 
 	return nil
 }
 
-func (cmd *ApproveCommand) createOperation() (base.Operation, error) { // nolint:dupl}
-	e := util.StringErrorFunc("failed to create approve operation")
+func (cmd *RegisterCommand) createOperation() (base.Operation, error) { // nolint:dupl}
+	e := util.StringErrorFunc("failed to create register operation")
 
-	fact := dao.NewApproveFact(
+	fact := dao.NewRegisterFact(
 		[]byte(cmd.Token),
 		cmd.sender,
 		cmd.contract,
 		cmd.DAO.ID,
 		cmd.ProposeID,
-		cmd.target,
+		cmd.approved,
 		cmd.Currency.CID,
 	)
 
-	op, err := dao.NewApprove(fact)
+	op, err := dao.NewRegister(fact)
 	if err != nil {
 		return nil, e(err, "")
 	}
