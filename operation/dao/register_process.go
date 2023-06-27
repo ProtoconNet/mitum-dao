@@ -154,26 +154,35 @@ func (opp *RegisterProcessor) PreProcess(
 						}
 					}
 				} else {
-					return nil, base.NewBaseOperationProcessReasonError("already registered sender, %q", fact.Sender()), nil
+					for _, acc := range info.ApprovedBy {
+						if acc.Equal(fact.Sender()) {
+							return nil, base.NewBaseOperationProcessReasonError("already registered account, %q", fact.Sender()), nil
+						}
+					}
 				}
 			}
 		}
 	}
 
-	if fact.Approved() != nil {
-		switch st, found, err := getStateFunc(state.StateKeyApprovingList(fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender())); {
-		case err != nil:
-			return nil, base.NewBaseOperationProcessReasonError("failed to find approving list, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
-		case found:
-			approving, err := state.StateApprovingListValue(st)
-			if err != nil {
-				return nil, base.NewBaseOperationProcessReasonError("failed to find approving list value, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
-			}
+	switch st, found, err := getStateFunc(state.StateKeyApprovingList(fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender())); {
+	case err != nil:
+		return nil, base.NewBaseOperationProcessReasonError("failed to find approving list, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
+	case found:
+		approving, err := state.StateApprovingListValue(st)
+		if err != nil {
+			return nil, base.NewBaseOperationProcessReasonError("failed to find approving list value, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
+		}
 
-			for _, acc := range approving {
-				if acc.Equal(fact.Approved()) {
-					return nil, base.NewBaseOperationProcessReasonError("already approved account, %q approved by %q", fact.Approved(), fact.Sender()), nil
-				}
+		var target base.Address
+		if fact.Approved() != nil {
+			target = fact.Approved()
+		} else {
+			target = fact.Sender()
+		}
+
+		for _, acc := range approving {
+			if acc.Equal(target) {
+				return nil, base.NewBaseOperationProcessReasonError("already approved account, %q approved by %q", target, fact.Sender()), nil
 			}
 		}
 	}
@@ -207,25 +216,26 @@ func (opp *RegisterProcessor) Process(
 			return nil, base.NewBaseOperationProcessReasonError("failed to find register list value, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
 		}
 
+		var target base.Address
 		if fact.Approved() != nil {
-			for i, info := range registers {
-				if info.Account.Equal(fact.Approved()) {
-					accs := info.ApprovedBy
-					accs = append(accs, fact.Sender())
-
-					registers = []state.RegisterInfo{
-						state.NewRegisterInfo(fact.Approved(), accs),
-					}
-
-					break
-				}
-
-				if i == len(registers)-1 {
-					registers = append(registers, state.NewRegisterInfo(fact.Approved(), []base.Address{fact.Sender()}))
-				}
-			}
+			target = fact.Approved()
 		} else {
-			registers = append(registers, state.NewRegisterInfo(fact.Sender(), []base.Address{}))
+			target = fact.Sender()
+		}
+
+		for i, info := range registers {
+			if info.Account.Equal(target) {
+				accs := info.ApprovedBy
+				accs = append(accs, fact.Sender())
+
+				registers[i] = state.NewRegisterInfo(target, accs)
+
+				break
+			}
+
+			if i == len(registers)-1 {
+				registers = append(registers, state.NewRegisterInfo(target, []base.Address{fact.Sender()}))
+			}
 		}
 
 		sts[0] = currencystate.NewStateMergeValue(
@@ -237,7 +247,7 @@ func (opp *RegisterProcessor) Process(
 		if fact.Approved() != nil {
 			registers[0] = state.NewRegisterInfo(fact.Approved(), []base.Address{fact.Sender()})
 		} else {
-			registers[0] = state.NewRegisterInfo(fact.Sender(), []base.Address{})
+			registers[0] = state.NewRegisterInfo(fact.Sender(), []base.Address{fact.Sender()})
 		}
 		sts[0] = currencystate.NewStateMergeValue(
 			st.Key(),
@@ -254,17 +264,28 @@ func (opp *RegisterProcessor) Process(
 			return nil, base.NewBaseOperationProcessReasonError("failed to find approving list value, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
 		}
 
-		approving = append(approving, fact.Approved())
+		if fact.Approved() != nil {
+			approving = append(approving, fact.Approved())
+		} else {
+			approving = append(approving, fact.Sender())
+		}
 
 		sts[1] = currencystate.NewStateMergeValue(
 			st.Key(),
 			state.NewApprovingListStateValue(approving),
 		)
 	default:
-		sts[1] = currencystate.NewStateMergeValue(
-			st.Key(),
-			state.NewApprovingListStateValue([]base.Address{fact.Approved()}),
-		)
+		if fact.Approved() != nil {
+			sts[1] = currencystate.NewStateMergeValue(
+				st.Key(),
+				state.NewApprovingListStateValue([]base.Address{fact.Approved()}),
+			)
+		} else {
+			sts[1] = currencystate.NewStateMergeValue(
+				st.Key(),
+				state.NewApprovingListStateValue([]base.Address{fact.Sender()}),
+			)
+		}
 	}
 
 	currencyPolicy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)
