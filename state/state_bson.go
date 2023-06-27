@@ -88,6 +88,16 @@ func (p *ProposalStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 	return nil
 }
 
+func (r RegisterInfo) MarshalBSON() ([]byte, error) {
+	return bsonenc.Marshal(
+		bson.M{
+			"_hint":       r.Hint().String(),
+			"account":     r.Account,
+			"approved_by": r.ApprovedBy,
+		},
+	)
+}
+
 func (ap ApprovingListStateValue) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
@@ -129,16 +139,6 @@ func (ap *ApprovingListStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) er
 	ap.Accounts = acc
 
 	return nil
-}
-
-func (r RegisterInfo) MarshalBSON() ([]byte, error) {
-	return bsonenc.Marshal(
-		bson.M{
-			"_hint":       r.Hint().String(),
-			"account":     r.Account,
-			"approved_by": r.ApprovedBy,
-		},
-	)
 }
 
 type RegisterInfoBSONUnmarshaler struct {

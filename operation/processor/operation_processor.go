@@ -245,6 +245,13 @@ func (opr *OperationProcessor) checkDuplication(op base.Operation) error {
 		}
 		did = fact.Sender().String()
 		didtype = DuplicationTypeSender
+	case dao.Register:
+		fact, ok := t.Fact().(dao.RegisterFact)
+		if !ok {
+			return errors.Errorf("expected RegisterFact, not %T", t.Fact())
+		}
+		did = fact.Sender().String()
+		didtype = DuplicationTypeSender
 	default:
 		return nil
 	}
@@ -323,7 +330,8 @@ func (opr *OperationProcessor) getNewProcessor(op base.Operation) (base.Operatio
 		currency.CurrencyPolicyUpdater,
 		currency.SuffrageInflation,
 		dao.CreateDAO,
-		dao.Propose:
+		dao.Propose,
+		dao.Register:
 		return nil, false, errors.Errorf("%T needs SetProcessor", t)
 	default:
 		return nil, false, nil
