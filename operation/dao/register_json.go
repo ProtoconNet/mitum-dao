@@ -3,7 +3,6 @@ package dao
 import (
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
-	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
@@ -16,9 +15,7 @@ type RegisterFactJSONMarshaler struct {
 	DAOID     currencytypes.ContractID `json:"daoid"`
 	ProposeID string                   `json:"proposeid"`
 	Approved  base.Address             `json:"approved"`
-	Quorum    types.PercentRatio       `json:"quorum"`
-
-	Currency currencytypes.CurrencyID `json:"currency"`
+	Currency  currencytypes.CurrencyID `json:"currency"`
 }
 
 func (fact RegisterFact) MarshalJSON() ([]byte, error) {
