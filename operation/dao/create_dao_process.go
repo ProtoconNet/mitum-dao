@@ -99,6 +99,10 @@ func (opp *CreateDAOProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("dao already exists, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
+	if err := currencystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.Currency()), getStateFunc); err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("currency doesn't exist, %q: %w", fact.Currency(), err), nil
+	}
+
 	if err := currencystate.CheckFactSignsByState(fact.Sender(), op.Signs(), getStateFunc); err != nil {
 		return ctx, base.NewBaseOperationProcessReasonError("invalid signing: %w", err), nil
 	}
