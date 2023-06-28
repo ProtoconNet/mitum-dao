@@ -24,6 +24,7 @@ type GovernanceCalldataCommand struct {
 	Fee              CurrencyAmountFlag `name:"fee" help:"fee to propose"`
 	Delaytime        uint64             `name:"delaytime" help:"delaytime"`
 	Snaptime         uint64             `name:"snaptime" help:"snaptime"`
+	Voteperiod       uint64             `name:"voteperiod" help:"voteperiod"`
 	Timelock         uint64             `name:"timelock" help:"timelock"`
 	Turnout          uint               `name:"turnout" help:"turnout"`
 	Quorum           uint               `name:"quorum" help:"quorum"`
@@ -50,6 +51,7 @@ type ProposeCommand struct {
 	Option    string         `arg:"" name:"option" help:"propose option; crypto | biz" required:"true"`
 	ProposeID string         `arg:"" name:"propose-id" help:"propose id" required:"true"`
 	StartTime uint64         `arg:"" name:"starttime" help:"start time to register" required:"true"`
+	Options   uint8          `arg:"" name:"options" help:"number of vote options" required:"true"`
 	CryptoProposalCommand
 	BizProposalCommand
 	Currency CurrencyIDFlag `arg:"" name:"currency-id" help:"currency id" required:"true"`
@@ -145,7 +147,7 @@ func (cmd *ProposeCommand) parseFlags() error {
 			policy := types.NewPolicy(
 				cmd.VotingPowerToken.CID,
 				fee, threshold, whitelist,
-				cmd.Delaytime, cmd.Snaptime, cmd.Timelock,
+				cmd.Delaytime, cmd.Snaptime, cmd.Voteperiod, cmd.Timelock,
 				types.PercentRatio(cmd.Turnout), types.PercentRatio(cmd.Quorum),
 			)
 			if err := policy.IsValid(nil); err != nil {
@@ -166,7 +168,7 @@ func (cmd *ProposeCommand) parseFlags() error {
 			return errors.Errorf("invalid calldata option, %s", cmd.CalldataOption)
 		}
 	} else if cmd.Option == types.ProposalBiz {
-		proposal := types.NewBizProposal(cmd.StartTime, cmd.URL, cmd.Hash)
+		proposal := types.NewBizProposal(cmd.StartTime, cmd.URL, cmd.Hash, cmd.Options)
 		if err := proposal.IsValid(nil); err != nil {
 			return err
 		}

@@ -24,6 +24,7 @@ type CreateDAOCommand struct {
 	Fee              CurrencyAmountFlag `arg:"" name:"fee" help:"fee to propose" required:"true"`
 	Delaytime        uint64             `arg:"" name:"delaytime" help:"delaytime" required:"true"`
 	Snaptime         uint64             `arg:"" name:"snaptime" help:"snaptime" required:"true"`
+	Voteperiod       uint64             `arg:"" name:"voteperiod" help:"voteperiod" required:"true"`
 	Timelock         uint64             `arg:"" name:"timelock" help:"timelock" required:"true"`
 	Turnout          uint               `arg:"" name:"turnout" help:"turnout" required:"true"`
 	Quorum           uint               `arg:"" name:"quorum" help:"quorum" required:"true"`
@@ -113,6 +114,7 @@ func (cmd *CreateDAOCommand) createOperation() (base.Operation, error) { // noli
 		cmd.whitelist,
 		cmd.Delaytime,
 		cmd.Snaptime,
+		cmd.Voteperiod,
 		cmd.Timelock,
 		types.PercentRatio(cmd.Turnout),
 		types.PercentRatio(cmd.Quorum),

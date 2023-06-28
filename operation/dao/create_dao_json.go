@@ -23,6 +23,7 @@ type CreateDAOFactJSONMarshaler struct {
 	Whitelist        types.Whitelist          `json:"whitelist"`
 	Delaytime        uint64                   `json:"delaytime"`
 	Snaptime         uint64                   `json:"snaptime"`
+	Voteperiod       uint64                   `json:"voteperiod"`
 	Timelock         uint64                   `json:"timelock"`
 	Turnout          types.PercentRatio       `json:"turnout"`
 	Quorum           types.PercentRatio       `json:"quorum"`
@@ -43,6 +44,7 @@ func (fact CreateDAOFact) MarshalJSON() ([]byte, error) {
 		Whitelist:             fact.whitelist,
 		Delaytime:             fact.delaytime,
 		Snaptime:              fact.snaptime,
+		Voteperiod:            fact.voteperiod,
 		Timelock:              fact.timelock,
 		Turnout:               fact.turnout,
 		Quorum:                fact.quorum,
@@ -62,6 +64,7 @@ type CreateDAOFactJSONUnMarshaler struct {
 	Whitelist        json.RawMessage `json:"whitelist"`
 	Delaytime        uint64          `json:"delaytime"`
 	Snaptime         uint64          `json:"snaptime"`
+	Voteperiod       uint64          `json:"voteperiod"`
 	Timelock         uint64          `json:"timelock"`
 	Turnout          uint            `json:"turnout"`
 	Quorum           uint            `json:"quorum"`
@@ -89,6 +92,7 @@ func (fact *CreateDAOFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		uf.Whitelist,
 		uf.Delaytime,
 		uf.Snaptime,
+		uf.Voteperiod,
 		uf.Timelock,
 		uf.Turnout,
 		uf.Quorum,

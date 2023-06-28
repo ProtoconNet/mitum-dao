@@ -47,6 +47,7 @@ type Proposal interface {
 	Type() string
 	Bytes() []byte
 	StartTime() uint64
+	Options() uint8
 	Addresses() []base.Address
 }
 
@@ -66,6 +67,10 @@ func NewCryptoProposal(starttime uint64, calldata Calldata) CryptoProposal {
 
 func (CryptoProposal) Type() string {
 	return ProposalCrypto
+}
+
+func (CryptoProposal) Options() uint8 {
+	return 3
 }
 
 func (p CryptoProposal) Bytes() []byte {
@@ -101,9 +106,10 @@ type BizProposal struct {
 	starttime uint64
 	url       URL
 	hash      string
+	options   uint8
 }
 
-func NewBizProposal(starttime uint64, url URL, hash string) BizProposal {
+func NewBizProposal(starttime uint64, url URL, hash string, options uint8) BizProposal {
 	return BizProposal{
 		BaseHinter: hint.NewBaseHinter(BizProposalHint),
 		starttime:  starttime,
@@ -116,8 +122,12 @@ func (BizProposal) Type() string {
 	return ProposalBiz
 }
 
+func (p BizProposal) Options() uint8 {
+	return p.options
+}
+
 func (p BizProposal) Bytes() []byte {
-	return util.ConcatBytesSlice(util.Uint64ToBytes(p.starttime), p.url.Bytes(), []byte(p.hash))
+	return util.ConcatBytesSlice(util.Uint64ToBytes(p.starttime), p.url.Bytes(), []byte(p.hash), util.Uint8ToBytes(p.options))
 }
 
 func (p BizProposal) StartTime() uint64 {

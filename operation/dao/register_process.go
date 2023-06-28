@@ -105,15 +105,21 @@ func (opp *RegisterProcessor) PreProcess(
 
 	st, err = currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposeID()), "key of proposal", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), err), nil
 	}
 
-	proposal, err := state.StateProposalValue(st)
+	p, err := state.StateProposalValue(st)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal value not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal value not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), err), nil
 	}
 
-	starttime := (*proposal).StartTime()
+	if !p.Active {
+		return nil, base.NewBaseOperationProcessReasonError("already closed proposal, %s-%s-%s", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
+	}
+
+	proposal := p.Proposal
+
+	starttime := proposal.StartTime()
 	endtime := starttime + delaytime
 
 	blockmap, found, err := opp.getLastBlockFunc()
@@ -131,11 +137,11 @@ func (opp *RegisterProcessor) PreProcess(
 
 	switch st, found, err := getStateFunc(state.StateKeyRegisterList(fact.Contract(), fact.DAOID(), fact.ProposeID())); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find register list, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find register list, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), err), nil
 	case found:
 		registers, err := state.StateRegisterListValue(st)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find register list value, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find register list value, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), err), nil
 		}
 
 		var target base.Address
@@ -146,15 +152,15 @@ func (opp *RegisterProcessor) PreProcess(
 		}
 
 		for _, info := range registers {
-			if info.Account.Equal(target) {
+			if info.Account().Equal(target) {
 				if fact.Approved() != nil {
-					for _, acc := range info.ApprovedBy {
+					for _, acc := range info.ApprovedBy() {
 						if acc.Equal(fact.Sender()) {
 							return nil, base.NewBaseOperationProcessReasonError("sender already approve the account, %q approved by %q", fact.Approved(), fact.Sender()), nil
 						}
 					}
 				} else {
-					for _, acc := range info.ApprovedBy {
+					for _, acc := range info.ApprovedBy() {
 						if acc.Equal(fact.Sender()) {
 							return nil, base.NewBaseOperationProcessReasonError("already registered account, %q", fact.Sender()), nil
 						}
@@ -166,11 +172,11 @@ func (opp *RegisterProcessor) PreProcess(
 
 	switch st, found, err := getStateFunc(state.StateKeyApprovingList(fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender())); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find approving list, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find approving list, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender(), err), nil
 	case found:
 		approving, err := state.StateApprovingListValue(st)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find approving list value, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find approving list value, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender(), err), nil
 		}
 
 		var target base.Address
@@ -209,11 +215,11 @@ func (opp *RegisterProcessor) Process(
 
 	switch st, found, err := getStateFunc(state.StateKeyRegisterList(fact.Contract(), fact.DAOID(), fact.ProposeID())); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find register list, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find register list, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), err), nil
 	case found:
 		registers, err := state.StateRegisterListValue(st)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find register list value, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find register list value, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), err), nil
 		}
 
 		var target base.Address
@@ -224,8 +230,8 @@ func (opp *RegisterProcessor) Process(
 		}
 
 		for i, info := range registers {
-			if info.Account.Equal(target) {
-				accs := info.ApprovedBy
+			if info.Account().Equal(target) {
+				accs := info.ApprovedBy()
 				accs = append(accs, fact.Sender())
 
 				registers[i] = state.NewRegisterInfo(target, accs)
@@ -261,7 +267,7 @@ func (opp *RegisterProcessor) Process(
 	case found:
 		approving, err := state.StateApprovingListValue(st)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find approving list value, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find approving list value, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender(), err), nil
 		}
 
 		if fact.Approved() != nil {

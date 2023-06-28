@@ -178,6 +178,7 @@ func POperationProcessorsMap(ctx context.Context) (context.Context, error) {
 	opr.SetProcessor(dao.CreateDAOHint, dao.NewCreateDAOProcessor())
 	opr.SetProcessor(dao.ProposeHint, dao.NewProposeProcessor())
 	opr.SetProcessor(dao.RegisterHint, dao.NewRegisterProcessor(db.LastBlockMap))
+	opr.SetProcessor(dao.SnapHint, dao.NewSnapProcessor(db.LastBlockMap))
 
 	_ = set.Add(mitumcurrency.CreateAccountsHint, func(height base.Height) (base.OperationProcessor, error) {
 		return opr.New(
@@ -280,6 +281,16 @@ func POperationProcessorsMap(ctx context.Context) (context.Context, error) {
 	})
 
 	_ = set.Add(dao.RegisterHint, func(height base.Height) (base.OperationProcessor, error) {
+		return opr.New(
+			height,
+			db.State,
+			db.LastBlockMap,
+			nil,
+			nil,
+		)
+	})
+
+	_ = set.Add(dao.SnapHint, func(height base.Height) (base.OperationProcessor, error) {
 		return opr.New(
 			height,
 			db.State,

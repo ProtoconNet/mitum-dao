@@ -80,22 +80,23 @@ var PolicyHint = hint.MustNewHint("mitum-dao-policy-v0.0.1")
 
 type Policy struct {
 	hint.BaseHinter
-	token     currencytypes.CurrencyID
-	threshold currencytypes.Amount
-	fee       currencytypes.Amount
-	whitelist Whitelist
-	delaytime uint64
-	snaptime  uint64
-	timelock  uint64
-	turnout   PercentRatio
-	quorum    PercentRatio
+	token      currencytypes.CurrencyID
+	threshold  currencytypes.Amount
+	fee        currencytypes.Amount
+	whitelist  Whitelist
+	delaytime  uint64
+	snaptime   uint64
+	voteperiod uint64
+	timelock   uint64
+	turnout    PercentRatio
+	quorum     PercentRatio
 }
 
 func NewPolicy(
 	token currencytypes.CurrencyID,
 	fee, threshold currencytypes.Amount,
 	whitelist Whitelist,
-	delaytime, snaptime, timelock uint64,
+	delaytime, snaptime, voteperiod, timelock uint64,
 	turnout, quorum PercentRatio,
 ) Policy {
 	return Policy{
@@ -106,6 +107,7 @@ func NewPolicy(
 		whitelist:  whitelist,
 		delaytime:  delaytime,
 		snaptime:   snaptime,
+		voteperiod: voteperiod,
 		timelock:   timelock,
 		turnout:    turnout,
 		quorum:     quorum,
@@ -120,6 +122,7 @@ func (po Policy) Bytes() []byte {
 		po.whitelist.Bytes(),
 		util.Uint64ToBytes(po.delaytime),
 		util.Uint64ToBytes(po.snaptime),
+		util.Uint64ToBytes(po.voteperiod),
 		util.Uint64ToBytes(po.timelock),
 		po.turnout.Bytes(),
 		po.quorum.Bytes(),
@@ -166,6 +169,10 @@ func (po Policy) DelayTime() uint64 {
 
 func (po Policy) SnapTime() uint64 {
 	return po.snaptime
+}
+
+func (po Policy) VotePeriod() uint64 {
+	return po.voteperiod
 }
 
 func (po Policy) TimeLock() uint64 {

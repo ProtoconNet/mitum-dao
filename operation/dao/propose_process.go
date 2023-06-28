@@ -164,7 +164,7 @@ func (opp *ProposeProcessor) Process(
 	sts = append(sts,
 		currencystate.NewStateMergeValue(
 			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposeID()),
-			state.NewProposalStateValue(fact.Proposal()),
+			state.NewProposalStateValue(true, fact.Proposal()),
 		),
 	)
 

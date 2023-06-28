@@ -24,6 +24,7 @@ func (fact CreateDAOFact) MarshalBSON() ([]byte, error) {
 			"whitelist":          fact.whitelist,
 			"delaytime":          fact.delaytime,
 			"snaptime":           fact.snaptime,
+			"voteperiod":         fact.voteperiod,
 			"timelock":           fact.timelock,
 			"turnout":            fact.turnout,
 			"quorum":             fact.quorum,
@@ -46,6 +47,7 @@ type CreateDAOFactBSONUnmarshaler struct {
 	Whitelist        bson.Raw `bson:"whitelist"`
 	Delaytime        uint64   `bson:"delaytime"`
 	Snaptime         uint64   `bson:"snaptime"`
+	Voteperiod       uint64   `bson:"voteperiod"`
 	Timelock         uint64   `bson:"timelock"`
 	Turnout          uint     `bson:"turnout"`
 	Quorum           uint     `bson:"quorum"`
@@ -86,6 +88,7 @@ func (fact *CreateDAOFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		uf.Whitelist,
 		uf.Delaytime,
 		uf.Snaptime,
+		uf.Voteperiod,
 		uf.Timelock,
 		uf.Turnout,
 		uf.Quorum,
