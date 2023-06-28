@@ -140,6 +140,10 @@ func (opp *SnapProcessor) PreProcess(
 	votingstart := starttime + delaytime + registerperiod + snaptime
 	votingend := starttime + delaytime + registerperiod + snaptime + voteperiod
 
+	if votingstart <= blocktime && blocktime < votingend {
+		return nil, base.NewBaseOperationProcessReasonError("voting is still in progress, now voting start <= block(%d) < voting end", blocktime), nil
+	}
+
 	switch st, found, err := getStateFunc(state.StateKeySnapHistories(fact.Contract(), fact.DAOID(), fact.ProposeID())); {
 	case err != nil:
 		return nil, base.NewBaseOperationProcessReasonError("failed to find snap histories, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), err), nil
