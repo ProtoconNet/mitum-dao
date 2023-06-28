@@ -103,6 +103,7 @@ func (opp *SnapProcessor) PreProcess(
 	}
 
 	delaytime := design.Policy().DelayTime()
+	registerperiod := design.Policy().RegsiterPeriod()
 	snaptime := design.Policy().SnapTime()
 	voteperiod := design.Policy().VotePeriod()
 
@@ -132,12 +133,12 @@ func (opp *SnapProcessor) PreProcess(
 
 	blocktime := uint64(blockmap.Manifest().ProposedAt().Unix())
 
-	if blocktime < starttime+delaytime {
+	if blocktime < starttime+delaytime+registerperiod {
 		return nil, base.NewBaseOperationProcessReasonError("registration is still in progress, must in %d <= block(%d)", starttime+delaytime, blocktime), nil
 	}
 
-	votingstart := starttime + delaytime + snaptime
-	votingend := starttime + delaytime + snaptime + voteperiod
+	votingstart := starttime + delaytime + registerperiod + snaptime
+	votingend := starttime + delaytime + registerperiod + snaptime + voteperiod
 
 	switch st, found, err := getStateFunc(state.StateKeySnapHistories(fact.Contract(), fact.DAOID(), fact.ProposeID())); {
 	case err != nil:
@@ -188,6 +189,7 @@ func (opp *SnapProcessor) Process(
 	}
 
 	delaytime := design.Policy().DelayTime()
+	registerperiod := design.Policy().RegsiterPeriod()
 	snaptime := design.Policy().SnapTime()
 	voteperiod := design.Policy().VotePeriod()
 
@@ -217,8 +219,8 @@ func (opp *SnapProcessor) Process(
 
 	blocktime := uint64(blockmap.Manifest().ProposedAt().Unix())
 
-	votingstart := starttime + delaytime + snaptime
-	votingend := starttime + delaytime + snaptime + voteperiod
+	votingstart := starttime + delaytime + registerperiod + snaptime
+	votingend := starttime + delaytime + registerperiod + snaptime + voteperiod
 
 	var snaps []state.SnapHistory
 

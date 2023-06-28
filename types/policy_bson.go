@@ -43,33 +43,35 @@ func (wl *Whitelist) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 func (po Policy) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
-			"_hint":      po.Hint().String(),
-			"token":      po.token,
-			"threshold":  po.threshold,
-			"fee":        po.fee,
-			"whitelist":  po.whitelist,
-			"delaytime":  po.delaytime,
-			"snaptime":   po.snaptime,
-			"voteperiod": po.voteperiod,
-			"timelock":   po.timelock,
-			"turnout":    po.turnout,
-			"quorum":     po.quorum,
+			"_hint":          po.Hint().String(),
+			"token":          po.token,
+			"threshold":      po.threshold,
+			"fee":            po.fee,
+			"whitelist":      po.whitelist,
+			"delaytime":      po.delaytime,
+			"registerperiod": po.registerperiod,
+			"snaptime":       po.snaptime,
+			"voteperiod":     po.voteperiod,
+			"timelock":       po.timelock,
+			"turnout":        po.turnout,
+			"quorum":         po.quorum,
 		},
 	)
 }
 
 type PolicyBSONUnmarshaler struct {
-	Hint       string   `bson:"_hint"`
-	Token      string   `bson:"token"`
-	Threshold  bson.Raw `bson:"threshold"`
-	Fee        bson.Raw `bson:"fee"`
-	Whitelist  bson.Raw `bson:"whitelist"`
-	Delaytime  uint64   `bson:"delaytime"`
-	Snaptime   uint64   `bson:"snaptime"`
-	VotePeriod uint64   `bson:"voteperiod"`
-	Timelock   uint64   `bson:"timelock"`
-	Turnout    uint     `bson:"turnout"`
-	Quorum     uint     `bson:"quorum"`
+	Hint           string   `bson:"_hint"`
+	Token          string   `bson:"token"`
+	Threshold      bson.Raw `bson:"threshold"`
+	Fee            bson.Raw `bson:"fee"`
+	Whitelist      bson.Raw `bson:"whitelist"`
+	Delaytime      uint64   `bson:"delaytime"`
+	RegisterPeriod uint64   `bson:"registerperiod"`
+	Snaptime       uint64   `bson:"snaptime"`
+	VotePeriod     uint64   `bson:"voteperiod"`
+	Timelock       uint64   `bson:"timelock"`
+	Turnout        uint     `bson:"turnout"`
+	Quorum         uint     `bson:"quorum"`
 }
 
 func (po *Policy) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
@@ -91,6 +93,7 @@ func (po *Policy) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		upo.Fee,
 		upo.Whitelist,
 		upo.Delaytime,
+		upo.RegisterPeriod,
 		upo.Snaptime,
 		upo.VotePeriod,
 		upo.Timelock,

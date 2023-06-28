@@ -22,6 +22,7 @@ type CreateDAOFactJSONMarshaler struct {
 	Fee              currencytypes.Amount     `json:"fee"`
 	Whitelist        types.Whitelist          `json:"whitelist"`
 	Delaytime        uint64                   `json:"delaytime"`
+	Registerperiod   uint64                   `json:"registerperiod"`
 	Snaptime         uint64                   `json:"snaptime"`
 	Voteperiod       uint64                   `json:"voteperiod"`
 	Timelock         uint64                   `json:"timelock"`
@@ -43,6 +44,7 @@ func (fact CreateDAOFact) MarshalJSON() ([]byte, error) {
 		Fee:                   fact.fee,
 		Whitelist:             fact.whitelist,
 		Delaytime:             fact.delaytime,
+		Registerperiod:        fact.registerperiod,
 		Snaptime:              fact.snaptime,
 		Voteperiod:            fact.voteperiod,
 		Timelock:              fact.timelock,
@@ -63,6 +65,7 @@ type CreateDAOFactJSONUnMarshaler struct {
 	Fee              json.RawMessage `json:"fee"`
 	Whitelist        json.RawMessage `json:"whitelist"`
 	Delaytime        uint64          `json:"delaytime"`
+	Registerperiod   uint64          `json:"registerperiod"`
 	Snaptime         uint64          `json:"snaptime"`
 	Voteperiod       uint64          `json:"voteperiod"`
 	Timelock         uint64          `json:"timelock"`
@@ -91,6 +94,7 @@ func (fact *CreateDAOFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		uf.Fee,
 		uf.Whitelist,
 		uf.Delaytime,
+		uf.Registerperiod,
 		uf.Snaptime,
 		uf.Voteperiod,
 		uf.Timelock,

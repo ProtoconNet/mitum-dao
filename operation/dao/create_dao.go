@@ -26,6 +26,7 @@ type CreateDAOFact struct {
 	fee              currencytypes.Amount
 	whitelist        types.Whitelist
 	delaytime        uint64
+	registerperiod   uint64
 	snaptime         uint64
 	voteperiod       uint64
 	timelock         uint64
@@ -43,7 +44,7 @@ func NewCreateDAOFact(
 	votingPowerToken currencytypes.CurrencyID,
 	threshold, fee currencytypes.Amount,
 	whitelist types.Whitelist,
-	delaytime, snaptime, voteperiod, timelock uint64,
+	delaytime, registerperiod, snaptime, voteperiod, timelock uint64,
 	turnout, quorum types.PercentRatio,
 	currency currencytypes.CurrencyID,
 ) CreateDAOFact {
@@ -59,6 +60,7 @@ func NewCreateDAOFact(
 		fee:              fee,
 		whitelist:        whitelist,
 		delaytime:        delaytime,
+		registerperiod:   registerperiod,
 		snaptime:         snaptime,
 		voteperiod:       voteperiod,
 		timelock:         timelock,
@@ -90,6 +92,7 @@ func (fact CreateDAOFact) Bytes() []byte {
 		fact.threshold.Bytes(),
 		fact.whitelist.Bytes(),
 		util.Uint64ToBytes(fact.delaytime),
+		util.Uint64ToBytes(fact.registerperiod),
 		util.Uint64ToBytes(fact.snaptime),
 		util.Uint64ToBytes(fact.voteperiod),
 		util.Uint64ToBytes(fact.timelock),
@@ -164,6 +167,10 @@ func (fact CreateDAOFact) Whitelist() types.Whitelist {
 
 func (fact CreateDAOFact) DelayTime() uint64 {
 	return fact.delaytime
+}
+
+func (fact CreateDAOFact) RegisterPeriod() uint64 {
+	return fact.registerperiod
 }
 
 func (fact CreateDAOFact) SnapTime() uint64 {

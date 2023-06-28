@@ -102,6 +102,7 @@ func (opp *RegisterProcessor) PreProcess(
 	}
 
 	delaytime := design.Policy().DelayTime()
+	registerperiod := design.Policy().RegsiterPeriod()
 
 	st, err = currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposeID()), "key of proposal", getStateFunc)
 	if err != nil {
@@ -119,8 +120,8 @@ func (opp *RegisterProcessor) PreProcess(
 
 	proposal := p.Proposal
 
-	starttime := proposal.StartTime()
-	endtime := starttime + delaytime
+	starttime := proposal.StartTime() + delaytime
+	endtime := starttime + delaytime + registerperiod
 
 	blockmap, found, err := opp.getLastBlockFunc()
 	if err != nil {

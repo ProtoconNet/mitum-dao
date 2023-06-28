@@ -11,7 +11,7 @@ import (
 func (fact *CreateDAOFact) unpack(enc encoder.Encoder,
 	sa, ca, did, op, tk string,
 	bth, bf, bw []byte,
-	dt, st, vp, tl uint64,
+	dt, rp, st, vp, tl uint64,
 	to, qou uint,
 	cid string,
 ) error {
@@ -22,6 +22,7 @@ func (fact *CreateDAOFact) unpack(enc encoder.Encoder,
 	fact.option = types.DAOOption(op)
 	fact.votingPowerToken = currencytypes.CurrencyID(tk)
 	fact.delaytime = dt
+	fact.registerperiod = rp
 	fact.snaptime = st
 	fact.voteperiod = vp
 	fact.timelock = tl

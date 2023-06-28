@@ -35,7 +35,7 @@ func (wl *Whitelist) unpack(enc encoder.Encoder, ht hint.Hint, at bool, bacs []b
 func (po *Policy) unpack(enc encoder.Encoder, ht hint.Hint,
 	cr string,
 	bth, bf, bw []byte,
-	dt, st, vp, tl uint64,
+	dt, rp, st, vp, tl uint64,
 	to, qou uint,
 ) error {
 	e := util.StringErrorFunc("failed to decode bson of Policy")
@@ -43,6 +43,7 @@ func (po *Policy) unpack(enc encoder.Encoder, ht hint.Hint,
 	po.BaseHinter = hint.NewBaseHinter(ht)
 	po.token = currencytypes.CurrencyID(cr)
 	po.delaytime = dt
+	po.registerperiod = rp
 	po.snaptime = st
 	po.voteperiod = vp
 	po.timelock = tl

@@ -23,6 +23,7 @@ type GovernanceCalldataCommand struct {
 	Threshold        CurrencyAmountFlag `name:"threshold" help:"threshold to propose"`
 	Fee              CurrencyAmountFlag `name:"fee" help:"fee to propose"`
 	Delaytime        uint64             `name:"delaytime" help:"delaytime"`
+	Registerperiod   uint64             `name:"registerperiod" help:"registerperiod"`
 	Snaptime         uint64             `name:"snaptime" help:"snaptime"`
 	Voteperiod       uint64             `name:"voteperiod" help:"voteperiod"`
 	Timelock         uint64             `name:"timelock" help:"timelock"`
@@ -147,7 +148,7 @@ func (cmd *ProposeCommand) parseFlags() error {
 			policy := types.NewPolicy(
 				cmd.VotingPowerToken.CID,
 				fee, threshold, whitelist,
-				cmd.Delaytime, cmd.Snaptime, cmd.Voteperiod, cmd.Timelock,
+				cmd.Delaytime, cmd.Registerperiod, cmd.Snaptime, cmd.Voteperiod, cmd.Timelock,
 				types.PercentRatio(cmd.Turnout), types.PercentRatio(cmd.Quorum),
 			)
 			if err := policy.IsValid(nil); err != nil {

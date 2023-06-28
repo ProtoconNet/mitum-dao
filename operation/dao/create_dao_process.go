@@ -121,7 +121,11 @@ func (opp *CreateDAOProcessor) Process(
 		return nil, nil, e(nil, "expected CreateDAOFact, not %T", op.Fact())
 	}
 
-	policy := types.NewPolicy(fact.votingPowerToken, fact.fee, fact.threshold, fact.whitelist, fact.delaytime, fact.snaptime, fact.voteperiod, fact.timelock, fact.turnout, fact.quorum)
+	policy := types.NewPolicy(
+		fact.votingPowerToken, fact.fee, fact.threshold, fact.whitelist,
+		fact.delaytime, fact.registerperiod, fact.snaptime, fact.voteperiod,
+		fact.timelock, fact.turnout, fact.quorum,
+	)
 	if err := policy.IsValid(nil); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("invalid dao policy, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
