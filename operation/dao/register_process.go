@@ -235,13 +235,13 @@ func (opp *RegisterProcessor) Process(
 				accs := info.ApprovedBy()
 				accs = append(accs, fact.Sender())
 
-				registers[i] = state.NewRegisterInfo(target, accs)
+				registers[i] = types.NewRegisterInfo(target, accs)
 
 				break
 			}
 
 			if i == len(registers)-1 {
-				registers = append(registers, state.NewRegisterInfo(target, []base.Address{fact.Sender()}))
+				registers = append(registers, types.NewRegisterInfo(target, []base.Address{fact.Sender()}))
 			}
 		}
 
@@ -250,11 +250,11 @@ func (opp *RegisterProcessor) Process(
 			state.NewRegisterListStateValue(registers),
 		)
 	default:
-		registers := make([]state.RegisterInfo, 1)
+		registers := make([]types.RegisterInfo, 1)
 		if fact.Approved() != nil {
-			registers[0] = state.NewRegisterInfo(fact.Approved(), []base.Address{fact.Sender()})
+			registers[0] = types.NewRegisterInfo(fact.Approved(), []base.Address{fact.Sender()})
 		} else {
-			registers[0] = state.NewRegisterInfo(fact.Sender(), []base.Address{fact.Sender()})
+			registers[0] = types.NewRegisterInfo(fact.Sender(), []base.Address{fact.Sender()})
 		}
 		sts[0] = currencystate.NewStateMergeValue(
 			st.Key(),

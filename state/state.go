@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ProtoconNet/mitum-currency/v3/common"
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/base"
@@ -221,70 +220,6 @@ func StateKeyApprovingList(ca base.Address, daoid currencytypes.ContractID, pid 
 	return fmt.Sprintf("%s-%s-%s%s", StateKeyDAOPrefix(ca, daoid), pid, ac.String(), ApprovingListSuffix)
 }
 
-var RegisterInfoHint = hint.MustNewHint("mitum-dao-register-info-v0.0.1")
-
-type RegisterInfo struct {
-	hint.BaseHinter
-	account    base.Address
-	approvedBy []base.Address
-}
-
-func NewRegisterInfo(account base.Address, approvedBy []base.Address) RegisterInfo {
-	return RegisterInfo{
-		BaseHinter: hint.NewBaseHinter(RegisterInfoHint),
-		account:    account,
-		approvedBy: approvedBy,
-	}
-}
-
-func (r RegisterInfo) Hint() hint.Hint {
-	return r.BaseHinter.Hint()
-}
-
-func (r RegisterInfo) IsValid([]byte) error {
-	e := util.ErrInvalid.Errorf("invalid RegisterInfo")
-
-	if err := r.BaseHinter.IsValid(nil); err != nil {
-		return e.Wrap(err)
-	}
-
-	if err := r.account.IsValid(nil); err != nil {
-		return e.Wrap(err)
-	}
-
-	for _, ac := range r.approvedBy {
-		if err := ac.IsValid(nil); err != nil {
-			return e.Wrap(err)
-		}
-
-		if ac.Equal(r.account) {
-			return e.Wrap(errors.Errorf("approving address is same with approved address, %q", r.Account))
-		}
-	}
-
-	return nil
-}
-
-func (r RegisterInfo) Bytes() []byte {
-	ba := make([][]byte, len(r.approvedBy)+1)
-
-	ba[0] = r.account.Bytes()
-
-	for i, ac := range r.approvedBy {
-		ba[i+1] = ac.Bytes()
-	}
-
-	return util.ConcatBytesSlice(ba...)
-}
-
-func (r RegisterInfo) Account() base.Address {
-	return r.account
-}
-
-func (r RegisterInfo) ApprovedBy() []base.Address {
-	return r.approvedBy
-}
-
 var (
 	RegisterListStateValueHint = hint.MustNewHint("mitum-dao-register-list-state-value-v0.0.1")
 	RegisterListSuffix         = ":register-list"
@@ -292,10 +227,10 @@ var (
 
 type RegisterListStateValue struct {
 	hint.BaseHinter
-	Registers []RegisterInfo
+	Registers []types.RegisterInfo
 }
 
-func NewRegisterListStateValue(registers []RegisterInfo) RegisterListStateValue {
+func NewRegisterListStateValue(registers []types.RegisterInfo) RegisterListStateValue {
 	return RegisterListStateValue{
 		BaseHinter: hint.NewBaseHinter(RegisterListStateValueHint),
 		Registers:  registers,
@@ -319,8 +254,8 @@ func (r RegisterListStateValue) IsValid([]byte) error {
 			return e.Wrap(err)
 		}
 
-		if _, found := founds[info.account.String()]; found {
-			return e.Wrap(errors.Errorf("duplicate register account found, %q", info.account))
+		if _, found := founds[info.Account().String()]; found {
+			return e.Wrap(errors.Errorf("duplicate register account found, %q", info.Account()))
 		}
 	}
 
@@ -337,7 +272,7 @@ func (r RegisterListStateValue) HashBytes() []byte {
 	return util.ConcatBytesSlice(bs...)
 }
 
-func StateRegisterListValue(st base.State) ([]RegisterInfo, error) {
+func StateRegisterListValue(st base.State) ([]types.RegisterInfo, error) {
 	v := st.Value()
 	if v == nil {
 		return nil, util.ErrNotFound.Errorf("register list not found in State")
@@ -360,133 +295,16 @@ func StateKeyRegisterList(ca base.Address, daoid currencytypes.ContractID, pid s
 }
 
 var (
-	VotingPowerHint = hint.MustNewHint("mitum-dao-voting-power-v0.0.1")
-)
-
-type VotingPower struct {
-	hint.BaseHinter
-	account     base.Address
-	votingPower common.Big
-}
-
-func NewVotingPower(account base.Address, votingPower common.Big) VotingPower {
-	return VotingPower{
-		BaseHinter:  hint.NewBaseHinter(VotingPowerHint),
-		account:     account,
-		votingPower: votingPower,
-	}
-}
-
-func (vp VotingPower) Hint() hint.Hint {
-	return vp.BaseHinter.Hint()
-}
-
-func (vp VotingPower) IsValid([]byte) error {
-	e := util.ErrInvalid.Errorf("invalid VotingPower")
-
-	if err := vp.BaseHinter.IsValid(SnapHistoryHint.Type().Bytes()); err != nil {
-		return e.Wrap(err)
-	}
-
-	if err := util.CheckIsValiders(nil, false, vp.account, vp.votingPower); err != nil {
-		return e.Wrap(err)
-	}
-
-	return nil
-}
-
-func (vp VotingPower) Bytes() []byte {
-	return util.ConcatBytesSlice(
-		vp.account.Bytes(),
-		vp.votingPower.Bytes(),
-	)
-}
-
-func (vp VotingPower) Account() base.Address {
-	return vp.account
-}
-
-func (vp VotingPower) VotingPower() common.Big {
-	return vp.votingPower
-}
-
-var (
-	SnapHistoryHint = hint.MustNewHint("mitum-dao-snap-history-v0.0.1")
-)
-
-type SnapHistory struct {
-	hint.BaseHinter
-	timestamp uint64
-	snaps     []VotingPower
-}
-
-func NewSnapHistory(timestamp uint64, snaps []VotingPower) SnapHistory {
-	return SnapHistory{
-		BaseHinter: hint.NewBaseHinter(SnapHistoryHint),
-		timestamp:  timestamp,
-		snaps:      snaps,
-	}
-}
-
-func (sh SnapHistory) Hint() hint.Hint {
-	return sh.BaseHinter.Hint()
-}
-
-func (sh SnapHistory) IsValid([]byte) error {
-	e := util.ErrInvalid.Errorf("invalid SnapHistory")
-
-	if err := sh.BaseHinter.IsValid(SnapHistoryHint.Type().Bytes()); err != nil {
-		return e.Wrap(err)
-	}
-
-	founds := map[string]struct{}{}
-	for _, snap := range sh.snaps {
-		if err := snap.IsValid(nil); err != nil {
-			return e.Wrap(err)
-		}
-
-		if _, found := founds[snap.account.String()]; found {
-			return e.Wrap(errors.Errorf("duplicate snap account found, %q", snap.account))
-		}
-
-		founds[snap.account.String()] = struct{}{}
-	}
-
-	return nil
-}
-
-func (sh SnapHistory) Bytes() []byte {
-	bs := make([][]byte, len(sh.snaps))
-
-	for i, snap := range sh.snaps {
-		bs[i] = snap.Bytes()
-	}
-
-	return util.ConcatBytesSlice(
-		util.Uint64ToBytes(sh.timestamp),
-		util.ConcatBytesSlice(bs...),
-	)
-}
-
-func (sh SnapHistory) TimeStamp() uint64 {
-	return sh.timestamp
-}
-
-func (sh SnapHistory) Snaps() []VotingPower {
-	return sh.snaps
-}
-
-var (
 	SnapHistoriesStateValueHint = hint.MustNewHint("mitum-dao-snap-histories-state-value-v0.0.1")
 	SnapHistoriesSuffix         = ":snap-histories"
 )
 
 type SnapHistoriesStateValue struct {
 	hint.BaseHinter
-	Histories []SnapHistory
+	Histories []types.SnapHistory
 }
 
-func NewSnapHistoriesStateValue(histories []SnapHistory) SnapHistoriesStateValue {
+func NewSnapHistoriesStateValue(histories []types.SnapHistory) SnapHistoriesStateValue {
 	return SnapHistoriesStateValue{
 		BaseHinter: hint.NewBaseHinter(SnapHistoriesStateValueHint),
 		Histories:  histories,
@@ -523,7 +341,7 @@ func (sh SnapHistoriesStateValue) HashBytes() []byte {
 	return util.ConcatBytesSlice(bs...)
 }
 
-func StateSnapHistoriesValue(st base.State) ([]SnapHistory, error) {
+func StateSnapHistoriesValue(st base.State) ([]types.SnapHistory, error) {
 	v := st.Value()
 	if v == nil {
 		return nil, util.ErrNotFound.Errorf("snap histories not found in State")
@@ -546,67 +364,6 @@ func StateKeySnapHistories(ca base.Address, daoid currencytypes.ContractID, pid 
 }
 
 var (
-	VotingPowersHint = hint.MustNewHint("mitum-dao-voting-powers-v0.0.1")
-)
-
-type VotingPowers struct {
-	hint.BaseHinter
-	total        common.Big
-	votingPowers []VotingPower
-}
-
-func NewVotingPowers(total common.Big, votingPowers []VotingPower) VotingPowers {
-	return VotingPowers{
-		BaseHinter:   hint.NewBaseHinter(VotingPowersHint),
-		total:        total,
-		votingPowers: votingPowers,
-	}
-}
-
-func (vp VotingPowers) IsValid([]byte) error {
-	e := util.ErrInvalid.Errorf("invalid VotingPowers")
-
-	if err := vp.BaseHinter.IsValid(nil); err != nil {
-		return e.Wrap(err)
-	}
-
-	total := common.ZeroBig
-	for _, vp := range vp.votingPowers {
-		if err := vp.IsValid(nil); err != nil {
-			return e.Wrap(err)
-		}
-
-		total = total.Add(vp.votingPower)
-	}
-
-	if total.Compare(vp.total) != 0 {
-		return e.Wrap(errors.Errorf("invalid voting power total, %q != %q", total, vp.total))
-	}
-
-	return nil
-}
-
-func (vp VotingPowers) Bytes() []byte {
-	bs := make([][]byte, len(vp.votingPowers))
-	for i, v := range vp.votingPowers {
-		bs[i] = v.Bytes()
-	}
-
-	return util.ConcatBytesSlice(
-		vp.total.Bytes(),
-		util.ConcatBytesSlice(bs...),
-	)
-}
-
-func (vp VotingPowers) Total() common.Big {
-	return vp.total
-}
-
-func (vp VotingPowers) VotingPowers() []VotingPower {
-	return vp.votingPowers
-}
-
-var (
 	VotesStateValueHint = hint.MustNewHint("mitum-dao-votes-state-value-v0.0.1")
 	VotesSuffix         = ":votes"
 )
@@ -615,10 +372,10 @@ type VotesStateValue struct {
 	hint.BaseHinter
 	Active bool
 	Result uint8
-	Votes  []VotingPowers
+	Votes  []types.VotingPowers
 }
 
-func NewVotesStateValue(active bool, result uint8, votes []VotingPowers) VotesStateValue {
+func NewVotesStateValue(active bool, result uint8, votes []types.VotingPowers) VotesStateValue {
 	return VotesStateValue{
 		BaseHinter: hint.NewBaseHinter(VotesStateValueHint),
 		Active:     active,

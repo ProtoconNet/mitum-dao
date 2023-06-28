@@ -222,7 +222,7 @@ func (opp *SnapProcessor) Process(
 	votingstart := starttime + delaytime + registerperiod + snaptime
 	votingend := starttime + delaytime + registerperiod + snaptime + voteperiod
 
-	var snaps []state.SnapHistory
+	var snaps []types.SnapHistory
 
 	switch st, found, err := getStateFunc(state.StateKeySnapHistories(fact.Contract(), fact.DAOID(), fact.ProposeID())); {
 	case err != nil:
@@ -234,10 +234,10 @@ func (opp *SnapProcessor) Process(
 		}
 		snaps = sn
 	default:
-		snaps = []state.SnapHistory{}
+		snaps = []types.SnapHistory{}
 	}
 
-	votingPowers := []state.VotingPower{}
+	votingPowers := []types.VotingPower{}
 	votingPowerToken := design.Policy().Token()
 
 	switch st, found, err := getStateFunc(state.StateKeyRegisterList(fact.Contract(), fact.DAOID(), fact.ProposeID())); {
@@ -264,11 +264,11 @@ func (opp *SnapProcessor) Process(
 
 				total = total.Add(b.Big())
 			}
-			votingPowers = append(votingPowers, state.NewVotingPower(info.Account(), total))
+			votingPowers = append(votingPowers, types.NewVotingPower(info.Account(), total))
 		}
 	}
 
-	snaps = append(snaps, state.NewSnapHistory(uint64(time.Now().UnixMilli()), votingPowers))
+	snaps = append(snaps, types.NewSnapHistory(uint64(time.Now().UnixMilli()), votingPowers))
 
 	sts[0] = currencystate.NewStateMergeValue(
 		state.StateKeySnapHistories(fact.Contract(), fact.DAOID(), fact.ProposeID()),
@@ -310,9 +310,9 @@ func (opp *SnapProcessor) Process(
 				),
 			)
 		} else {
-			vps := make([]state.VotingPowers, proposal.Options())
+			vps := make([]types.VotingPowers, proposal.Options())
 			for i := range vps {
-				vps[i] = state.NewVotingPowers(common.ZeroBig, []state.VotingPower{})
+				vps[i] = types.NewVotingPowers(common.ZeroBig, []types.VotingPower{})
 			}
 
 			sts = append(sts,

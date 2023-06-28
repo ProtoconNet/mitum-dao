@@ -1,7 +1,6 @@
 package state
 
 import (
-	"github.com/ProtoconNet/mitum-currency/v3/common"
 	bsonenc "github.com/ProtoconNet/mitum-currency/v3/digest/util/bson"
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/base"
@@ -134,58 +133,6 @@ func (ap *ApprovingListStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) er
 	return nil
 }
 
-func (r RegisterInfo) MarshalBSON() ([]byte, error) {
-	return bsonenc.Marshal(
-		bson.M{
-			"_hint":       r.Hint().String(),
-			"account":     r.Account,
-			"approved_by": r.ApprovedBy,
-		},
-	)
-}
-
-type RegisterInfoBSONUnmarshaler struct {
-	Hint       string   `bson:"_hint"`
-	Account    string   `bson:"account"`
-	ApprovedBy []string `bson:"approved_by"`
-}
-
-func (r *RegisterInfo) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of RegisterInfo")
-
-	var u RegisterInfoBSONUnmarshaler
-	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
-	}
-
-	ht, err := hint.ParseHint(u.Hint)
-	if err != nil {
-		return e(err, "")
-	}
-
-	r.BaseHinter = hint.NewBaseHinter(ht)
-
-	switch a, err := base.DecodeAddress(u.Account, enc); {
-	case err != nil:
-		return e(err, "")
-	default:
-		r.account = a
-	}
-
-	acc := make([]base.Address, len(u.ApprovedBy))
-	for i, ba := range u.ApprovedBy {
-		ac, err := base.DecodeAddress(ba, enc)
-		if err != nil {
-			return e(err, "")
-		}
-		acc[i] = ac
-
-	}
-	r.approvedBy = acc
-
-	return nil
-}
-
 func (r RegisterListStateValue) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
@@ -220,114 +167,16 @@ func (r *RegisterListStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) erro
 		return e(err, "")
 	}
 
-	infos := make([]RegisterInfo, len(hr))
+	infos := make([]types.RegisterInfo, len(hr))
 	for i, hinter := range hr {
-		rg, ok := hinter.(RegisterInfo)
+		rg, ok := hinter.(types.RegisterInfo)
 		if !ok {
-			return e(util.ErrWrongType.Errorf("expected RegisterInfo, not %T", hinter), "")
+			return e(util.ErrWrongType.Errorf("expected types.RegisterInfo, not %T", hinter), "")
 		}
 
 		infos[i] = rg
 	}
 	r.Registers = infos
-
-	return nil
-}
-
-func (vp VotingPower) MarshalBSON() ([]byte, error) {
-	return bsonenc.Marshal(
-		bson.M{
-			"_hint":        vp.Hint().String(),
-			"account":      vp.account,
-			"voting_power": vp.votingPower,
-		},
-	)
-}
-
-type VotingPowerBSONUnmarshaler struct {
-	Hint        string `bson:"_hint"`
-	Account     string `bson:"account"`
-	VotingPower string `bson:"voting_power"`
-}
-
-func (vp *VotingPower) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of VotingPower")
-
-	var u VotingPowerBSONUnmarshaler
-	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
-	}
-
-	ht, err := hint.ParseHint(u.Hint)
-	if err != nil {
-		return e(err, "")
-	}
-
-	vp.BaseHinter = hint.NewBaseHinter(ht)
-
-	switch a, err := base.DecodeAddress(u.Account, enc); {
-	case err != nil:
-		return e(err, "")
-	default:
-		vp.account = a
-	}
-
-	big, err := common.NewBigFromString(u.VotingPower)
-	if err != nil {
-		return e(err, "")
-	}
-	vp.votingPower = big
-
-	return nil
-}
-
-func (sh SnapHistory) MarshalBSON() ([]byte, error) {
-	return bsonenc.Marshal(
-		bson.M{
-			"_hint":     sh.Hint().String(),
-			"timestamp": sh.timestamp,
-			"snaps":     sh.snaps,
-		},
-	)
-}
-
-type SnapHistoryBSONUnmarshaler struct {
-	Hint      string   `bson:"_hint"`
-	TimeStamp uint64   `bson:"timestamp"`
-	Snaps     bson.Raw `bson:"snaps"`
-}
-
-func (sh *SnapHistory) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of SnapHistory")
-
-	var u SnapHistoryBSONUnmarshaler
-	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
-	}
-
-	ht, err := hint.ParseHint(u.Hint)
-	if err != nil {
-		return e(err, "")
-	}
-
-	sh.BaseHinter = hint.NewBaseHinter(ht)
-	sh.timestamp = u.TimeStamp
-
-	hs, err := enc.DecodeSlice(u.Snaps)
-	if err != nil {
-		return e(err, "")
-	}
-
-	snaps := make([]VotingPower, len(hs))
-	for i := range hs {
-		s, ok := hs[i].(VotingPower)
-		if !ok {
-			return e(util.ErrWrongType.Errorf("expected VotingPower, not %T", hs[i]), "")
-		}
-
-		snaps[i] = s
-	}
-	sh.snaps = snaps
 
 	return nil
 }
@@ -366,72 +215,16 @@ func (sh *SnapHistoriesStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) er
 		return e(err, "")
 	}
 
-	histories := make([]SnapHistory, len(hs))
+	histories := make([]types.SnapHistory, len(hs))
 	for i, hinter := range hs {
-		h, ok := hinter.(SnapHistory)
+		h, ok := hinter.(types.SnapHistory)
 		if !ok {
-			return e(util.ErrWrongType.Errorf("expected SnapHistory, not %T", hinter), "")
+			return e(util.ErrWrongType.Errorf("expected types.SnapHistory, not %T", hinter), "")
 		}
 
 		histories[i] = h
 	}
 	sh.Histories = histories
-
-	return nil
-}
-
-func (v VotingPowers) MarshalBSON() ([]byte, error) {
-	return bsonenc.Marshal(
-		bson.M{
-			"_hint":         v.Hint().String(),
-			"total":         v.total.String(),
-			"voting_powers": v.votingPowers,
-		},
-	)
-}
-
-type VotingPowersBSONUnmarshaler struct {
-	Hint         string   `bson:"_hint"`
-	Total        string   `bson:"total"`
-	VotingPowers bson.Raw `bson:"voting_powers"`
-}
-
-func (v *VotingPowers) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of VotingPowers")
-
-	var u VotingPowersBSONUnmarshaler
-	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
-	}
-
-	ht, err := hint.ParseHint(u.Hint)
-	if err != nil {
-		return e(err, "")
-	}
-
-	v.BaseHinter = hint.NewBaseHinter(ht)
-
-	big, err := common.NewBigFromString(u.Total)
-	if err != nil {
-		return e(err, "")
-	}
-	v.total = big
-
-	hv, err := enc.DecodeSlice(u.VotingPowers)
-	if err != nil {
-		return e(err, "")
-	}
-
-	vps := make([]VotingPower, len(hv))
-	for i, hinter := range hv {
-		vp, ok := hinter.(VotingPower)
-		if !ok {
-			return e(util.ErrWrongType.Errorf("expected VotingPower, not %T", hinter), "")
-		}
-
-		vps[i] = vp
-	}
-	v.votingPowers = vps
 
 	return nil
 }
@@ -476,11 +269,11 @@ func (v *VotesStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		return e(err, "")
 	}
 
-	votes := make([]VotingPowers, len(hvs))
+	votes := make([]types.VotingPowers, len(hvs))
 	for i, hinter := range hvs {
-		c, ok := hinter.(VotingPowers)
+		c, ok := hinter.(types.VotingPowers)
 		if !ok {
-			return e(util.ErrWrongType.Errorf("expected VotingPowers, not %T", hinter), "")
+			return e(util.ErrWrongType.Errorf("expected types.VotingPowers, not %T", hinter), "")
 		}
 
 		votes[i] = c

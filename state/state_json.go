@@ -3,7 +3,6 @@ package state
 import (
 	"encoding/json"
 
-	"github.com/ProtoconNet/mitum-currency/v3/common"
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
@@ -124,57 +123,9 @@ func (ap *ApprovingListStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) er
 	return nil
 }
 
-type RegisterInfoJSONMarshaler struct {
-	hint.BaseHinter
-	Account    base.Address   `json:"account"`
-	ApprovedBy []base.Address `json:"approved_by"`
-}
-
-func (r RegisterInfo) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(RegisterInfoJSONMarshaler{
-		BaseHinter: r.BaseHinter,
-		Account:    r.account,
-		ApprovedBy: r.approvedBy,
-	})
-}
-
-type RegisterInfoJSONUnmarshaler struct {
-	Account    string   `json:"account"`
-	ApprovedBy []string `json:"approved_by"`
-}
-
-func (r *RegisterInfo) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of RegisterInfo")
-
-	var u RegisterInfoJSONUnmarshaler
-	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
-	}
-
-	switch a, err := base.DecodeAddress(u.Account, enc); {
-	case err != nil:
-		return e(err, "")
-	default:
-		r.account = a
-	}
-
-	acc := make([]base.Address, len(u.ApprovedBy))
-	for i, ba := range u.ApprovedBy {
-		ac, err := base.DecodeAddress(ba, enc)
-		if err != nil {
-			return e(err, "")
-		}
-		acc[i] = ac
-
-	}
-	r.approvedBy = acc
-
-	return nil
-}
-
 type RegisterListStateValueJSONMarshaler struct {
 	hint.BaseHinter
-	Registers []RegisterInfo `json:"registers"`
+	Registers []types.RegisterInfo `json:"registers"`
 }
 
 func (r RegisterListStateValue) MarshalJSON() ([]byte, error) {
@@ -201,11 +152,11 @@ func (r *RegisterListStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) erro
 		return e(err, "")
 	}
 
-	infos := make([]RegisterInfo, len(hr))
+	infos := make([]types.RegisterInfo, len(hr))
 	for i, hinter := range hr {
-		rg, ok := hinter.(RegisterInfo)
+		rg, ok := hinter.(types.RegisterInfo)
 		if !ok {
-			return e(util.ErrWrongType.Errorf("expected RegisterInfo, not %T", hinter), "")
+			return e(util.ErrWrongType.Errorf("expected types.RegisterInfo, not %T", hinter), "")
 		}
 
 		infos[i] = rg
@@ -215,100 +166,9 @@ func (r *RegisterListStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) erro
 	return nil
 }
 
-type VotingPowerJSONMarshaler struct {
-	hint.BaseHinter
-	Account     base.Address `json:"account"`
-	VotingPower string       `json:"voting_power"`
-}
-
-func (vp VotingPower) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(VotingPowerJSONMarshaler{
-		BaseHinter:  vp.BaseHinter,
-		Account:     vp.account,
-		VotingPower: vp.votingPower.String(),
-	})
-}
-
-type VotingPowerJSONUnmarshaler struct {
-	Account     string `json:"account"`
-	VotingPower string `json:"voting_power"`
-}
-
-func (vp *VotingPower) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of VotingPower")
-
-	var u VotingPowerJSONUnmarshaler
-	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
-	}
-
-	switch a, err := base.DecodeAddress(u.Account, enc); {
-	case err != nil:
-		return e(err, "")
-	default:
-		vp.account = a
-	}
-
-	big, err := common.NewBigFromString(u.VotingPower)
-	if err != nil {
-		return e(err, "")
-	}
-	vp.votingPower = big
-
-	return nil
-}
-
-type SnapHistoryJSONMarshaler struct {
-	hint.BaseHinter
-	TimeStamp uint64        `json:"timestamp"`
-	Snaps     []VotingPower `json:"snaps"`
-}
-
-func (sh SnapHistory) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(SnapHistoryJSONMarshaler{
-		BaseHinter: sh.BaseHinter,
-		TimeStamp:  sh.timestamp,
-		Snaps:      sh.snaps,
-	})
-}
-
-type SnapHistoryJSONUnmarshaler struct {
-	TimeStamp uint64          `json:"timestamp"`
-	Snaps     json.RawMessage `json:"snaps"`
-}
-
-func (sh *SnapHistory) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of SnapHistory")
-
-	var u SnapHistoryJSONUnmarshaler
-	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
-	}
-
-	sh.timestamp = u.TimeStamp
-
-	hs, err := enc.DecodeSlice(u.Snaps)
-	if err != nil {
-		return e(err, "")
-	}
-
-	snaps := make([]VotingPower, len(hs))
-	for i := range hs {
-		s, ok := hs[i].(VotingPower)
-		if !ok {
-			return e(util.ErrWrongType.Errorf("expected VotingPower, not %T", hs[i]), "")
-		}
-
-		snaps[i] = s
-	}
-	sh.snaps = snaps
-
-	return nil
-}
-
 type SnapHistoriesStateValueJSONMarshaler struct {
 	hint.BaseHinter
-	Histories []SnapHistory `json:"histories"`
+	Histories []types.SnapHistory `json:"histories"`
 }
 
 func (sh SnapHistoriesStateValue) MarshalJSON() ([]byte, error) {
@@ -335,11 +195,11 @@ func (sh *SnapHistoriesStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) er
 		return e(err, "")
 	}
 
-	histories := make([]SnapHistory, len(hs))
+	histories := make([]types.SnapHistory, len(hs))
 	for i, hinter := range hs {
-		h, ok := hinter.(SnapHistory)
+		h, ok := hinter.(types.SnapHistory)
 		if !ok {
-			return e(util.ErrWrongType.Errorf("expected SnapHistory, not %T", hinter), "")
+			return e(util.ErrWrongType.Errorf("expected types.SnapHistory, not %T", hinter), "")
 		}
 
 		histories[i] = h
@@ -349,63 +209,11 @@ func (sh *SnapHistoriesStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) er
 	return nil
 }
 
-type VotingPowersJSONMarshaler struct {
-	hint.BaseHinter
-	Total        string        `json:"total"`
-	VotingPowers []VotingPower `json:"voting_powers"`
-}
-
-func (v VotingPowers) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(VotingPowersJSONMarshaler{
-		BaseHinter:   v.BaseHinter,
-		Total:        v.total.String(),
-		VotingPowers: v.votingPowers,
-	})
-}
-
-type VotingPowersJSONUnmarshaler struct {
-	Total        string          `json:"total"`
-	VotingPowers json.RawMessage `json:"voting_powers"`
-}
-
-func (v *VotingPowers) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("faileod to decde json of VotingPowers")
-
-	var u VotingPowersJSONUnmarshaler
-	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
-	}
-
-	big, err := common.NewBigFromString(u.Total)
-	if err != nil {
-		return e(err, "")
-	}
-	v.total = big
-
-	hv, err := enc.DecodeSlice(u.VotingPowers)
-	if err != nil {
-		return e(err, "")
-	}
-
-	vps := make([]VotingPower, len(hv))
-	for i, hinter := range hv {
-		vp, ok := hinter.(VotingPower)
-		if !ok {
-			return e(util.ErrWrongType.Errorf("expected VotingPower, not %T", hinter), "")
-		}
-
-		vps[i] = vp
-	}
-	v.votingPowers = vps
-
-	return nil
-}
-
 type VotesStateValueJSONMarshaler struct {
 	hint.BaseHinter
-	Active bool           `json:"active"`
-	Result uint8          `json:"result"`
-	Votes  []VotingPowers `json:"votes"`
+	Active bool                 `json:"active"`
+	Result uint8                `json:"result"`
+	Votes  []types.VotingPowers `json:"votes"`
 }
 
 func (v VotesStateValue) MarshalJSON() ([]byte, error) {
@@ -439,11 +247,11 @@ func (v *VotesStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		return e(err, "")
 	}
 
-	votes := make([]VotingPowers, len(hvs))
+	votes := make([]types.VotingPowers, len(hvs))
 	for i, hinter := range hvs {
-		c, ok := hinter.(VotingPowers)
+		c, ok := hinter.(types.VotingPowers)
 		if !ok {
-			return e(util.ErrWrongType.Errorf("expected VotingPowers, not %T", hinter), "")
+			return e(util.ErrWrongType.Errorf("expected types.VotingPowers, not %T", hinter), "")
 		}
 
 		votes[i] = c
