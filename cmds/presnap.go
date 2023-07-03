@@ -13,14 +13,14 @@ import (
 type SnapCommand struct {
 	baseCommand
 	OperationFlags
-	Sender    AddressFlag    `arg:"" name:"sender" help:"sender address" required:"true"`
-	Contract  AddressFlag    `arg:"" name:"contract" help:"contract address of credential" required:"true"`
-	DAO       ContractIDFlag `arg:"" name:"dao-id" help:"dao id" required:"true"`
-	ProposeID string         `arg:"" name:"propose-id" help:"propose id" required:"true"`
-	Currency  CurrencyIDFlag `arg:"" name:"currency-id" help:"currency id" required:"true"`
-	sender    base.Address
-	contract  base.Address
-	approved  base.Address
+	Sender     AddressFlag    `arg:"" name:"sender" help:"sender address" required:"true"`
+	Contract   AddressFlag    `arg:"" name:"contract" help:"contract address of credential" required:"true"`
+	DAO        ContractIDFlag `arg:"" name:"dao-id" help:"dao id" required:"true"`
+	ProposalID string         `arg:"" name:"proposal-id" help:"proposal id" required:"true"`
+	Currency   CurrencyIDFlag `arg:"" name:"currency-id" help:"currency id" required:"true"`
+	sender     base.Address
+	contract   base.Address
+	approved   base.Address
 }
 
 func NewSnapCommand() SnapCommand {
@@ -75,16 +75,16 @@ func (cmd *SnapCommand) parseFlags() error {
 func (cmd *SnapCommand) createOperation() (base.Operation, error) { // nolint:dupl}
 	e := util.StringErrorFunc("failed to create register operation")
 
-	fact := dao.NewSnapFact(
+	fact := dao.NewPreSnapFact(
 		[]byte(cmd.Token),
 		cmd.sender,
 		cmd.contract,
 		cmd.DAO.ID,
-		cmd.ProposeID,
+		cmd.ProposalID,
 		cmd.Currency.CID,
 	)
 
-	op, err := dao.NewSnap(fact)
+	op, err := dao.NewPreSnap(fact)
 	if err != nil {
 		return nil, e(err, "")
 	}

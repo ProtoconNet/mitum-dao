@@ -13,15 +13,15 @@ import (
 type RegisterCommand struct {
 	baseCommand
 	OperationFlags
-	Sender    AddressFlag    `arg:"" name:"sender" help:"sender address" required:"true"`
-	Contract  AddressFlag    `arg:"" name:"contract" help:"contract address of credential" required:"true"`
-	DAO       ContractIDFlag `arg:"" name:"dao-id" help:"dao id" required:"true"`
-	ProposeID string         `arg:"" name:"propose-id" help:"propose id" required:"true"`
-	Currency  CurrencyIDFlag `arg:"" name:"currency-id" help:"currency id" required:"true"`
-	Approved  AddressFlag    `name:"approved" help:"target address to approve"`
-	sender    base.Address
-	contract  base.Address
-	approved  base.Address
+	Sender     AddressFlag    `arg:"" name:"sender" help:"sender address" required:"true"`
+	Contract   AddressFlag    `arg:"" name:"contract" help:"contract address of credential" required:"true"`
+	DAO        ContractIDFlag `arg:"" name:"dao-id" help:"dao id" required:"true"`
+	ProposalID string         `arg:"" name:"proposal-id" help:"proposal id" required:"true"`
+	Currency   CurrencyIDFlag `arg:"" name:"currency-id" help:"currency id" required:"true"`
+	Delegated  AddressFlag    `arg:"" name:"delegated" help:"target address to be delegated" required:"true"`
+	sender     base.Address
+	contract   base.Address
+	delegated  base.Address
 }
 
 func NewRegisterCommand() RegisterCommand {
@@ -70,15 +70,11 @@ func (cmd *RegisterCommand) parseFlags() error {
 	}
 	cmd.contract = contract
 
-	if cmd.Approved.s != "" {
-		ap, err := cmd.Approved.Encode(enc)
-		if err != nil {
-			return errors.Wrapf(err, "invalid approved account format, %q", cmd.Approved.String())
-		}
-		cmd.approved = ap
-	} else {
-		cmd.approved = nil
+	delegated, err := cmd.Delegated.Encode(enc)
+	if err != nil {
+		return errors.Wrapf(err, "invalid delegated account format, %q", cmd.Delegated.String())
 	}
+	cmd.delegated = delegated
 
 	return nil
 }
@@ -91,8 +87,8 @@ func (cmd *RegisterCommand) createOperation() (base.Operation, error) { // nolin
 		cmd.sender,
 		cmd.contract,
 		cmd.DAO.ID,
-		cmd.ProposeID,
-		cmd.approved,
+		cmd.ProposalID,
+		cmd.delegated,
 		cmd.Currency.CID,
 	)
 

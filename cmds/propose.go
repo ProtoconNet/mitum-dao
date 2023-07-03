@@ -12,30 +12,31 @@ import (
 	"github.com/ProtoconNet/mitum2/util"
 )
 
-type TransferCalldataCommand struct {
-	From   AddressFlag        `name:"from" help:"calldata sender"`
-	To     AddressFlag        `name:"to" help:"calldata receiver"`
-	Amount CurrencyAmountFlag `name:"amount" help:"calldata amount"`
+type TransferCallDataCommand struct {
+	From   AddressFlag        `name:"from" help:"call data sender"`
+	To     AddressFlag        `name:"to" help:"call data receiver"`
+	Amount CurrencyAmountFlag `name:"amount" help:"call data amount"`
 }
 
-type GovernanceCalldataCommand struct {
-	VotingPowerToken CurrencyIDFlag     `name:"voting-power-token" help:"voting power token"`
-	Threshold        CurrencyAmountFlag `name:"threshold" help:"threshold to propose"`
-	Fee              CurrencyAmountFlag `name:"fee" help:"fee to propose"`
-	Delaytime        uint64             `name:"delaytime" help:"delaytime"`
-	Registerperiod   uint64             `name:"registerperiod" help:"registerperiod"`
-	Snaptime         uint64             `name:"snaptime" help:"snaptime"`
-	Voteperiod       uint64             `name:"voteperiod" help:"voteperiod"`
-	Timelock         uint64             `name:"timelock" help:"timelock"`
-	Turnout          uint               `name:"turnout" help:"turnout"`
-	Quorum           uint               `name:"quorum" help:"quorum"`
-	Whitelist        AddressFlag        `name:"whitelist" help:"whitelist account"`
+type GovernanceCallDataCommand struct {
+	VotingPowerToken     CurrencyIDFlag     `name:"voting-power-token" help:"voting power token"`
+	Threshold            CurrencyAmountFlag `name:"threshold" help:"threshold to propose"`
+	Fee                  CurrencyAmountFlag `name:"fee" help:"fee to propose"`
+	ProposalReviewPeriod uint64             `name:"proposal-review-period" help:"proposal review period"`
+	RegistrationPeriod   uint64             `name:"registration-period" help:"registration period"`
+	PreSnapshotPeriod    uint64             `name:"pre-snapshot-period" help:"pre snapshot period"`
+	VotingPeriod         uint64             `name:"voting-period" help:"voting period"`
+	PostSnapshotPeriod   uint64             `name:"post-snapshot-period" help:"post snapshot period"`
+	ExecutionDelayPeriod uint64             `name:"execution-delay-period" help:"execution delay period"`
+	Turnout              uint               `name:"turnout" help:"turnout"`
+	Quorum               uint               `name:"quorum" help:"quorum"`
+	Whitelist            AddressFlag        `name:"whitelist" help:"whitelist account"`
 }
 
 type CryptoProposalCommand struct {
 	CalldataOption string `name:"calldata-option" help:"calldata option; transfer | governance"`
-	TransferCalldataCommand
-	GovernanceCalldataCommand
+	TransferCallDataCommand
+	GovernanceCallDataCommand
 }
 
 type BizProposalCommand struct {
@@ -46,13 +47,13 @@ type BizProposalCommand struct {
 type ProposeCommand struct {
 	baseCommand
 	OperationFlags
-	Sender    AddressFlag    `arg:"" name:"sender" help:"sender address" required:"true"`
-	Contract  AddressFlag    `arg:"" name:"contract" help:"contract address of credential" required:"true"`
-	DAO       ContractIDFlag `arg:"" name:"dao-id" help:"dao id" required:"true"`
-	Option    string         `arg:"" name:"option" help:"propose option; crypto | biz" required:"true"`
-	ProposeID string         `arg:"" name:"propose-id" help:"propose id" required:"true"`
-	StartTime uint64         `arg:"" name:"starttime" help:"start time to register" required:"true"`
-	Options   uint8          `arg:"" name:"options" help:"number of vote options" required:"true"`
+	Sender     AddressFlag    `arg:"" name:"sender" help:"sender address" required:"true"`
+	Contract   AddressFlag    `arg:"" name:"contract" help:"contract address of credential" required:"true"`
+	DAO        ContractIDFlag `arg:"" name:"dao-id" help:"dao id" required:"true"`
+	Option     string         `arg:"" name:"option" help:"propose option; crypto | biz" required:"true"`
+	ProposalID string         `arg:"" name:"proposal-id" help:"proposal id" required:"true"`
+	StartTime  uint64         `arg:"" name:"start-time" help:"start time to proposal lifecycle" required:"true"`
+	Options    uint8          `arg:"" name:"options" help:"number of vote options" required:"true"`
 	CryptoProposalCommand
 	BizProposalCommand
 	Currency CurrencyIDFlag `arg:"" name:"currency-id" help:"currency id" required:"true"`
@@ -121,12 +122,12 @@ func (cmd *ProposeCommand) parseFlags() error {
 
 			amount := currencytypes.NewAmount(cmd.Amount.Big, cmd.Amount.CID)
 
-			calldata := types.NewTransferCalldata(from, to, amount)
-			if err := calldata.IsValid(nil); err != nil {
+			callData := types.NewTransferCallData(from, to, amount)
+			if err := callData.IsValid(nil); err != nil {
 				return err
 			}
 
-			proposal := types.NewCryptoProposal(cmd.StartTime, calldata)
+			proposal := types.NewCryptoProposal(cmd.StartTime, callData)
 			if err := proposal.IsValid(nil); err != nil {
 				return err
 			}
@@ -148,14 +149,19 @@ func (cmd *ProposeCommand) parseFlags() error {
 			policy := types.NewPolicy(
 				cmd.VotingPowerToken.CID,
 				fee, threshold, whitelist,
-				cmd.Delaytime, cmd.Registerperiod, cmd.Snaptime, cmd.Voteperiod, cmd.Timelock,
+				cmd.ProposalReviewPeriod,
+				cmd.RegistrationPeriod,
+				cmd.PreSnapshotPeriod,
+				cmd.VotingPeriod,
+				cmd.PostSnapshotPeriod,
+				cmd.ExecutionDelayPeriod,
 				types.PercentRatio(cmd.Turnout), types.PercentRatio(cmd.Quorum),
 			)
 			if err := policy.IsValid(nil); err != nil {
 				return err
 			}
 
-			calldata := types.NewGovernanceCalldata(policy)
+			calldata := types.NewGovernanceCallData(policy)
 			if err := calldata.IsValid(nil); err != nil {
 				return err
 			}
@@ -189,7 +195,7 @@ func (cmd *ProposeCommand) createOperation() (base.Operation, error) { // nolint
 		cmd.sender,
 		cmd.contract,
 		cmd.DAO.ID,
-		cmd.ProposeID,
+		cmd.ProposalID,
 		cmd.StartTime,
 		cmd.proposal,
 		cmd.Currency.CID,
