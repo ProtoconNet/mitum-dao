@@ -2,9 +2,9 @@ package state
 
 import (
 	"encoding/json"
+	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/ProtoconNet/mitum-dao/types"
-	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
 	"github.com/ProtoconNet/mitum2/util/hint"
@@ -12,18 +12,18 @@ import (
 
 type DesignStateValueJSONMarshaler struct {
 	hint.BaseHinter
-	DAO types.Design `json:"dao"`
+	Design types.Design `json:"design"`
 }
 
 func (de DesignStateValue) MarshalJSON() ([]byte, error) {
 	return util.MarshalJSON(DesignStateValueJSONMarshaler{
 		BaseHinter: de.BaseHinter,
-		DAO:        de.Design,
+		Design:     de.design,
 	})
 }
 
 type DesignStateValueJSONUnmarshaler struct {
-	DAO json.RawMessage `json:"dao"`
+	Design json.RawMessage `json:"design"`
 }
 
 func (de *DesignStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
@@ -36,31 +36,31 @@ func (de *DesignStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 
 	var design types.Design
 
-	if err := design.DecodeJSON(u.DAO, enc); err != nil {
+	if err := design.DecodeJSON(u.Design, enc); err != nil {
 		return e(err, "")
 	}
 
-	de.Design = design
+	de.design = design
 
 	return nil
 }
 
 type ProposalStateValueJSONMarshaler struct {
 	hint.BaseHinter
-	Active   bool           `json:"active"`
-	Proposal types.Proposal `json:"proposal"`
+	Status   types.ProposalStatus `json:"status"`
+	Proposal types.Proposal       `json:"proposal"`
 }
 
 func (p ProposalStateValue) MarshalJSON() ([]byte, error) {
 	return util.MarshalJSON(ProposalStateValueJSONMarshaler{
 		BaseHinter: p.BaseHinter,
-		Active:     p.Active,
-		Proposal:   p.Proposal,
+		Status:     p.Status(),
+		Proposal:   p.proposal,
 	})
 }
 
 type ProposalStateValueJSONUnmarshaler struct {
-	Active   bool            `json:"active"`
+	Status   uint8           `json:"status"`
 	Proposal json.RawMessage `json:"proposal"`
 }
 
@@ -72,191 +72,179 @@ func (p *ProposalStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		return e(err, "")
 	}
 
-	p.Active = u.Active
+	p.status = types.ProposalStatus(u.Status)
 
 	if hinter, err := enc.Decode(u.Proposal); err != nil {
 		return e(err, "")
 	} else if pr, ok := hinter.(types.Proposal); !ok {
 		return e(util.ErrWrongType.Errorf("expected Proposal, not %T", hinter), "")
 	} else {
-		p.Proposal = pr
+		p.proposal = pr
 	}
 
 	return nil
 }
 
-type ApprovingListStateValueJSONMarshaler struct {
+type DelegatorsStateValueJSONMarshaler struct {
 	hint.BaseHinter
-	Accounts []base.Address `json:"accounts"`
+	Delegators []types.DelegatorInfo `json:"delegators"`
 }
 
-func (ap ApprovingListStateValue) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(ApprovingListStateValueJSONMarshaler{
-		BaseHinter: ap.BaseHinter,
-		Accounts:   ap.Accounts,
+func (dg DelegatorsStateValue) MarshalJSON() ([]byte, error) {
+	return util.MarshalJSON(DelegatorsStateValueJSONMarshaler{
+		BaseHinter: dg.BaseHinter,
+		Delegators: dg.delegators,
 	})
 }
 
-type ApprovingListStateValueJSONUnmarshaler struct {
-	Accounts []string `json:"accounts"`
+type DelegatorsStateValueJSONUnmarshaler struct {
+	Delegators bson.Raw `json:"delegators"`
 }
 
-func (ap *ApprovingListStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of ApprovingListStateValue")
+func (dg *DelegatorsStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+	e := util.StringErrorFunc("failed to decode json of DelegatorsStateValue")
 
-	var u ApprovingListStateValueJSONUnmarshaler
+	var u DelegatorsStateValueJSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
 		return e(err, "")
 	}
 
-	acc := make([]base.Address, len(u.Accounts))
-	for i, ba := range u.Accounts {
-		ac, err := base.DecodeAddress(ba, enc)
-		if err != nil {
-			return e(err, "")
+	hr, err := enc.DecodeSlice(u.Delegators)
+	if err != nil {
+		return err
+	}
+
+	dgs := make([]types.DelegatorInfo, len(u.Delegators))
+	for i, hinter := range hr {
+		if v, ok := hinter.(types.DelegatorInfo); !ok {
+			return e(util.ErrWrongType.Errorf("expected types.DelegatorInfo, not %T", hinter), "")
+		} else {
+			dgs[i] = v
 		}
-		acc[i] = ac
-
 	}
-	ap.Accounts = acc
+	dg.delegators = dgs
 
 	return nil
 }
 
-type RegisterListStateValueJSONMarshaler struct {
+type VotersStateValueJSONMarshaler struct {
 	hint.BaseHinter
-	Registers []types.RegisterInfo `json:"registers"`
+	Voters []types.VoterInfo `json:"voters"`
 }
 
-func (r RegisterListStateValue) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(RegisterListStateValueJSONMarshaler{
-		BaseHinter: r.BaseHinter,
-		Registers:  r.Registers,
+func (vt VotersStateValue) MarshalJSON() ([]byte, error) {
+	return util.MarshalJSON(VotersStateValueJSONMarshaler{
+		BaseHinter: vt.BaseHinter,
+		Voters:     vt.voters,
 	})
 }
 
-type RegisterListStateValueJSONUnmarshaler struct {
-	Registers json.RawMessage `json:"account"`
+type VotersStateValueJSONUnmarshaler struct {
+	Voters json.RawMessage `json:"voters"`
 }
 
-func (r *RegisterListStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of RegisterListStateValue")
+func (vt *VotersStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+	e := util.StringErrorFunc("failed to decode json of VotersStateValue")
 
-	var u RegisterListStateValueJSONUnmarshaler
+	var u VotersStateValueJSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
 		return e(err, "")
 	}
 
-	hr, err := enc.DecodeSlice(u.Registers)
+	hr, err := enc.DecodeSlice(u.Voters)
 	if err != nil {
 		return e(err, "")
 	}
 
-	infos := make([]types.RegisterInfo, len(hr))
+	infos := make([]types.VoterInfo, len(hr))
 	for i, hinter := range hr {
-		rg, ok := hinter.(types.RegisterInfo)
+		rg, ok := hinter.(types.VoterInfo)
 		if !ok {
-			return e(util.ErrWrongType.Errorf("expected types.RegisterInfo, not %T", hinter), "")
+			return e(util.ErrWrongType.Errorf("expected types.VoterInfo, not %T", hinter), "")
 		}
 
 		infos[i] = rg
 	}
-	r.Registers = infos
+	vt.voters = infos
 
 	return nil
 }
 
-type SnapHistoriesStateValueJSONMarshaler struct {
-	hint.BaseHinter
-	Histories []types.SnapHistory `json:"histories"`
-}
-
-func (sh SnapHistoriesStateValue) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(SnapHistoriesStateValueJSONMarshaler{
-		BaseHinter: sh.BaseHinter,
-		Histories:  sh.Histories,
-	})
-}
-
-type SnapHistoriesStateValueJSONUnmarshaler struct {
-	Histories json.RawMessage `json:"histories"`
-}
-
-func (sh *SnapHistoriesStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of SnapHistoriesStateValue")
-
-	var u SnapHistoriesStateValueJSONUnmarshaler
-	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
-	}
-
-	hs, err := enc.DecodeSlice(u.Histories)
-	if err != nil {
-		return e(err, "")
-	}
-
-	histories := make([]types.SnapHistory, len(hs))
-	for i, hinter := range hs {
-		h, ok := hinter.(types.SnapHistory)
-		if !ok {
-			return e(util.ErrWrongType.Errorf("expected types.SnapHistory, not %T", hinter), "")
-		}
-
-		histories[i] = h
-	}
-	sh.Histories = histories
-
-	return nil
-}
+//
+//type SnapHistoriesStateValueJSONMarshaler struct {
+//	hint.BaseHinter
+//	Histories []types.SnapHistory `json:"histories"`
+//}
+//
+//func (sh SnapHistoriesStateValue) MarshalJSON() ([]byte, error) {
+//	return util.MarshalJSON(SnapHistoriesStateValueJSONMarshaler{
+//		BaseHinter: sh.BaseHinter,
+//		Histories:  sh.Histories,
+//	})
+//}
+//
+//type SnapHistoriesStateValueJSONUnmarshaler struct {
+//	Histories json.RawMessage `json:"histories"`
+//}
+//
+//func (sh *SnapHistoriesStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+//	e := util.StringErrorFunc("failed to decode json of SnapHistoriesStateValue")
+//
+//	var u SnapHistoriesStateValueJSONUnmarshaler
+//	if err := enc.Unmarshal(b, &u); err != nil {
+//		return e(err, "")
+//	}
+//
+//	hs, err := enc.DecodeSlice(u.Histories)
+//	if err != nil {
+//		return e(err, "")
+//	}
+//
+//	histories := make([]types.SnapHistory, len(hs))
+//	for i, hinter := range hs {
+//		h, ok := hinter.(types.SnapHistory)
+//		if !ok {
+//			return e(util.ErrWrongType.Errorf("expected types.SnapHistory, not %T", hinter), "")
+//		}
+//
+//		histories[i] = h
+//	}
+//	sh.Histories = histories
+//
+//	return nil
+//}
 
 type VotesStateValueJSONMarshaler struct {
 	hint.BaseHinter
-	Active bool                 `json:"active"`
-	Result uint8                `json:"result"`
-	Votes  []types.VotingPowers `json:"votes"`
+	VotingPowerBox types.VotingPowerBox `json:"voting_power_box"`
 }
 
-func (v VotesStateValue) MarshalJSON() ([]byte, error) {
+func (vb VotingPowerBoxStateValue) MarshalJSON() ([]byte, error) {
 	return util.MarshalJSON(VotesStateValueJSONMarshaler{
-		BaseHinter: v.BaseHinter,
-		Active:     v.Active,
-		Result:     v.Result,
-		Votes:      v.Votes,
+		BaseHinter:     vb.BaseHinter,
+		VotingPowerBox: vb.votingPowerBox,
 	})
 }
 
 type VotesStateValueJSONUnmarshaler struct {
-	Active bool            `json:"active"`
-	Result uint8           `json:"result"`
-	Votes  json.RawMessage `json:"votes"`
+	VotingPowrBox json.RawMessage `json:"voting_power_box"`
 }
 
-func (v *VotesStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of VotesStateValue")
+func (vb *VotingPowerBoxStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+	e := util.StringErrorFunc("failed to decode json of VotingPowerBoxStateValue")
 
 	var u VotesStateValueJSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
 		return e(err, "")
 	}
 
-	v.Active = u.Active
-	v.Result = u.Result
-
-	hvs, err := enc.DecodeSlice(u.Votes)
-	if err != nil {
+	if hinter, err := enc.Decode(u.VotingPowrBox); err != nil {
 		return e(err, "")
+	} else if v, ok := hinter.(types.VotingPowerBox); !ok {
+		return e(util.ErrWrongType.Errorf("expected VotingPowerBox, not %T", hinter), "")
+	} else {
+		vb.votingPowerBox = v
 	}
-
-	votes := make([]types.VotingPowers, len(hvs))
-	for i, hinter := range hvs {
-		c, ok := hinter.(types.VotingPowers)
-		if !ok {
-			return e(util.ErrWrongType.Errorf("expected types.VotingPowers, not %T", hinter), "")
-		}
-
-		votes[i] = c
-	}
-	v.Votes = votes
 
 	return nil
 }
