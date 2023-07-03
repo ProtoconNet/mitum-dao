@@ -6,31 +6,32 @@ import (
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/encoder"
 	"github.com/ProtoconNet/mitum2/util/hint"
+	"github.com/pkg/errors"
 )
 
 func (cd *TransferCallData) unpack(enc encoder.Encoder, ht hint.Hint, sd, rc string, bam []byte) error {
-	e := util.StringErrorFunc("failed to decode bson of TransferCallData")
+	e := util.StringError("failed to decode bson of TransferCallData")
 
 	cd.BaseHinter = hint.NewBaseHinter(ht)
 
 	switch a, err := base.DecodeAddress(sd, enc); {
 	case err != nil:
-		return e(err, "")
+		return e.Wrap(err)
 	default:
 		cd.sender = a
 	}
 
 	switch a, err := base.DecodeAddress(rc, enc); {
 	case err != nil:
-		return e(err, "")
+		return e.Wrap(err)
 	default:
 		cd.receiver = a
 	}
 
 	if hinter, err := enc.Decode(bam); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	} else if am, ok := hinter.(currencytypes.Amount); !ok {
-		return e(util.ErrWrongType.Errorf("expected Amount, not %T", hinter), "")
+		return e.Wrap(errors.Errorf("expected Amount, not %T", hinter))
 	} else {
 		cd.amount = am
 	}
@@ -39,14 +40,14 @@ func (cd *TransferCallData) unpack(enc encoder.Encoder, ht hint.Hint, sd, rc str
 }
 
 func (cd *GovernanceCallData) unpack(enc encoder.Encoder, ht hint.Hint, bpo []byte) error {
-	e := util.StringErrorFunc("failed to decode bson of GovernanceCallData")
+	e := util.StringError("failed to decode bson of GovernanceCallData")
 
 	cd.BaseHinter = hint.NewBaseHinter(ht)
 
 	if hinter, err := enc.Decode(bpo); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	} else if po, ok := hinter.(Policy); !ok {
-		return e(util.ErrWrongType.Errorf("expected Policy, not %T", hinter), "")
+		return e.Wrap(errors.Errorf("expected Policy, not %T", hinter))
 	} else {
 		cd.policy = po
 	}

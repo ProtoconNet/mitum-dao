@@ -81,7 +81,7 @@ type DelegatorInfo struct {
 
 func NewDelegatorInfo(account base.Address, delegatee base.Address) DelegatorInfo {
 	return DelegatorInfo{
-		BaseHinter: hint.NewBaseHinter(VoterInfoHint),
+		BaseHinter: hint.NewBaseHinter(DelegatorInfoHint),
 		account:    account,
 		delegatee:  delegatee,
 	}

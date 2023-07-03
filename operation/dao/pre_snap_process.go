@@ -3,6 +3,7 @@ package dao
 import (
 	"context"
 	"github.com/ProtoconNet/mitum-currency/v3/common"
+	"github.com/ProtoconNet/mitum-currency/v3/operation/processor"
 	currencystate "github.com/ProtoconNet/mitum-currency/v3/state"
 	"github.com/ProtoconNet/mitum-currency/v3/state/currency"
 	extensioncurrency "github.com/ProtoconNet/mitum-currency/v3/state/extension"
@@ -29,17 +30,17 @@ func (PreSnap) Process(
 
 type PreSnapProcessor struct {
 	*base.BaseOperationProcessor
-	getLastBlockFunc types.GetLastBlockFunc
+	getLastBlockFunc processor.GetLastBlockFunc
 }
 
-func NewPreSnapProcessor(getLastBlockFunc types.GetLastBlockFunc) currencytypes.GetNewProcessor {
+func NewPreSnapProcessor(getLastBlockFunc processor.GetLastBlockFunc) currencytypes.GetNewProcessor {
 	return func(
 		height base.Height,
 		getStateFunc base.GetStateFunc,
 		newPreProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 		newProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 	) (base.OperationProcessor, error) {
-		e := util.StringErrorFunc("failed to create new PreSnapProcessor")
+		e := util.StringError("failed to create new PreSnapProcessor")
 
 		nopp := preSnapProcessorPool.Get()
 		opp, ok := nopp.(*PreSnapProcessor)
@@ -50,7 +51,7 @@ func NewPreSnapProcessor(getLastBlockFunc types.GetLastBlockFunc) currencytypes.
 		b, err := base.NewBaseOperationProcessor(
 			height, getStateFunc, newPreProcessConstraintFunc, newProcessConstraintFunc)
 		if err != nil {
-			return nil, e(err, "")
+			return nil, e.Wrap(err)
 		}
 
 		opp.BaseOperationProcessor = b
@@ -63,15 +64,15 @@ func NewPreSnapProcessor(getLastBlockFunc types.GetLastBlockFunc) currencytypes.
 func (opp *PreSnapProcessor) PreProcess(
 	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc,
 ) (context.Context, base.OperationProcessReasonError, error) {
-	e := util.StringErrorFunc("failed to preprocess PreSnap")
+	e := util.StringError("failed to preprocess PreSnap")
 
 	fact, ok := op.Fact().(PreSnapFact)
 	if !ok {
-		return ctx, nil, e(nil, "not PreSnapFact, %T", op.Fact())
+		return ctx, nil, e.Errorf("not PreSnapFact, %T", op.Fact())
 	}
 
 	if err := fact.IsValid(nil); err != nil {
-		return ctx, nil, e(err, "")
+		return ctx, nil, e.Wrap(err)
 	}
 
 	if err := currencystate.CheckExistsState(currency.StateKeyAccount(fact.Sender()), getStateFunc); err != nil {
@@ -154,11 +155,11 @@ func (opp *PreSnapProcessor) Process(
 	_ context.Context, op base.Operation, getStateFunc base.GetStateFunc) (
 	[]base.StateMergeValue, base.OperationProcessReasonError, error,
 ) {
-	e := util.StringErrorFunc("failed to process PreSnap")
+	e := util.StringError("failed to process PreSnap")
 
 	fact, ok := op.Fact().(PreSnapFact)
 	if !ok {
-		return nil, nil, e(nil, "expected PreSnapFact, not %T", op.Fact())
+		return nil, nil, e.Errorf("expected PreSnapFact, not %T", op.Fact())
 	}
 
 	sts := make([]base.StateMergeValue, 1)

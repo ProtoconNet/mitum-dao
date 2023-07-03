@@ -33,11 +33,11 @@ type DesignJSONUnmarshaler struct {
 }
 
 func (de *Design) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of Design")
+	e := util.StringError("failed to decode json of Design")
 
 	var ud DesignJSONUnmarshaler
 	if err := enc.Unmarshal(b, &ud); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	return de.unpack(enc, ud.Hint, ud.Option, ud.DAO, ud.Policy)

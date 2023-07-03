@@ -34,11 +34,11 @@ type TransferCalldataJSONUnmarshaler struct {
 }
 
 func (cd *TransferCallData) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of TransferCallData")
+	e := util.StringError("failed to decode json of TransferCallData")
 
 	var uc TransferCalldataJSONUnmarshaler
 	if err := enc.Unmarshal(b, &uc); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	return cd.unpack(enc, uc.Hint, uc.Sender, uc.Receiver, uc.Amount)
@@ -62,11 +62,11 @@ type GovernanceCalldataJSONUnmarshaler struct {
 }
 
 func (cd *GovernanceCallData) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of GovernanceCallData")
+	e := util.StringError("failed to decode json of GovernanceCallData")
 
 	var uc GovernanceCalldataJSONUnmarshaler
 	if err := enc.Unmarshal(b, &uc); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	return cd.unpack(enc, uc.Hint, uc.Policy)

@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"github.com/ProtoconNet/mitum-currency/v3/operation/processor"
 	"github.com/ProtoconNet/mitum-dao/utils"
 	"sync"
 	"time"
@@ -25,24 +26,24 @@ var registerProcessorPool = sync.Pool{
 }
 
 func (Register) Process(
-	ctx context.Context, getStateFunc base.GetStateFunc,
+	_ context.Context, _ base.GetStateFunc,
 ) ([]base.StateMergeValue, base.OperationProcessReasonError, error) {
 	return nil, nil, nil
 }
 
 type RegisterProcessor struct {
 	*base.BaseOperationProcessor
-	getLastBlockFunc types.GetLastBlockFunc
+	getLastBlockFunc processor.GetLastBlockFunc
 }
 
-func NewRegisterProcessor(getLastBlockFunc types.GetLastBlockFunc) currencytypes.GetNewProcessor {
+func NewRegisterProcessor(getLastBlockFunc processor.GetLastBlockFunc) currencytypes.GetNewProcessor {
 	return func(
 		height base.Height,
 		getStateFunc base.GetStateFunc,
 		newPreProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 		newProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 	) (base.OperationProcessor, error) {
-		e := util.StringErrorFunc("failed to create new RegisterProcessor")
+		e := util.StringError("failed to create new RegisterProcessor")
 
 		nopp := registerProcessorPool.Get()
 		opp, ok := nopp.(*RegisterProcessor)
@@ -53,7 +54,7 @@ func NewRegisterProcessor(getLastBlockFunc types.GetLastBlockFunc) currencytypes
 		b, err := base.NewBaseOperationProcessor(
 			height, getStateFunc, newPreProcessConstraintFunc, newProcessConstraintFunc)
 		if err != nil {
-			return nil, e(err, "")
+			return nil, e.Wrap(err)
 		}
 
 		opp.BaseOperationProcessor = b
@@ -66,15 +67,15 @@ func NewRegisterProcessor(getLastBlockFunc types.GetLastBlockFunc) currencytypes
 func (opp *RegisterProcessor) PreProcess(
 	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc,
 ) (context.Context, base.OperationProcessReasonError, error) {
-	e := util.StringErrorFunc("failed to preprocess Register")
+	e := util.StringError("failed to preprocess Register")
 
 	fact, ok := op.Fact().(RegisterFact)
 	if !ok {
-		return ctx, nil, e(nil, "not RegisterFact, %T", op.Fact())
+		return ctx, nil, e.Errorf("not RegisterFact, %T", op.Fact())
 	}
 
 	if err := fact.IsValid(nil); err != nil {
-		return ctx, nil, e(err, "")
+		return ctx, nil, e.Wrap(err)
 	}
 
 	if err := currencystate.CheckExistsState(currency.StateKeyAccount(fact.Sender()), getStateFunc); err != nil {
@@ -179,14 +180,14 @@ func (opp *RegisterProcessor) PreProcess(
 }
 
 func (opp *RegisterProcessor) Process(
-	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc) (
+	_ context.Context, op base.Operation, getStateFunc base.GetStateFunc) (
 	[]base.StateMergeValue, base.OperationProcessReasonError, error,
 ) {
-	e := util.StringErrorFunc("failed to process Register")
+	e := util.StringError("failed to process Register")
 
 	fact, ok := op.Fact().(RegisterFact)
 	if !ok {
-		return nil, nil, e(nil, "expected RegisterFact, not %T", op.Fact())
+		return nil, nil, e.Errorf("expected RegisterFact, not %T", op.Fact())
 	}
 
 	sts := make([]base.StateMergeValue, 3)

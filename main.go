@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	launchcmd "github.com/ProtoconNet/mitum2/launch/cmd"
 	"os"
 
 	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
@@ -24,21 +25,33 @@ var (
 )
 
 //revive:disable:nested-structs
-type CLI struct { //nolint:govet //...
+var CLI struct { //nolint:govet //...
 	launch.BaseFlags
-	Import    currencycmds.ImportCommand  `cmd:"" help:"import from block data"`
-	Init      cmds.INITCommand            `cmd:"" help:"init node"`
-	Run       cmds.RunCommand             `cmd:"" help:"run node"`
-	Operation cmds.OperationCommand       `cmd:"" help:"create operation"`
-	Network   currencycmds.NetworkCommand `cmd:"" help:"network"`
-	Key       currencycmds.KeyCommand     `cmd:"" help:"key"`
-	Version   struct{}                    `cmd:"" help:"version"`
+	Init      currencycmds.INITCommand `cmd:"" help:"init node"`
+	Run       cmds.RunCommand          `cmd:"" help:"run node"`
+	Storage   launchcmd.Storage        `cmd:""`
+	Operation struct {
+		Currency currencycmds.CurrencyCommand `cmd:"" help:"currency operation"`
+		Suffrage currencycmds.SuffrageCommand `cmd:"" help:"suffrage operation"`
+		DAO      cmds.DAOCommand              `cmd:"" help:"dao operation"`
+	} `cmd:"" help:"create operation"`
+	Network struct {
+		Client launchcmd.NetworkClientCommand `cmd:"" help:"network client"`
+	} `cmd:"" help:"network"`
+	Key struct {
+		New     currencycmds.KeyNewCommand     `cmd:"" help:"generate new key"`
+		Address currencycmds.KeyAddressCommand `cmd:"" help:"generate address from key"`
+		Load    launchcmd.KeyLoadCommand       `cmd:"" help:"load key"`
+		Sign    launchcmd.KeySignCommand       `cmd:"" help:"sign"`
+	} `cmd:"" help:"key"`
+	Handover launchcmd.HandoverCommands `cmd:""`
+	Version  struct{}                   `cmd:"" help:"version"`
 }
 
 var flagDefaults = kong.Vars{
 	"log_out":                           "stderr",
 	"log_format":                        "terminal",
-	"log_level":                         "info",
+	"log_level":                         "debug",
 	"log_force_color":                   "false",
 	"design_uri":                        launch.DefaultDesignURI,
 	"create_account_threshold":          "100",
@@ -48,16 +61,7 @@ var flagDefaults = kong.Vars{
 }
 
 func main() {
-	cli := CLI{
-		Import:    currencycmds.NewImportCommand(),
-		Init:      cmds.NewINITCommand(),
-		Run:       cmds.NewRunCommand(),
-		Operation: cmds.NewOperationCommand(),
-		Network:   currencycmds.NewNetworkCommand(),
-		Key:       currencycmds.NewKeyCommand(),
-	}
-
-	kctx := kong.Parse(&cli, flagDefaults)
+	kctx := kong.Parse(&CLI, flagDefaults)
 
 	if err := checkVersion(); err != nil {
 		kctx.FatalIfErrorf(err)
@@ -70,7 +74,7 @@ func main() {
 
 	pctx := context.Background()
 	pctx = context.WithValue(pctx, launch.VersionContextKey, version)
-	pctx = context.WithValue(pctx, launch.FlagsContextKey, cli.BaseFlags)
+	pctx = context.WithValue(pctx, launch.FlagsContextKey, CLI.BaseFlags)
 	pctx = context.WithValue(pctx, launch.KongContextContextKey, kctx)
 
 	pss := launch.DefaultMainPS()
@@ -80,7 +84,7 @@ func main() {
 		kctx.FatalIfErrorf(err)
 	default:
 		pctx = i
-		kctx = kong.Parse(&cli, kong.BindTo(pctx, (*context.Context)(nil)), flagDefaults)
+		kctx = kong.Parse(&CLI, kong.BindTo(pctx, (*context.Context)(nil)), flagDefaults)
 	}
 
 	var log *logging.Logging

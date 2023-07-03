@@ -25,23 +25,23 @@ type RegisterInfoBSONUnmarshaler struct {
 }
 
 func (r *VoterInfo) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of VoterInfo")
+	e := util.StringError("failed to decode bson of VoterInfo")
 
 	var u RegisterInfoBSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(u.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	r.BaseHinter = hint.NewBaseHinter(ht)
 
 	switch a, err := base.DecodeAddress(u.Account, enc); {
 	case err != nil:
-		return e(err, "")
+		return e.Wrap(err)
 	default:
 		r.account = a
 	}
@@ -50,7 +50,7 @@ func (r *VoterInfo) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 	for i, ba := range u.Delegators {
 		ac, err := base.DecodeAddress(ba, enc)
 		if err != nil {
-			return e(err, "")
+			return e.Wrap(err)
 		}
 		acc[i] = ac
 

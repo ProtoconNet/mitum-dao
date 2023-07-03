@@ -59,12 +59,12 @@ type CreateDAOFactBSONUnmarshaler struct {
 }
 
 func (fact *CreateDAOFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of CreateDAOFact")
+	e := util.StringError("failed to decode bson of CreateDAOFact")
 
 	var ubf common.BaseFactBSONUnmarshaler
 
 	if err := enc.Unmarshal(b, &ubf); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	fact.BaseFact.SetHash(valuehash.NewBytesFromString(ubf.Hash))
@@ -72,12 +72,12 @@ func (fact *CreateDAOFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 
 	var uf CreateDAOFactBSONUnmarshaler
 	if err := bson.Unmarshal(b, &uf); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(uf.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 	fact.BaseHinter = hint.NewBaseHinter(ht)
 
@@ -113,11 +113,11 @@ func (op CreateDAO) MarshalBSON() ([]byte, error) {
 }
 
 func (op *CreateDAO) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of CreateDAO")
+	e := util.StringError("failed to decode bson of CreateDAO")
 
 	var ubo common.BaseOperation
 	if err := ubo.DecodeBSON(b, enc); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	op.BaseOperation = ubo

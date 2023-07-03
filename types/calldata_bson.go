@@ -26,16 +26,16 @@ type TransferCalldataBSONUnmarshaler struct {
 }
 
 func (cd *TransferCallData) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of TransferCallData")
+	e := util.StringError("failed to decode bson of TransferCallData")
 
 	var uc TransferCalldataBSONUnmarshaler
 	if err := enc.Unmarshal(b, &uc); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(uc.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	return cd.unpack(enc, ht, uc.Sender, uc.Receiver, uc.Amount)
@@ -56,16 +56,16 @@ type GovernanceCalldataBSONUnmarshaler struct {
 }
 
 func (cd *GovernanceCallData) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of GovernanceCallData")
+	e := util.StringError("failed to decode bson of GovernanceCallData")
 
 	var uc GovernanceCalldataBSONUnmarshaler
 	if err := enc.Unmarshal(b, &uc); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(uc.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	return cd.unpack(enc, ht, uc.Policy)

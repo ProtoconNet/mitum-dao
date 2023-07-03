@@ -10,7 +10,7 @@ import (
 func (fact *PreSnapFact) unpack(enc encoder.Encoder,
 	sa, ca, did, pid, cid string,
 ) error {
-	e := util.StringErrorFunc("failed to unmarshal PreSnapFact")
+	e := util.StringError("failed to unmarshal PreSnapFact")
 
 	fact.daoID = currencytypes.ContractID(did)
 	fact.proposalID = pid
@@ -18,14 +18,14 @@ func (fact *PreSnapFact) unpack(enc encoder.Encoder,
 
 	switch a, err := base.DecodeAddress(sa, enc); {
 	case err != nil:
-		return e(err, "")
+		return e.Wrap(err)
 	default:
 		fact.sender = a
 	}
 
 	switch a, err := base.DecodeAddress(ca, enc); {
 	case err != nil:
-		return e(err, "")
+		return e.Wrap(err)
 	default:
 		fact.contract = a
 	}

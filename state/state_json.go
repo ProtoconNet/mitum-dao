@@ -2,6 +2,7 @@ package state
 
 import (
 	"encoding/json"
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/ProtoconNet/mitum-dao/types"
@@ -27,17 +28,17 @@ type DesignStateValueJSONUnmarshaler struct {
 }
 
 func (de *DesignStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of DesignStateValue")
+	e := util.StringError("failed to decode json of DesignStateValue")
 
 	var u DesignStateValueJSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	var design types.Design
 
 	if err := design.DecodeJSON(u.Design, enc); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	de.design = design
@@ -65,19 +66,19 @@ type ProposalStateValueJSONUnmarshaler struct {
 }
 
 func (p *ProposalStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of ProposalStateValue")
+	e := util.StringError("failed to decode json of ProposalStateValue")
 
 	var u ProposalStateValueJSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	p.status = types.ProposalStatus(u.Status)
 
 	if hinter, err := enc.Decode(u.Proposal); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	} else if pr, ok := hinter.(types.Proposal); !ok {
-		return e(util.ErrWrongType.Errorf("expected Proposal, not %T", hinter), "")
+		return e.Wrap(errors.Errorf("expected Proposal, not %T", hinter))
 	} else {
 		p.proposal = pr
 	}
@@ -102,11 +103,11 @@ type DelegatorsStateValueJSONUnmarshaler struct {
 }
 
 func (dg *DelegatorsStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of DelegatorsStateValue")
+	e := util.StringError("failed to decode json of DelegatorsStateValue")
 
 	var u DelegatorsStateValueJSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	hr, err := enc.DecodeSlice(u.Delegators)
@@ -117,7 +118,7 @@ func (dg *DelegatorsStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error
 	dgs := make([]types.DelegatorInfo, len(u.Delegators))
 	for i, hinter := range hr {
 		if v, ok := hinter.(types.DelegatorInfo); !ok {
-			return e(util.ErrWrongType.Errorf("expected types.DelegatorInfo, not %T", hinter), "")
+			return e.Wrap(errors.Errorf("expected types.DelegatorInfo, not %T", hinter))
 		} else {
 			dgs[i] = v
 		}
@@ -144,23 +145,23 @@ type VotersStateValueJSONUnmarshaler struct {
 }
 
 func (vt *VotersStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of VotersStateValue")
+	e := util.StringError("failed to decode json of VotersStateValue")
 
 	var u VotersStateValueJSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	hr, err := enc.DecodeSlice(u.Voters)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	infos := make([]types.VoterInfo, len(hr))
 	for i, hinter := range hr {
 		rg, ok := hinter.(types.VoterInfo)
 		if !ok {
-			return e(util.ErrWrongType.Errorf("expected types.VoterInfo, not %T", hinter), "")
+			return e.Wrap(errors.Errorf("expected types.VoterInfo, not %T", hinter))
 		}
 
 		infos[i] = rg
@@ -188,23 +189,23 @@ func (vt *VotersStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 //}
 //
 //func (sh *SnapHistoriesStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-//	e := util.StringErrorFunc("failed to decode json of SnapHistoriesStateValue")
+//	e := util.StringError("failed to decode json of SnapHistoriesStateValue")
 //
 //	var u SnapHistoriesStateValueJSONUnmarshaler
 //	if err := enc.Unmarshal(b, &u); err != nil {
-//		return e(err, "")
+//		return e.Wrap(err)
 //	}
 //
 //	hs, err := enc.DecodeSlice(u.Histories)
 //	if err != nil {
-//		return e(err, "")
+//		return e.Wrap(err)
 //	}
 //
 //	histories := make([]types.SnapHistory, len(hs))
 //	for i, hinter := range hs {
 //		h, ok := hinter.(types.SnapHistory)
 //		if !ok {
-//			return e(util.ErrWrongType.Errorf("expected types.SnapHistory, not %T", hinter), "")
+//			return e.Wrap(errors.Errorf("expected types.SnapHistory, not %T", hinter))
 //		}
 //
 //		histories[i] = h
@@ -231,17 +232,17 @@ type VotesStateValueJSONUnmarshaler struct {
 }
 
 func (vb *VotingPowerBoxStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of VotingPowerBoxStateValue")
+	e := util.StringError("failed to decode json of VotingPowerBoxStateValue")
 
 	var u VotesStateValueJSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	if hinter, err := enc.Decode(u.VotingPowrBox); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	} else if v, ok := hinter.(types.VotingPowerBox); !ok {
-		return e(util.ErrWrongType.Errorf("expected VotingPowerBox, not %T", hinter), "")
+		return e.Wrap(errors.Errorf("expected VotingPowerBox, not %T", hinter))
 	} else {
 		vb.votingPowerBox = v
 	}

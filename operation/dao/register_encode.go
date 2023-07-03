@@ -10,7 +10,7 @@ import (
 func (fact *RegisterFact) unpack(enc encoder.Encoder,
 	sa, ca, did, pid, ta, cid string,
 ) error {
-	e := util.StringErrorFunc("failed to unmarshal RegisterFact")
+	e := util.StringError("failed to unmarshal RegisterFact")
 
 	fact.daoID = currencytypes.ContractID(did)
 	fact.proposalID = pid
@@ -18,14 +18,14 @@ func (fact *RegisterFact) unpack(enc encoder.Encoder,
 
 	switch a, err := base.DecodeAddress(sa, enc); {
 	case err != nil:
-		return e(err, "")
+		return e.Wrap(err)
 	default:
 		fact.sender = a
 	}
 
 	switch a, err := base.DecodeAddress(ca, enc); {
 	case err != nil:
-		return e(err, "")
+		return e.Wrap(err)
 	default:
 		fact.contract = a
 	}
@@ -33,7 +33,7 @@ func (fact *RegisterFact) unpack(enc encoder.Encoder,
 	if ta != "" {
 		switch a, err := base.DecodeAddress(ta, enc); {
 		case err != nil:
-			return e(err, "")
+			return e.Wrap(err)
 		default:
 			fact.delegated = a
 		}

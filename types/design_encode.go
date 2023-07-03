@@ -5,19 +5,20 @@ import (
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/encoder"
 	"github.com/ProtoconNet/mitum2/util/hint"
+	"github.com/pkg/errors"
 )
 
 func (de *Design) unpack(enc encoder.Encoder, ht hint.Hint, op, dao string, bpo []byte) error {
-	e := util.StringErrorFunc("failed to decode bson of Design")
+	e := util.StringError("failed to decode bson of Design")
 
 	de.BaseHinter = hint.NewBaseHinter(ht)
 	de.option = DAOOption(dao)
 	de.daoID = types.ContractID(dao)
 
 	if hinter, err := enc.Decode(bpo); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	} else if po, ok := hinter.(Policy); !ok {
-		return e(util.ErrWrongType.Errorf("expected Policy, not %T", hinter), "")
+		return e.Wrap(errors.Errorf("expected Policy, not %T", hinter))
 	} else {
 		de.policy = po
 	}

@@ -38,11 +38,11 @@ type SnapFactJSONUnMarshaler struct {
 }
 
 func (fact *PreSnapFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of PreSnapFact")
+	e := util.StringError("failed to decode json of PreSnapFact")
 
 	var uf SnapFactJSONUnMarshaler
 	if err := enc.Unmarshal(b, &uf); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	fact.BaseFact.SetJSONUnmarshaler(uf.BaseFactJSONUnmarshaler)
@@ -67,11 +67,11 @@ func (op PreSnap) MarshalJSON() ([]byte, error) {
 }
 
 func (op *PreSnap) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of PreSnap")
+	e := util.StringError("failed to decode json of PreSnap")
 
 	var ubo common.BaseOperation
 	if err := ubo.DecodeJSON(b, enc); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	op.BaseOperation = ubo

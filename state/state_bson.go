@@ -5,6 +5,7 @@ import (
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/hint"
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -23,23 +24,23 @@ type DesignStateValueBSONUnmarshaler struct {
 }
 
 func (de *DesignStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of DesignStateValue")
+	e := util.StringError("failed to decode bson of DesignStateValue")
 
 	var u DesignStateValueBSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(u.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	de.BaseHinter = hint.NewBaseHinter(ht)
 
 	var design types.Design
 	if err := design.DecodeBSON(u.Design, enc); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	de.design = design
@@ -62,24 +63,24 @@ type ProposalStateValueBSONUnmarshaler struct {
 }
 
 func (p *ProposalStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of ProposalStateValue")
+	e := util.StringError("failed to decode bson of ProposalStateValue")
 
 	var u ProposalStateValueBSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(u.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	p.BaseHinter = hint.NewBaseHinter(ht)
 
 	if hinter, err := enc.Decode(u.Proposal); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	} else if pr, ok := hinter.(types.Proposal); !ok {
-		return e(util.ErrWrongType.Errorf("expected Proposal, not %T", hinter), "")
+		return e.Wrap(errors.Errorf("expected Proposal, not %T", hinter))
 	} else {
 		p.proposal = pr
 	}
@@ -102,30 +103,30 @@ type DelegatorsStateValueBSONUnmarshaler struct {
 }
 
 func (dg *DelegatorsStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of DelegatorsStateValue")
+	e := util.StringError("failed to decode bson of DelegatorsStateValue")
 
 	var u DelegatorsStateValueBSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(u.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	dg.BaseHinter = hint.NewBaseHinter(ht)
 
 	hr, err := enc.DecodeSlice(u.Delegators)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	infos := make([]types.DelegatorInfo, len(hr))
 	for i, hinter := range hr {
 		rg, ok := hinter.(types.DelegatorInfo)
 		if !ok {
-			return e(util.ErrWrongType.Errorf("expected types.DelegatorInfo, not %T", hinter), "")
+			return e.Wrap(errors.Errorf("expected types.DelegatorInfo, not %T", hinter))
 		}
 
 		infos[i] = rg
@@ -150,30 +151,30 @@ type VotersStateValueBSONUnmarshaler struct {
 }
 
 func (vt *VotersStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of VotersStateValue")
+	e := util.StringError("failed to decode bson of VotersStateValue")
 
 	var u VotersStateValueBSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(u.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	vt.BaseHinter = hint.NewBaseHinter(ht)
 
 	hr, err := enc.DecodeSlice(u.Registers)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	infos := make([]types.VoterInfo, len(hr))
 	for i, hinter := range hr {
 		rg, ok := hinter.(types.VoterInfo)
 		if !ok {
-			return e(util.ErrWrongType.Errorf("expected types.VoterInfo, not %T", hinter), "")
+			return e.Wrap(errors.Errorf("expected types.VoterInfo, not %T", hinter))
 		}
 
 		infos[i] = rg
@@ -198,30 +199,30 @@ func (vt *VotersStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 //}
 //
 //func (sh *SnapHistoriesStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-//	e := util.StringErrorFunc("failed to decode bson of SnapHistoriesStateValue")
+//	e := util.StringError("failed to decode bson of SnapHistoriesStateValue")
 //
 //	var u SnapHistoriesStateValueBSONUnmarshaler
 //	if err := enc.Unmarshal(b, &u); err != nil {
-//		return e(err, "")
+//		return e.Wrap(err)
 //	}
 //
 //	ht, err := hint.ParseHint(u.Hint)
 //	if err != nil {
-//		return e(err, "")
+//		return e.Wrap(err)
 //	}
 //
 //	sh.BaseHinter = hint.NewBaseHinter(ht)
 //
 //	hs, err := enc.DecodeSlice(u.Histories)
 //	if err != nil {
-//		return e(err, "")
+//		return e.Wrap(err)
 //	}
 //
 //	histories := make([]types.SnapHistory, len(hs))
 //	for i, hinter := range hs {
 //		h, ok := hinter.(types.SnapHistory)
 //		if !ok {
-//			return e(util.ErrWrongType.Errorf("expected types.SnapHistory, not %T", hinter), "")
+//			return e.Wrap(errors.Errorf("expected types.SnapHistory, not %T", hinter))
 //		}
 //
 //		histories[i] = h
@@ -246,24 +247,24 @@ type VotesStateValueBSONUnmarshaler struct {
 }
 
 func (vb *VotingPowerBoxStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of VotingPowerBoxStateValue")
+	e := util.StringError("failed to decode bson of VotingPowerBoxStateValue")
 
 	var u VotesStateValueBSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(u.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	vb.BaseHinter = hint.NewBaseHinter(ht)
 
 	if hinter, err := enc.Decode(u.VotingPowerBox); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	} else if v, ok := hinter.(types.VotingPowerBox); !ok {
-		return e(util.ErrWrongType.Errorf("expected VotingPowerBox, not %T", hinter), "")
+		return e.Wrap(errors.Errorf("expected VotingPowerBox, not %T", hinter))
 	} else {
 		vb.votingPowerBox = v
 	}

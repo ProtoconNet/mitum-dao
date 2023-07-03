@@ -24,16 +24,16 @@ type CryptoProposalBSONUnmarshaler struct {
 }
 
 func (p *CryptoProposal) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of CryptoProposal")
+	e := util.StringError("failed to decode bson of CryptoProposal")
 
 	var up CryptoProposalBSONUnmarshaler
 	if err := enc.Unmarshal(b, &up); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(up.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	return p.unpack(enc, ht, up.StartTime, up.CallData)
@@ -58,16 +58,16 @@ type BizProposalBSONUnmarshaler struct {
 }
 
 func (p *BizProposal) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of BizProposal")
+	e := util.StringError("failed to decode bson of BizProposal")
 
 	var up BizProposalBSONUnmarshaler
 	if err := enc.Unmarshal(b, &up); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(up.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	return p.unpack(enc, ht, up.StartTime, up.Url, up.Hash)

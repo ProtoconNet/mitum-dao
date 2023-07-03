@@ -27,16 +27,16 @@ type RegisterInfoJSONUnmarshaler struct {
 }
 
 func (r *VoterInfo) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of VoterInfo")
+	e := util.StringError("failed to decode json of VoterInfo")
 
 	var u RegisterInfoJSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	switch a, err := base.DecodeAddress(u.Account, enc); {
 	case err != nil:
-		return e(err, "")
+		return e.Wrap(err)
 	default:
 		r.account = a
 	}
@@ -45,7 +45,7 @@ func (r *VoterInfo) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 	for i, ba := range u.Delegators {
 		ac, err := base.DecodeAddress(ba, enc)
 		if err != nil {
-			return e(err, "")
+			return e.Wrap(err)
 		}
 		acc[i] = ac
 

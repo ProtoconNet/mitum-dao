@@ -23,7 +23,7 @@ var createDAOProcessorPool = sync.Pool{
 }
 
 func (CreateDAO) Process(
-	ctx context.Context, getStateFunc base.GetStateFunc,
+	_ context.Context, _ base.GetStateFunc,
 ) ([]base.StateMergeValue, base.OperationProcessReasonError, error) {
 	return nil, nil, nil
 }
@@ -39,7 +39,7 @@ func NewCreateDAOProcessor() currencytypes.GetNewProcessor {
 		newPreProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 		newProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 	) (base.OperationProcessor, error) {
-		e := util.StringErrorFunc("failed to create new CreateDAOProcessor")
+		e := util.StringError("failed to create new CreateDAOProcessor")
 
 		nopp := createDAOProcessorPool.Get()
 		opp, ok := nopp.(*CreateDAOProcessor)
@@ -50,7 +50,7 @@ func NewCreateDAOProcessor() currencytypes.GetNewProcessor {
 		b, err := base.NewBaseOperationProcessor(
 			height, getStateFunc, newPreProcessConstraintFunc, newProcessConstraintFunc)
 		if err != nil {
-			return nil, e(err, "")
+			return nil, e.Wrap(err)
 		}
 
 		opp.BaseOperationProcessor = b
@@ -62,15 +62,15 @@ func NewCreateDAOProcessor() currencytypes.GetNewProcessor {
 func (opp *CreateDAOProcessor) PreProcess(
 	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc,
 ) (context.Context, base.OperationProcessReasonError, error) {
-	e := util.StringErrorFunc("failed to preprocess CreateDAO")
+	e := util.StringError("failed to preprocess CreateDAO")
 
 	fact, ok := op.Fact().(CreateDAOFact)
 	if !ok {
-		return ctx, nil, e(nil, "not CreateDAOFact, %T", op.Fact())
+		return ctx, nil, e.Errorf("not CreateDAOFact, %T", op.Fact())
 	}
 
 	if err := fact.IsValid(nil); err != nil {
-		return ctx, nil, e(err, "")
+		return ctx, nil, e.Wrap(err)
 	}
 
 	if err := currencystate.CheckExistsState(currency.StateKeyAccount(fact.Sender()), getStateFunc); err != nil {
@@ -111,14 +111,14 @@ func (opp *CreateDAOProcessor) PreProcess(
 }
 
 func (opp *CreateDAOProcessor) Process(
-	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc) (
+	_ context.Context, op base.Operation, getStateFunc base.GetStateFunc) (
 	[]base.StateMergeValue, base.OperationProcessReasonError, error,
 ) {
-	e := util.StringErrorFunc("failed to process CreateDAO")
+	e := util.StringError("failed to process CreateDAO")
 
 	fact, ok := op.Fact().(CreateDAOFact)
 	if !ok {
-		return nil, nil, e(nil, "expected CreateDAOFact, not %T", op.Fact())
+		return nil, nil, e.Errorf("expected CreateDAOFact, not %T", op.Fact())
 	}
 
 	policy := types.NewPolicy(

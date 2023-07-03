@@ -43,15 +43,15 @@ func (wl Whitelist) Bytes() []byte {
 }
 
 func (wl Whitelist) IsValid([]byte) error {
-	e := util.StringErrorFunc("invalid whitelist")
+	e := util.StringError("invalid whitelist")
 
 	if err := util.CheckIsValiders(nil, false, wl.BaseHinter); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	for _, ac := range wl.accounts {
 		if err := ac.IsValid(nil); err != nil {
-			return e(err, "")
+			return e.Wrap(err)
 		}
 	}
 
@@ -136,7 +136,7 @@ func (po Policy) Bytes() []byte {
 }
 
 func (po Policy) IsValid([]byte) error {
-	e := util.StringErrorFunc("invalid dao policy")
+	e := util.StringError("invalid dao policy")
 
 	if err := util.CheckIsValiders(nil, false,
 		po.BaseHinter,
@@ -147,7 +147,7 @@ func (po Policy) IsValid([]byte) error {
 		po.turnout,
 		po.quorum,
 	); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	return nil

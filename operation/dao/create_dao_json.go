@@ -78,11 +78,11 @@ type CreateDAOFactJSONUnMarshaler struct {
 }
 
 func (fact *CreateDAOFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of CreateDAOFact")
+	e := util.StringError("failed to decode json of CreateDAOFact")
 
 	var uf CreateDAOFactJSONUnMarshaler
 	if err := enc.Unmarshal(b, &uf); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	fact.BaseFact.SetJSONUnmarshaler(uf.BaseFactJSONUnmarshaler)
@@ -119,11 +119,11 @@ func (op CreateDAO) MarshalJSON() ([]byte, error) {
 }
 
 func (op *CreateDAO) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of CreateDAO")
+	e := util.StringError("failed to decode json of CreateDAO")
 
 	var ubo common.BaseOperation
 	if err := ubo.DecodeJSON(b, enc); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	op.BaseOperation = ubo
