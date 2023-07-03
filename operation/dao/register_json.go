@@ -10,12 +10,12 @@ import (
 
 type RegisterFactJSONMarshaler struct {
 	base.BaseFactJSONMarshaler
-	Owner     base.Address             `json:"sender"`
-	Contract  base.Address             `json:"contract"`
-	DAOID     currencytypes.ContractID `json:"daoid"`
-	ProposeID string                   `json:"proposeid"`
-	Approved  base.Address             `json:"approved"`
-	Currency  currencytypes.CurrencyID `json:"currency"`
+	Owner      base.Address             `json:"sender"`
+	Contract   base.Address             `json:"contract"`
+	DAOID      currencytypes.ContractID `json:"dao_id"`
+	ProposalID string                   `json:"proposal_id"`
+	Delegated  base.Address             `json:"delegated"`
+	Currency   currencytypes.CurrencyID `json:"currency"`
 }
 
 func (fact RegisterFact) MarshalJSON() ([]byte, error) {
@@ -24,20 +24,20 @@ func (fact RegisterFact) MarshalJSON() ([]byte, error) {
 		Owner:                 fact.sender,
 		Contract:              fact.contract,
 		DAOID:                 fact.daoID,
-		ProposeID:             fact.proposeID,
-		Approved:              fact.approved,
+		ProposalID:            fact.proposalID,
+		Delegated:             fact.delegated,
 		Currency:              fact.currency,
 	})
 }
 
 type RegisterFactJSONUnMarshaler struct {
 	base.BaseFactJSONUnmarshaler
-	Owner     string `json:"sender"`
-	Contract  string `json:"contract"`
-	DAOID     string `json:"daoid"`
-	ProposeID string `json:"proposeid"`
-	Approved  string `json:"approved"`
-	Currency  string `json:"currency"`
+	Owner      string `json:"sender"`
+	Contract   string `json:"contract"`
+	DAOID      string `json:"dao_id"`
+	ProposalID string `json:"proposal_id"`
+	Delegated  string `json:"delegated"`
+	Currency   string `json:"currency"`
 }
 
 func (fact *RegisterFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
@@ -54,8 +54,8 @@ func (fact *RegisterFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		uf.Owner,
 		uf.Contract,
 		uf.DAOID,
-		uf.ProposeID,
-		uf.Approved,
+		uf.ProposalID,
+		uf.Delegated,
 		uf.Currency,
 	)
 }

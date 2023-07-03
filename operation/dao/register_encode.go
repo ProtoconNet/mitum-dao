@@ -13,7 +13,7 @@ func (fact *RegisterFact) unpack(enc encoder.Encoder,
 	e := util.StringErrorFunc("failed to unmarshal RegisterFact")
 
 	fact.daoID = currencytypes.ContractID(did)
-	fact.proposeID = pid
+	fact.proposalID = pid
 	fact.currency = currencytypes.CurrencyID(cid)
 
 	switch a, err := base.DecodeAddress(sa, enc); {
@@ -35,10 +35,10 @@ func (fact *RegisterFact) unpack(enc encoder.Encoder,
 		case err != nil:
 			return e(err, "")
 		default:
-			fact.approved = a
+			fact.delegated = a
 		}
 	} else {
-		fact.approved = nil
+		fact.delegated = nil
 	}
 
 	return nil

@@ -13,27 +13,27 @@ import (
 func (fact RegisterFact) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
-			"_hint":     fact.Hint().String(),
-			"sender":    fact.sender,
-			"contract":  fact.contract,
-			"daoid":     fact.daoID,
-			"proposeid": fact.proposeID,
-			"approved":  fact.approved,
-			"currency":  fact.currency,
-			"hash":      fact.BaseFact.Hash().String(),
-			"token":     fact.BaseFact.Token(),
+			"_hint":       fact.Hint().String(),
+			"sender":      fact.sender,
+			"contract":    fact.contract,
+			"dao_id":      fact.daoID,
+			"proposal_id": fact.proposalID,
+			"delegated":   fact.delegated,
+			"currency":    fact.currency,
+			"hash":        fact.BaseFact.Hash().String(),
+			"token":       fact.BaseFact.Token(),
 		},
 	)
 }
 
 type RegisterFactBSONUnmarshaler struct {
-	Hint      string `bson:"_hint"`
-	Sender    string `bson:"sender"`
-	Contract  string `bson:"contract"`
-	DAOID     string `bson:"daoid"`
-	ProposeID string `bson:"proposeid"`
-	Approved  string `bson:"approved"`
-	Currency  string `bson:"currency"`
+	Hint       string `bson:"_hint"`
+	Sender     string `bson:"sender"`
+	Contract   string `bson:"contract"`
+	DAOID      string `bson:"dao_id"`
+	ProposalID string `bson:"proposal_id"`
+	Delegated  string `bson:"delegated"`
+	Currency   string `bson:"currency"`
 }
 
 func (fact *RegisterFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
@@ -63,8 +63,8 @@ func (fact *RegisterFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		uf.Sender,
 		uf.Contract,
 		uf.DAOID,
-		uf.ProposeID,
-		uf.Approved,
+		uf.ProposalID,
+		uf.Delegated,
 		uf.Currency,
 	)
 }

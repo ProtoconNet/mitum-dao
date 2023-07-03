@@ -2,12 +2,13 @@ package dao
 
 import (
 	"context"
+	"github.com/ProtoconNet/mitum-dao/types"
 	"sync"
 
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	currencystate "github.com/ProtoconNet/mitum-currency/v3/state"
-	currency "github.com/ProtoconNet/mitum-currency/v3/state/currency"
-	extensioncurrency "github.com/ProtoconNet/mitum-currency/v3/state/extension"
+	"github.com/ProtoconNet/mitum-currency/v3/state/currency"
+	stateextionsion "github.com/ProtoconNet/mitum-currency/v3/state/extension"
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum-dao/state"
 	"github.com/ProtoconNet/mitum2/base"
@@ -22,7 +23,7 @@ var proposeProcessorPool = sync.Pool{
 }
 
 func (Propose) Process(
-	ctx context.Context, getStateFunc base.GetStateFunc,
+	_ context.Context, _ base.GetStateFunc,
 ) ([]base.StateMergeValue, base.OperationProcessReasonError, error) {
 	return nil, nil, nil
 }
@@ -76,11 +77,11 @@ func (opp *ProposeProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("sender not found, %q: %w", fact.Sender(), err), nil
 	}
 
-	if err := currencystate.CheckNotExistsState(extensioncurrency.StateKeyContractAccount(fact.Sender()), getStateFunc); err != nil {
+	if err := currencystate.CheckNotExistsState(stateextionsion.StateKeyContractAccount(fact.Sender()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("contract account cannot propose proposal, %q: %w", fact.Sender(), err), nil
 	}
 
-	if err := currencystate.CheckExistsState(extensioncurrency.StateKeyContractAccount(fact.Contract()), getStateFunc); err != nil {
+	if err := currencystate.CheckExistsState(stateextionsion.StateKeyContractAccount(fact.Contract()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("contract account not found, %q: %w", fact.Contract(), err), nil
 	}
 
@@ -149,7 +150,7 @@ func (opp *ProposeProcessor) PreProcess(
 }
 
 func (opp *ProposeProcessor) Process(
-	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc) (
+	_ context.Context, op base.Operation, getStateFunc base.GetStateFunc) (
 	[]base.StateMergeValue, base.OperationProcessReasonError, error,
 ) {
 	e := util.StringErrorFunc("failed to process Propose")
@@ -159,12 +160,12 @@ func (opp *ProposeProcessor) Process(
 		return nil, nil, e(nil, "expected ProposeFact, not %T", op.Fact())
 	}
 
-	sts := []base.StateMergeValue{}
+	var sts []base.StateMergeValue
 
 	sts = append(sts,
 		currencystate.NewStateMergeValue(
-			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposeID()),
-			state.NewProposalStateValue(true, fact.Proposal()),
+			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
+			state.NewProposalStateValue(types.Proposed, fact.Proposal()),
 		),
 	)
 

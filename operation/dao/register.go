@@ -16,12 +16,12 @@ var (
 
 type RegisterFact struct {
 	base.BaseFact
-	sender    base.Address
-	contract  base.Address
-	daoID     currencytypes.ContractID
-	proposeID string
-	approved  base.Address
-	currency  currencytypes.CurrencyID
+	sender     base.Address
+	contract   base.Address
+	daoID      currencytypes.ContractID
+	proposalID string
+	delegated  base.Address
+	currency   currencytypes.CurrencyID
 }
 
 func NewRegisterFact(
@@ -29,19 +29,19 @@ func NewRegisterFact(
 	sender base.Address,
 	contract base.Address,
 	daoID currencytypes.ContractID,
-	proposeID string,
-	approved base.Address,
+	proposalID string,
+	delegated base.Address,
 	currency currencytypes.CurrencyID,
 ) RegisterFact {
 	bf := base.NewBaseFact(RegisterFactHint, token)
 	fact := RegisterFact{
-		BaseFact:  bf,
-		sender:    sender,
-		contract:  contract,
-		daoID:     daoID,
-		proposeID: proposeID,
-		approved:  approved,
-		currency:  currency,
+		BaseFact:   bf,
+		sender:     sender,
+		contract:   contract,
+		daoID:      daoID,
+		proposalID: proposalID,
+		delegated:  delegated,
+		currency:   currency,
 	}
 	fact.SetHash(fact.GenerateHash())
 
@@ -62,8 +62,8 @@ func (fact RegisterFact) Bytes() []byte {
 		fact.sender.Bytes(),
 		fact.contract.Bytes(),
 		fact.daoID.Bytes(),
-		[]byte(fact.proposeID),
-		fact.approved.Bytes(),
+		[]byte(fact.proposalID),
+		fact.delegated.Bytes(),
 		fact.currency.Bytes(),
 	)
 }
@@ -82,30 +82,17 @@ func (fact RegisterFact) IsValid(b []byte) error {
 		fact.daoID,
 		fact.contract,
 		fact.currency,
+		fact.delegated,
 	); err != nil {
 		return err
 	}
 
-	if len(fact.proposeID) == 0 {
+	if len(fact.proposalID) == 0 {
 		return util.ErrInvalid.Errorf("empty propose id")
 	}
 
 	if fact.sender.Equal(fact.contract) {
 		return util.ErrInvalid.Errorf("contract address is same with sender, %q", fact.sender)
-	}
-
-	if fact.approved != nil {
-		if err := fact.approved.IsValid(nil); err != nil {
-			return err
-		}
-
-		if fact.sender.Equal(fact.approved) {
-			return util.ErrInvalid.Errorf("sender cannot approve itself, %q", fact.sender)
-		}
-
-		if fact.approved.Equal(fact.contract) {
-			return util.ErrInvalid.Errorf("contract address is same with approved, %q", fact.approved)
-		}
 	}
 
 	return nil
@@ -127,12 +114,12 @@ func (fact RegisterFact) DAOID() currencytypes.ContractID {
 	return fact.daoID
 }
 
-func (fact RegisterFact) ProposeID() string {
-	return fact.proposeID
+func (fact RegisterFact) ProposalID() string {
+	return fact.proposalID
 }
 
-func (fact RegisterFact) Approved() base.Address {
-	return fact.approved
+func (fact RegisterFact) Delegated() base.Address {
+	return fact.delegated
 }
 
 func (fact RegisterFact) Currency() currencytypes.CurrencyID {
@@ -140,14 +127,11 @@ func (fact RegisterFact) Currency() currencytypes.CurrencyID {
 }
 
 func (fact RegisterFact) Addresses() ([]base.Address, error) {
-	as := make([]base.Address, 2)
+	as := make([]base.Address, 3)
 
 	as[0] = fact.sender
 	as[1] = fact.contract
-
-	if fact.approved != nil {
-		as = append(as, fact.approved)
-	}
+	as[2] = fact.delegated
 
 	return as, nil
 }

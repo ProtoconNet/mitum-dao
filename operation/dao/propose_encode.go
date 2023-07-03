@@ -16,8 +16,8 @@ func (fact *ProposeFact) unpack(enc encoder.Encoder,
 	e := util.StringErrorFunc("failed to unmarshal ProposeFact")
 
 	fact.daoID = currencytypes.ContractID(did)
-	fact.proposeID = pid
-	fact.starttime = st
+	fact.proposalID = pid
+	fact.startTime = st
 	fact.currency = currencytypes.CurrencyID(cid)
 
 	if hinter, err := enc.Decode(bp); err != nil {

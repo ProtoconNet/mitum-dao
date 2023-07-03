@@ -7,13 +7,13 @@ import (
 	"github.com/ProtoconNet/mitum2/util/encoder"
 )
 
-func (fact *SnapFact) unpack(enc encoder.Encoder,
+func (fact *PreSnapFact) unpack(enc encoder.Encoder,
 	sa, ca, did, pid, cid string,
 ) error {
-	e := util.StringErrorFunc("failed to unmarshal SnapFact")
+	e := util.StringErrorFunc("failed to unmarshal PreSnapFact")
 
 	fact.daoID = currencytypes.ContractID(did)
-	fact.proposeID = pid
+	fact.proposalID = pid
 	fact.currency = currencytypes.CurrencyID(cid)
 
 	switch a, err := base.DecodeAddress(sa, enc); {

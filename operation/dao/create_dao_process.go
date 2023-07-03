@@ -6,7 +6,7 @@ import (
 
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	currencystate "github.com/ProtoconNet/mitum-currency/v3/state"
-	currency "github.com/ProtoconNet/mitum-currency/v3/state/currency"
+	"github.com/ProtoconNet/mitum-currency/v3/state/currency"
 	extensioncurrency "github.com/ProtoconNet/mitum-currency/v3/state/extension"
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum-dao/state"
@@ -123,8 +123,8 @@ func (opp *CreateDAOProcessor) Process(
 
 	policy := types.NewPolicy(
 		fact.votingPowerToken, fact.fee, fact.threshold, fact.whitelist,
-		fact.delaytime, fact.registerperiod, fact.snaptime, fact.voteperiod,
-		fact.timelock, fact.turnout, fact.quorum,
+		fact.proposalReviewPeriod, fact.registrationPeriod, fact.preSnapshotPeriod, fact.votingPeriod,
+		fact.postSnapshotPeriod, fact.executionDelayPeriod, fact.turnout, fact.quorum,
 	)
 	if err := policy.IsValid(nil); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("invalid dao policy, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil

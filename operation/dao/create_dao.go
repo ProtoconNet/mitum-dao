@@ -17,22 +17,23 @@ var (
 
 type CreateDAOFact struct {
 	base.BaseFact
-	sender           base.Address
-	contract         base.Address
-	daoID            currencytypes.ContractID
-	option           types.DAOOption
-	votingPowerToken currencytypes.CurrencyID
-	threshold        currencytypes.Amount
-	fee              currencytypes.Amount
-	whitelist        types.Whitelist
-	delaytime        uint64
-	registerperiod   uint64
-	snaptime         uint64
-	voteperiod       uint64
-	timelock         uint64
-	turnout          types.PercentRatio
-	quorum           types.PercentRatio
-	currency         currencytypes.CurrencyID
+	sender               base.Address
+	contract             base.Address
+	daoID                currencytypes.ContractID
+	option               types.DAOOption
+	votingPowerToken     currencytypes.CurrencyID
+	threshold            currencytypes.Amount
+	fee                  currencytypes.Amount
+	whitelist            types.Whitelist
+	proposalReviewPeriod uint64
+	registrationPeriod   uint64
+	preSnapshotPeriod    uint64
+	votingPeriod         uint64
+	postSnapshotPeriod   uint64
+	executionDelayPeriod uint64
+	turnout              types.PercentRatio
+	quorum               types.PercentRatio
+	currency             currencytypes.CurrencyID
 }
 
 func NewCreateDAOFact(
@@ -44,29 +45,35 @@ func NewCreateDAOFact(
 	votingPowerToken currencytypes.CurrencyID,
 	threshold, fee currencytypes.Amount,
 	whitelist types.Whitelist,
-	delaytime, registerperiod, snaptime, voteperiod, timelock uint64,
+	proposalReviewPeriod,
+	registrationPeriod,
+	preSnapshotPeriod,
+	votingPeriod,
+	postSnapshotPeriod,
+	executionDelayPeriod uint64,
 	turnout, quorum types.PercentRatio,
 	currency currencytypes.CurrencyID,
 ) CreateDAOFact {
 	bf := base.NewBaseFact(CreateDAOFactHint, token)
 	fact := CreateDAOFact{
-		BaseFact:         bf,
-		sender:           sender,
-		contract:         contract,
-		daoID:            daoID,
-		option:           option,
-		votingPowerToken: votingPowerToken,
-		threshold:        threshold,
-		fee:              fee,
-		whitelist:        whitelist,
-		delaytime:        delaytime,
-		registerperiod:   registerperiod,
-		snaptime:         snaptime,
-		voteperiod:       voteperiod,
-		timelock:         timelock,
-		turnout:          turnout,
-		quorum:           quorum,
-		currency:         currency,
+		BaseFact:             bf,
+		sender:               sender,
+		contract:             contract,
+		daoID:                daoID,
+		option:               option,
+		votingPowerToken:     votingPowerToken,
+		threshold:            threshold,
+		fee:                  fee,
+		whitelist:            whitelist,
+		proposalReviewPeriod: proposalReviewPeriod,
+		registrationPeriod:   registrationPeriod,
+		preSnapshotPeriod:    preSnapshotPeriod,
+		votingPeriod:         votingPeriod,
+		executionDelayPeriod: executionDelayPeriod,
+		postSnapshotPeriod:   postSnapshotPeriod,
+		turnout:              turnout,
+		quorum:               quorum,
+		currency:             currency,
 	}
 	fact.SetHash(fact.GenerateHash())
 
@@ -91,11 +98,12 @@ func (fact CreateDAOFact) Bytes() []byte {
 		fact.fee.Bytes(),
 		fact.threshold.Bytes(),
 		fact.whitelist.Bytes(),
-		util.Uint64ToBytes(fact.delaytime),
-		util.Uint64ToBytes(fact.registerperiod),
-		util.Uint64ToBytes(fact.snaptime),
-		util.Uint64ToBytes(fact.voteperiod),
-		util.Uint64ToBytes(fact.timelock),
+		util.Uint64ToBytes(fact.proposalReviewPeriod),
+		util.Uint64ToBytes(fact.registrationPeriod),
+		util.Uint64ToBytes(fact.preSnapshotPeriod),
+		util.Uint64ToBytes(fact.votingPeriod),
+		util.Uint64ToBytes(fact.postSnapshotPeriod),
+		util.Uint64ToBytes(fact.executionDelayPeriod),
 		fact.turnout.Bytes(),
 		fact.quorum.Bytes(),
 		fact.currency.Bytes(),
@@ -165,24 +173,28 @@ func (fact CreateDAOFact) Whitelist() types.Whitelist {
 	return fact.whitelist
 }
 
-func (fact CreateDAOFact) DelayTime() uint64 {
-	return fact.delaytime
+func (fact CreateDAOFact) ProposalReviewPeriod() uint64 {
+	return fact.proposalReviewPeriod
 }
 
-func (fact CreateDAOFact) RegisterPeriod() uint64 {
-	return fact.registerperiod
+func (fact CreateDAOFact) RegistrationPeriod() uint64 {
+	return fact.registrationPeriod
 }
 
-func (fact CreateDAOFact) SnapTime() uint64 {
-	return fact.snaptime
+func (fact CreateDAOFact) PreSnapshotPeriod() uint64 {
+	return fact.preSnapshotPeriod
 }
 
-func (fact CreateDAOFact) VotePeriod() uint64 {
-	return fact.voteperiod
+func (fact CreateDAOFact) VotingPeriod() uint64 {
+	return fact.votingPeriod
 }
 
-func (fact CreateDAOFact) TimeLock() uint64 {
-	return fact.timelock
+func (fact CreateDAOFact) PostSnapshotPeriod() uint64 {
+	return fact.postSnapshotPeriod
+}
+
+func (fact CreateDAOFact) ExecutionDelayPeriod() uint64 {
+	return fact.executionDelayPeriod
 }
 
 func (fact CreateDAOFact) Turnout() types.PercentRatio {

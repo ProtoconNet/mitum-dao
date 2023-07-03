@@ -10,32 +10,32 @@ import (
 	"github.com/ProtoconNet/mitum2/util/valuehash"
 )
 
-func (fact SnapFact) MarshalBSON() ([]byte, error) {
+func (fact PreSnapFact) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
-			"_hint":     fact.Hint().String(),
-			"sender":    fact.sender,
-			"contract":  fact.contract,
-			"daoid":     fact.daoID,
-			"proposeid": fact.proposeID,
-			"currency":  fact.currency,
-			"hash":      fact.BaseFact.Hash().String(),
-			"token":     fact.BaseFact.Token(),
+			"_hint":       fact.Hint().String(),
+			"sender":      fact.sender,
+			"contract":    fact.contract,
+			"dao_id":      fact.daoID,
+			"proposal_id": fact.proposalID,
+			"currency":    fact.currency,
+			"hash":        fact.BaseFact.Hash().String(),
+			"token":       fact.BaseFact.Token(),
 		},
 	)
 }
 
-type SnapFactBSONUnmarshaler struct {
-	Hint      string `bson:"_hint"`
-	Sender    string `bson:"sender"`
-	Contract  string `bson:"contract"`
-	DAOID     string `bson:"daoid"`
-	ProposeID string `bson:"proposeid"`
-	Currency  string `bson:"currency"`
+type PreSnapFactBSONUnmarshaler struct {
+	Hint       string `bson:"_hint"`
+	Sender     string `bson:"sender"`
+	Contract   string `bson:"contract"`
+	DAOID      string `bson:"dao_id"`
+	ProposalID string `bson:"proposal_id"`
+	Currency   string `bson:"currency"`
 }
 
-func (fact *SnapFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of SnapFact")
+func (fact *PreSnapFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
+	e := util.StringErrorFunc("failed to decode bson of PreSnapFact")
 
 	var ubf common.BaseFactBSONUnmarshaler
 
@@ -46,7 +46,7 @@ func (fact *SnapFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 	fact.BaseFact.SetHash(valuehash.NewBytesFromString(ubf.Hash))
 	fact.BaseFact.SetToken(ubf.Token)
 
-	var uf SnapFactBSONUnmarshaler
+	var uf PreSnapFactBSONUnmarshaler
 	if err := bson.Unmarshal(b, &uf); err != nil {
 		return e(err, "")
 	}
@@ -61,12 +61,12 @@ func (fact *SnapFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		uf.Sender,
 		uf.Contract,
 		uf.DAOID,
-		uf.ProposeID,
+		uf.ProposalID,
 		uf.Currency,
 	)
 }
 
-func (op Snap) MarshalBSON() ([]byte, error) {
+func (op PreSnap) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
 			"_hint": op.Hint().String(),
@@ -76,8 +76,8 @@ func (op Snap) MarshalBSON() ([]byte, error) {
 		})
 }
 
-func (op *Snap) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of Snap")
+func (op *PreSnap) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
+	e := util.StringErrorFunc("failed to decode bson of PreSnap")
 
 	var ubo common.BaseOperation
 	if err := ubo.DecodeBSON(b, enc); err != nil {

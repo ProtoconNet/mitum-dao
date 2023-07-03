@@ -13,29 +13,29 @@ import (
 func (fact ProposeFact) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
-			"_hint":     fact.Hint().String(),
-			"sender":    fact.sender,
-			"contract":  fact.contract,
-			"daoid":     fact.daoID,
-			"proposeid": fact.proposeID,
-			"starttime": fact.starttime,
-			"proposal":  fact.proposal,
-			"currency":  fact.currency,
-			"hash":      fact.BaseFact.Hash().String(),
-			"token":     fact.BaseFact.Token(),
+			"_hint":       fact.Hint().String(),
+			"sender":      fact.sender,
+			"contract":    fact.contract,
+			"dao_id":      fact.daoID,
+			"proposal_id": fact.proposalID,
+			"start_time":  fact.startTime,
+			"proposal":    fact.proposal,
+			"currency":    fact.currency,
+			"hash":        fact.BaseFact.Hash().String(),
+			"token":       fact.BaseFact.Token(),
 		},
 	)
 }
 
 type ProposeFactBSONUnmarshaler struct {
-	Hint      string   `bson:"_hint"`
-	Sender    string   `bson:"sender"`
-	Contract  string   `bson:"contract"`
-	DAOID     string   `bson:"daoid"`
-	ProposeID string   `bson:"proposeid"`
-	StartTime uint64   `bson:"starttime"`
-	Proposal  bson.Raw `bson:"proposal"`
-	Currency  string   `bson:"currency"`
+	Hint       string   `bson:"_hint"`
+	Sender     string   `bson:"sender"`
+	Contract   string   `bson:"contract"`
+	DAOID      string   `bson:"dao_id"`
+	ProposalID string   `bson:"proposal_id"`
+	StartTime  uint64   `bson:"start_time"`
+	Proposal   bson.Raw `bson:"proposal"`
+	Currency   string   `bson:"currency"`
 }
 
 func (fact *ProposeFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
@@ -65,7 +65,7 @@ func (fact *ProposeFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		uf.Sender,
 		uf.Contract,
 		uf.DAOID,
-		uf.ProposeID,
+		uf.ProposalID,
 		uf.StartTime,
 		uf.Proposal,
 		uf.Currency,

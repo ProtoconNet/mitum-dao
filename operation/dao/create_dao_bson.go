@@ -13,47 +13,49 @@ import (
 func (fact CreateDAOFact) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
-			"_hint":              fact.Hint().String(),
-			"sender":             fact.sender,
-			"contract":           fact.contract,
-			"daoid":              fact.daoID,
-			"option":             fact.option,
-			"voting_power_token": fact.votingPowerToken,
-			"threshold":          fact.threshold,
-			"fee":                fact.fee,
-			"whitelist":          fact.whitelist,
-			"delaytime":          fact.delaytime,
-			"registerperiod":     fact.registerperiod,
-			"snaptime":           fact.snaptime,
-			"voteperiod":         fact.voteperiod,
-			"timelock":           fact.timelock,
-			"turnout":            fact.turnout,
-			"quorum":             fact.quorum,
-			"currency":           fact.currency,
-			"hash":               fact.BaseFact.Hash().String(),
-			"token":              fact.BaseFact.Token(),
+			"_hint":                  fact.Hint().String(),
+			"sender":                 fact.sender,
+			"contract":               fact.contract,
+			"dao_id":                 fact.daoID,
+			"option":                 fact.option,
+			"voting_power_token":     fact.votingPowerToken,
+			"threshold":              fact.threshold,
+			"fee":                    fact.fee,
+			"whitelist":              fact.whitelist,
+			"proposal_review_period": fact.proposalReviewPeriod,
+			"registration_period":    fact.registrationPeriod,
+			"pre_snapshot_period":    fact.preSnapshotPeriod,
+			"voting_period":          fact.votingPeriod,
+			"post_snapshot_period":   fact.postSnapshotPeriod,
+			"execution_delay_period": fact.executionDelayPeriod,
+			"turnout":                fact.turnout,
+			"quorum":                 fact.quorum,
+			"currency":               fact.currency,
+			"hash":                   fact.BaseFact.Hash().String(),
+			"token":                  fact.BaseFact.Token(),
 		},
 	)
 }
 
 type CreateDAOFactBSONUnmarshaler struct {
-	Hint             string   `bson:"_hint"`
-	Sender           string   `bson:"sender"`
-	Contract         string   `bson:"contract"`
-	DAOID            string   `bson:"daoid"`
-	Option           string   `bson:"option"`
-	VotingPowerToken string   `bson:"voting_power_token"`
-	Threshold        bson.Raw `bson:"threshold"`
-	Fee              bson.Raw `bson:"fee"`
-	Whitelist        bson.Raw `bson:"whitelist"`
-	Delaytime        uint64   `bson:"delaytime"`
-	Registerperiod   uint64   `bson:"registerperiod"`
-	Snaptime         uint64   `bson:"snaptime"`
-	Voteperiod       uint64   `bson:"voteperiod"`
-	Timelock         uint64   `bson:"timelock"`
-	Turnout          uint     `bson:"turnout"`
-	Quorum           uint     `bson:"quorum"`
-	Currency         string   `bson:"currency"`
+	Hint                 string   `bson:"_hint"`
+	Sender               string   `bson:"sender"`
+	Contract             string   `bson:"contract"`
+	DAOID                string   `bson:"dao_id"`
+	Option               string   `bson:"option"`
+	VotingPowerToken     string   `bson:"voting_power_token"`
+	Threshold            bson.Raw `bson:"threshold"`
+	Fee                  bson.Raw `bson:"fee"`
+	Whitelist            bson.Raw `bson:"whitelist"`
+	ProposalReviewPeriod uint64   `bson:"proposal_review_period"`
+	RegistrationPeriod   uint64   `bson:"registration_period"`
+	PreSnapshotPeriod    uint64   `bson:"pre_snapshot_period"`
+	VotingPeriod         uint64   `bson:"voting_period"`
+	PostSnapshotPeriod   uint64   `bson:"post_snapshot_period"`
+	ExecutionDelayPeriod uint64   `bson:"execution_delay_period"`
+	Turnout              uint     `bson:"turnout"`
+	Quorum               uint     `bson:"quorum"`
+	Currency             string   `bson:"currency"`
 }
 
 func (fact *CreateDAOFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
@@ -88,11 +90,12 @@ func (fact *CreateDAOFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		uf.Threshold,
 		uf.Fee,
 		uf.Whitelist,
-		uf.Delaytime,
-		uf.Registerperiod,
-		uf.Snaptime,
-		uf.Voteperiod,
-		uf.Timelock,
+		uf.ProposalReviewPeriod,
+		uf.RegistrationPeriod,
+		uf.PreSnapshotPeriod,
+		uf.VotingPeriod,
+		uf.PostSnapshotPeriod,
+		uf.ExecutionDelayPeriod,
 		uf.Turnout,
 		uf.Quorum,
 		uf.Currency,

@@ -10,61 +10,61 @@ import (
 )
 
 var (
-	SnapFactHint = hint.MustNewHint("mitum-dao-snap-operation-fact-v0.0.1")
-	SnapHint     = hint.MustNewHint("mitum-dao-snap-operation-v0.0.1")
+	PreSnapFactHint = hint.MustNewHint("mitum-dao-pre-snap-operation-fact-v0.0.1")
+	PreSnapHint     = hint.MustNewHint("mitum-dao-pre-snap-operation-v0.0.1")
 )
 
-type SnapFact struct {
+type PreSnapFact struct {
 	base.BaseFact
-	sender    base.Address
-	contract  base.Address
-	daoID     currencytypes.ContractID
-	proposeID string
-	currency  currencytypes.CurrencyID
+	sender     base.Address
+	contract   base.Address
+	daoID      currencytypes.ContractID
+	proposalID string
+	currency   currencytypes.CurrencyID
 }
 
-func NewSnapFact(
+func NewPreSnapFact(
 	token []byte,
 	sender base.Address,
 	contract base.Address,
 	daoID currencytypes.ContractID,
-	proposeID string,
+	proposalID string,
 	currency currencytypes.CurrencyID,
-) SnapFact {
-	bf := base.NewBaseFact(SnapFactHint, token)
-	fact := SnapFact{
-		BaseFact:  bf,
-		sender:    sender,
-		contract:  contract,
-		daoID:     daoID,
-		proposeID: proposeID,
-		currency:  currency,
+) PreSnapFact {
+	bf := base.NewBaseFact(PreSnapFactHint, token)
+	fact := PreSnapFact{
+		BaseFact:   bf,
+		sender:     sender,
+		contract:   contract,
+		daoID:      daoID,
+		proposalID: proposalID,
+		currency:   currency,
 	}
 	fact.SetHash(fact.GenerateHash())
 
 	return fact
 }
 
-func (fact SnapFact) Hash() util.Hash {
+func (fact PreSnapFact) Hash() util.Hash {
 	return fact.BaseFact.Hash()
 }
 
-func (fact SnapFact) GenerateHash() util.Hash {
+func (fact PreSnapFact) GenerateHash() util.Hash {
 	return valuehash.NewSHA256(fact.Bytes())
 }
 
-func (fact SnapFact) Bytes() []byte {
+func (fact PreSnapFact) Bytes() []byte {
 	return util.ConcatBytesSlice(
 		fact.Token(),
 		fact.sender.Bytes(),
 		fact.contract.Bytes(),
 		fact.daoID.Bytes(),
-		[]byte(fact.proposeID),
+		[]byte(fact.proposalID),
 		fact.currency.Bytes(),
 	)
 }
 
-func (fact SnapFact) IsValid(b []byte) error {
+func (fact PreSnapFact) IsValid(b []byte) error {
 	if err := fact.BaseHinter.IsValid(nil); err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (fact SnapFact) IsValid(b []byte) error {
 		return err
 	}
 
-	if len(fact.proposeID) == 0 {
+	if len(fact.proposalID) == 0 {
 		return util.ErrInvalid.Errorf("empty propose id")
 	}
 
@@ -93,31 +93,31 @@ func (fact SnapFact) IsValid(b []byte) error {
 	return nil
 }
 
-func (fact SnapFact) Token() base.Token {
+func (fact PreSnapFact) Token() base.Token {
 	return fact.BaseFact.Token()
 }
 
-func (fact SnapFact) Sender() base.Address {
+func (fact PreSnapFact) Sender() base.Address {
 	return fact.sender
 }
 
-func (fact SnapFact) Contract() base.Address {
+func (fact PreSnapFact) Contract() base.Address {
 	return fact.contract
 }
 
-func (fact SnapFact) DAOID() currencytypes.ContractID {
+func (fact PreSnapFact) DAOID() currencytypes.ContractID {
 	return fact.daoID
 }
 
-func (fact SnapFact) ProposeID() string {
-	return fact.proposeID
+func (fact PreSnapFact) ProposalID() string {
+	return fact.proposalID
 }
 
-func (fact SnapFact) Currency() currencytypes.CurrencyID {
+func (fact PreSnapFact) Currency() currencytypes.CurrencyID {
 	return fact.currency
 }
 
-func (fact SnapFact) Addresses() ([]base.Address, error) {
+func (fact PreSnapFact) Addresses() ([]base.Address, error) {
 	as := make([]base.Address, 2)
 
 	as[0] = fact.sender
@@ -126,15 +126,15 @@ func (fact SnapFact) Addresses() ([]base.Address, error) {
 	return as, nil
 }
 
-type Snap struct {
+type PreSnap struct {
 	common.BaseOperation
 }
 
-func NewSnap(fact SnapFact) (Snap, error) {
-	return Snap{BaseOperation: common.NewBaseOperation(SnapHint, fact)}, nil
+func NewPreSnap(fact PreSnapFact) (PreSnap, error) {
+	return PreSnap{BaseOperation: common.NewBaseOperation(PreSnapHint, fact)}, nil
 }
 
-func (op *Snap) HashSign(priv base.Privatekey, networkID base.NetworkID) error {
+func (op *PreSnap) HashSign(priv base.Privatekey, networkID base.NetworkID) error {
 	err := op.Sign(priv, networkID)
 	if err != nil {
 		return err
