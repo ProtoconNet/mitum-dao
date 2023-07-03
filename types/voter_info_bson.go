@@ -8,12 +8,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func (r RegisterInfo) MarshalBSON() ([]byte, error) {
+func (r VoterInfo) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
-			"_hint":       r.Hint().String(),
-			"account":     r.Account,
-			"approved_by": r.ApprovedBy,
+			"_hint":      r.Hint().String(),
+			"account":    r.Account,
+			"delegators": r.Delegators,
 		},
 	)
 }
@@ -21,11 +21,11 @@ func (r RegisterInfo) MarshalBSON() ([]byte, error) {
 type RegisterInfoBSONUnmarshaler struct {
 	Hint       string   `bson:"_hint"`
 	Account    string   `bson:"account"`
-	ApprovedBy []string `bson:"approved_by"`
+	Delegators []string `bson:"delegators"`
 }
 
-func (r *RegisterInfo) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of RegisterInfo")
+func (r *VoterInfo) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
+	e := util.StringErrorFunc("failed to decode bson of VoterInfo")
 
 	var u RegisterInfoBSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
@@ -46,8 +46,8 @@ func (r *RegisterInfo) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		r.account = a
 	}
 
-	acc := make([]base.Address, len(u.ApprovedBy))
-	for i, ba := range u.ApprovedBy {
+	acc := make([]base.Address, len(u.Delegators))
+	for i, ba := range u.Delegators {
 		ac, err := base.DecodeAddress(ba, enc)
 		if err != nil {
 			return e(err, "")
@@ -55,7 +55,7 @@ func (r *RegisterInfo) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		acc[i] = ac
 
 	}
-	r.approvedBy = acc
+	r.delegators = acc
 
 	return nil
 }

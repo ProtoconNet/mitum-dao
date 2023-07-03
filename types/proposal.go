@@ -53,15 +53,15 @@ type Proposal interface {
 
 type CryptoProposal struct {
 	hint.BaseHinter
-	starttime uint64
-	calldata  Calldata
+	startTime uint64
+	callData  CallData
 }
 
-func NewCryptoProposal(starttime uint64, calldata Calldata) CryptoProposal {
+func NewCryptoProposal(startTime uint64, callData CallData) CryptoProposal {
 	return CryptoProposal{
 		BaseHinter: hint.NewBaseHinter(CryptoProposalHint),
-		starttime:  starttime,
-		calldata:   calldata,
+		startTime:  startTime,
+		callData:   callData,
 	}
 }
 
@@ -74,15 +74,15 @@ func (CryptoProposal) Options() uint8 {
 }
 
 func (p CryptoProposal) Bytes() []byte {
-	return util.ConcatBytesSlice(util.Uint64ToBytes(p.starttime), p.calldata.Bytes())
+	return util.ConcatBytesSlice(util.Uint64ToBytes(p.startTime), p.callData.Bytes())
 }
 
 func (p CryptoProposal) StartTime() uint64 {
-	return p.starttime
+	return p.startTime
 }
 
-func (p CryptoProposal) Calldata() Calldata {
-	return p.calldata
+func (p CryptoProposal) CallData() CallData {
+	return p.callData
 }
 
 func (p CryptoProposal) IsValid([]byte) error {
@@ -90,7 +90,7 @@ func (p CryptoProposal) IsValid([]byte) error {
 		return err
 	}
 
-	if err := p.calldata.IsValid(nil); err != nil {
+	if err := p.callData.IsValid(nil); err != nil {
 		return err
 	}
 
@@ -98,23 +98,24 @@ func (p CryptoProposal) IsValid([]byte) error {
 }
 
 func (p CryptoProposal) Addresses() []base.Address {
-	return p.calldata.Addresses()
+	return p.callData.Addresses()
 }
 
 type BizProposal struct {
 	hint.BaseHinter
-	starttime uint64
+	startTime uint64
 	url       URL
 	hash      string
 	options   uint8
 }
 
-func NewBizProposal(starttime uint64, url URL, hash string, options uint8) BizProposal {
+func NewBizProposal(startTime uint64, url URL, hash string, options uint8) BizProposal {
 	return BizProposal{
 		BaseHinter: hint.NewBaseHinter(BizProposalHint),
-		starttime:  starttime,
+		startTime:  startTime,
 		url:        url,
 		hash:       hash,
+		options:    options,
 	}
 }
 
@@ -127,11 +128,11 @@ func (p BizProposal) Options() uint8 {
 }
 
 func (p BizProposal) Bytes() []byte {
-	return util.ConcatBytesSlice(util.Uint64ToBytes(p.starttime), p.url.Bytes(), []byte(p.hash), util.Uint8ToBytes(p.options))
+	return util.ConcatBytesSlice(util.Uint64ToBytes(p.startTime), p.url.Bytes(), []byte(p.hash), util.Uint8ToBytes(p.options))
 }
 
 func (p BizProposal) StartTime() uint64 {
-	return p.starttime
+	return p.startTime
 }
 
 func (p BizProposal) Url() URL {
@@ -160,4 +161,40 @@ func (p BizProposal) IsValid([]byte) error {
 
 func (p BizProposal) Addresses() []base.Address {
 	return []base.Address{}
+}
+
+func GetPeriodOfCurrentTime(
+	policy Policy,
+	proposal Proposal,
+	blockmap base.BlockMap,
+) (Period, int64 /*period start time*/, int64 /*period end time*/) {
+	blockTime := uint64(blockmap.Manifest().ProposedAt().Unix())
+	startTime := proposal.StartTime()
+	registrationTime := startTime + policy.ProposalReviewPeriod()
+	preSnapTime := registrationTime + policy.RegistrationPeriod()
+	votingTime := preSnapTime + policy.PreSnapshotPeriod()
+	postSnapTime := votingTime + policy.VotingPeriod()
+	executionDelayTime := postSnapTime + policy.PostSnapshotPeriod()
+	executeTime := executionDelayTime + policy.ExecutionDelayPeriod()
+
+	switch {
+	case blockTime < startTime:
+		return PreLifeCycle, 0, int64(startTime)
+	case blockTime < registrationTime:
+		return ProposalReview, int64(startTime), int64(registrationTime)
+	case blockTime < preSnapTime:
+		return Registration, int64(registrationTime), int64(preSnapTime)
+	case blockTime < votingTime:
+		return PreSnapshot, int64(preSnapTime), int64(votingTime)
+	case blockTime < postSnapTime:
+		return Voting, int64(votingTime), int64(postSnapTime)
+	case blockTime < executionDelayTime:
+		return PostSnapshot, int64(postSnapTime), int64(executionDelayTime)
+	case blockTime < executeTime:
+		return ExecutionDelay, int64(executionDelayTime), int64(executeTime)
+	case blockTime >= executeTime:
+		return Execute, int64(executeTime), 0
+	}
+
+	return NilPeriod, 0, 0
 }

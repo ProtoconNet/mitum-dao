@@ -7,7 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func (cd TransferCalldata) MarshalBSON() ([]byte, error) {
+func (cd TransferCallData) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
 			"_hint":    cd.Hint().String(),
@@ -25,8 +25,8 @@ type TransferCalldataBSONUnmarshaler struct {
 	Amount   bson.Raw `bson:"amount"`
 }
 
-func (cd *TransferCalldata) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of TransferCalldata")
+func (cd *TransferCallData) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
+	e := util.StringErrorFunc("failed to decode bson of TransferCallData")
 
 	var uc TransferCalldataBSONUnmarshaler
 	if err := enc.Unmarshal(b, &uc); err != nil {
@@ -41,7 +41,7 @@ func (cd *TransferCalldata) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 	return cd.unpack(enc, ht, uc.Sender, uc.Receiver, uc.Amount)
 }
 
-func (cd GovernanceCalldata) MarshalBSON() ([]byte, error) {
+func (cd GovernanceCallData) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
 			"_hint":  cd.Hint().String(),
@@ -55,8 +55,8 @@ type GovernanceCalldataBSONUnmarshaler struct {
 	Policy bson.Raw `bson:"policy"`
 }
 
-func (cd *GovernanceCalldata) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of GovernanceCalldata")
+func (cd *GovernanceCallData) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
+	e := util.StringErrorFunc("failed to decode bson of GovernanceCallData")
 
 	var uc GovernanceCalldataBSONUnmarshaler
 	if err := enc.Unmarshal(b, &uc); err != nil {

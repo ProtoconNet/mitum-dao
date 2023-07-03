@@ -43,49 +43,51 @@ func (wl *Whitelist) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 
 type PolicyJSONMarshaler struct {
 	hint.BaseHinter
-	Token          currencytypes.CurrencyID `json:"token"`
-	Threshold      currencytypes.Amount     `json:"threshold"`
-	Fee            currencytypes.Amount     `json:"fee"`
-	Whitelist      Whitelist                `json:"whitelist"`
-	Delaytime      uint64                   `json:"delaytime"`
-	Registerperiod uint64                   `json:"registerperiod"`
-	Snaptime       uint64                   `json:"snaptime"`
-	Voteoperiod    uint64                   `json:"voteperiod"`
-	Timelock       uint64                   `json:"timelock"`
-	Turnout        PercentRatio             `json:"turnout"`
-	Quorum         PercentRatio             `json:"quorum"`
+	Token                currencytypes.CurrencyID `json:"token"`
+	Threshold            currencytypes.Amount     `json:"threshold"`
+	Fee                  currencytypes.Amount     `json:"fee"`
+	Whitelist            Whitelist                `json:"whitelist"`
+	ProposalReviewPeriod uint64                   `json:"proposal_review_period"`
+	RegistrationPeriod   uint64                   `json:"registration_period"`
+	PreSnapshotPeriod    uint64                   `json:"pre_snapshot_period"`
+	VotingPeriod         uint64                   `json:"voting_period"`
+	PostSnapshotPeriod   uint64                   `json:"post_snapshot_period"`
+	ExecutionDelayPeriod uint64                   `json:"execution_delay_period"`
+	Turnout              PercentRatio             `json:"turnout"`
+	Quorum               PercentRatio             `json:"quorum"`
 }
 
 func (po Policy) MarshalJSON() ([]byte, error) {
 	return util.MarshalJSON(PolicyJSONMarshaler{
-		BaseHinter:     po.BaseHinter,
-		Token:          po.token,
-		Threshold:      po.threshold,
-		Fee:            po.fee,
-		Whitelist:      po.whitelist,
-		Delaytime:      po.delaytime,
-		Registerperiod: po.registerperiod,
-		Snaptime:       po.snaptime,
-		Voteoperiod:    po.voteperiod,
-		Timelock:       po.timelock,
-		Turnout:        po.turnout,
-		Quorum:         po.quorum,
+		BaseHinter:           po.BaseHinter,
+		Token:                po.token,
+		Threshold:            po.threshold,
+		Fee:                  po.fee,
+		Whitelist:            po.whitelist,
+		ProposalReviewPeriod: po.proposalReviewPeriod,
+		RegistrationPeriod:   po.registrationPeriod,
+		PreSnapshotPeriod:    po.preSnapshotPeriod,
+		VotingPeriod:         po.votingPeriod,
+		ExecutionDelayPeriod: po.executionDelayPeriod,
+		Turnout:              po.turnout,
+		Quorum:               po.quorum,
 	})
 }
 
 type PolicyJSONUnmarshaler struct {
-	Hint           hint.Hint       `json:"_hint"`
-	Token          string          `json:"token"`
-	Threshold      json.RawMessage `json:"threshold"`
-	Fee            json.RawMessage `json:"fee"`
-	Whitelist      json.RawMessage `json:"whitelist"`
-	Delaytime      uint64          `json:"delaytime"`
-	Registerperiod uint64          `json:"registerperiod"`
-	Snaptime       uint64          `json:"snaptime"`
-	Voteperiod     uint64          `json:"voteperiod"`
-	Timelock       uint64          `json:"timelock"`
-	Turnout        uint            `json:"turnout"`
-	Quorum         uint            `json:"quorum"`
+	Hint                 hint.Hint       `json:"_hint"`
+	Token                string          `json:"token"`
+	Threshold            json.RawMessage `json:"threshold"`
+	Fee                  json.RawMessage `json:"fee"`
+	Whitelist            json.RawMessage `json:"whitelist"`
+	ProposalReviewPeriod uint64          `json:"proposal_review_period"`
+	RegistrationPeriod   uint64          `json:"registration_period"`
+	PreSnapshotPeriod    uint64          `json:"pre_snapshot_period"`
+	VotingPeriod         uint64          `json:"voting_period"`
+	PostSnapshotPeriod   uint64          `json:"post_snapshot_period"`
+	ExecutionDelayPeriod uint64          `json:"execution_delay_period"`
+	Turnout              uint            `json:"turnout"`
+	Quorum               uint            `json:"quorum"`
 }
 
 func (po *Policy) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
@@ -101,11 +103,12 @@ func (po *Policy) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		upo.Threshold,
 		upo.Fee,
 		upo.Whitelist,
-		upo.Delaytime,
-		upo.Registerperiod,
-		upo.Snaptime,
-		upo.Voteperiod,
-		upo.Timelock,
+		upo.ProposalReviewPeriod,
+		upo.RegistrationPeriod,
+		upo.PreSnapshotPeriod,
+		upo.VotingPeriod,
+		upo.PostSnapshotPeriod,
+		upo.ExecutionDelayPeriod,
 		upo.Turnout,
 		upo.Quorum,
 	)

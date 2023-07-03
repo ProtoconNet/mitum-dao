@@ -8,8 +8,8 @@ import (
 	"github.com/ProtoconNet/mitum2/util/hint"
 )
 
-func (cd *TransferCalldata) unpack(enc encoder.Encoder, ht hint.Hint, sd, rc string, bam []byte) error {
-	e := util.StringErrorFunc("failed to decode bson of TransferCalldata")
+func (cd *TransferCallData) unpack(enc encoder.Encoder, ht hint.Hint, sd, rc string, bam []byte) error {
+	e := util.StringErrorFunc("failed to decode bson of TransferCallData")
 
 	cd.BaseHinter = hint.NewBaseHinter(ht)
 
@@ -38,8 +38,8 @@ func (cd *TransferCalldata) unpack(enc encoder.Encoder, ht hint.Hint, sd, rc str
 	return nil
 }
 
-func (cd *GovernanceCalldata) unpack(enc encoder.Encoder, ht hint.Hint, bpo []byte) error {
-	e := util.StringErrorFunc("failed to decode bson of GovernanceCalldata")
+func (cd *GovernanceCallData) unpack(enc encoder.Encoder, ht hint.Hint, bpo []byte) error {
+	e := util.StringErrorFunc("failed to decode bson of GovernanceCallData")
 
 	cd.BaseHinter = hint.NewBaseHinter(ht)
 

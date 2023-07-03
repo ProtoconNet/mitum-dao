@@ -10,14 +10,14 @@ func (p *CryptoProposal) unpack(enc encoder.Encoder, ht hint.Hint, st uint64, bc
 	e := util.StringErrorFunc("failed to decode bson of CryptoProposal")
 
 	p.BaseHinter = hint.NewBaseHinter(ht)
-	p.starttime = st
+	p.startTime = st
 
 	if hinter, err := enc.Decode(bcd); err != nil {
 		return e(err, "")
-	} else if cd, ok := hinter.(Calldata); !ok {
-		return e(util.ErrWrongType.Errorf("expected Calldata, not %T", hinter), "")
+	} else if cd, ok := hinter.(CallData); !ok {
+		return e(util.ErrWrongType.Errorf("expected CallData, not %T", hinter), "")
 	} else {
-		p.calldata = cd
+		p.callData = cd
 	}
 
 	return nil
@@ -26,7 +26,7 @@ func (p *CryptoProposal) unpack(enc encoder.Encoder, ht hint.Hint, st uint64, bc
 func (p *BizProposal) unpack(enc encoder.Encoder, ht hint.Hint, st uint64, url, hash string) error {
 	p.BaseHinter = hint.NewBaseHinter(ht)
 
-	p.starttime = st
+	p.startTime = st
 	p.url = URL(url)
 	p.hash = hash
 

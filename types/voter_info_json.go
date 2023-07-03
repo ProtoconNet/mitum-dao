@@ -10,24 +10,24 @@ import (
 type RegisterInfoJSONMarshaler struct {
 	hint.BaseHinter
 	Account    base.Address   `json:"account"`
-	ApprovedBy []base.Address `json:"approved_by"`
+	Delegators []base.Address `json:"delegators"`
 }
 
-func (r RegisterInfo) MarshalJSON() ([]byte, error) {
+func (r VoterInfo) MarshalJSON() ([]byte, error) {
 	return util.MarshalJSON(RegisterInfoJSONMarshaler{
 		BaseHinter: r.BaseHinter,
 		Account:    r.account,
-		ApprovedBy: r.approvedBy,
+		Delegators: r.delegators,
 	})
 }
 
 type RegisterInfoJSONUnmarshaler struct {
 	Account    string   `json:"account"`
-	ApprovedBy []string `json:"approved_by"`
+	Delegators []string `json:"delegators"`
 }
 
-func (r *RegisterInfo) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of RegisterInfo")
+func (r *VoterInfo) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+	e := util.StringErrorFunc("failed to decode json of VoterInfo")
 
 	var u RegisterInfoJSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
@@ -41,8 +41,8 @@ func (r *RegisterInfo) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		r.account = a
 	}
 
-	acc := make([]base.Address, len(u.ApprovedBy))
-	for i, ba := range u.ApprovedBy {
+	acc := make([]base.Address, len(u.Delegators))
+	for i, ba := range u.Delegators {
 		ac, err := base.DecodeAddress(ba, enc)
 		if err != nil {
 			return e(err, "")
@@ -50,7 +50,7 @@ func (r *RegisterInfo) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		acc[i] = ac
 
 	}
-	r.approvedBy = acc
+	r.delegators = acc
 
 	return nil
 }
