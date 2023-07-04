@@ -44,6 +44,7 @@ type BizProposalJSONMarshaler struct {
 	StartTime uint64 `json:"start_time"`
 	Url       URL    `json:"url"`
 	Hash      string `json:"hash"`
+	Options   uint8  `json:"options"`
 }
 
 func (p BizProposal) MarshalJSON() ([]byte, error) {
@@ -52,6 +53,7 @@ func (p BizProposal) MarshalJSON() ([]byte, error) {
 		StartTime:  p.startTime,
 		Url:        p.url,
 		Hash:       p.hash,
+		Options:    p.options,
 	})
 }
 
@@ -60,6 +62,7 @@ type BizProposalJSONUnmarshaler struct {
 	StartTime uint64    `json:"start_time"`
 	Url       string    `json:"url"`
 	Hash      string    `json:"hash"`
+	Options   uint8     `json:"options"`
 }
 
 func (p *BizProposal) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
@@ -70,5 +73,5 @@ func (p *BizProposal) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		return e.Wrap(err)
 	}
 
-	return p.unpack(enc, up.Hint, up.StartTime, up.Url, up.Hash)
+	return p.unpack(enc, up.Hint, up.StartTime, up.Url, up.Hash, up.Options)
 }

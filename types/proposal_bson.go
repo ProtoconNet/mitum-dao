@@ -46,6 +46,7 @@ func (p BizProposal) MarshalBSON() ([]byte, error) {
 			"start_time": p.startTime,
 			"url":        p.url,
 			"hash":       p.hash,
+			"options":    p.options,
 		},
 	)
 }
@@ -55,6 +56,7 @@ type BizProposalBSONUnmarshaler struct {
 	StartTime uint64 `bson:"start_time"`
 	Url       string `bson:"url"`
 	Hash      string `bson:"hash"`
+	Options   uint8  `bson:"options"`
 }
 
 func (p *BizProposal) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
@@ -70,5 +72,5 @@ func (p *BizProposal) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		return e.Wrap(err)
 	}
 
-	return p.unpack(enc, ht, up.StartTime, up.Url, up.Hash)
+	return p.unpack(enc, ht, up.StartTime, up.Url, up.Hash, up.Options)
 }

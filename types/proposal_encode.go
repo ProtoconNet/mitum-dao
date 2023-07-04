@@ -24,12 +24,13 @@ func (p *CryptoProposal) unpack(enc encoder.Encoder, ht hint.Hint, st uint64, bc
 	return nil
 }
 
-func (p *BizProposal) unpack(_ encoder.Encoder, ht hint.Hint, st uint64, url, hash string) error {
+func (p *BizProposal) unpack(_ encoder.Encoder, ht hint.Hint, st uint64, url, hash string, opt uint8) error {
 	p.BaseHinter = hint.NewBaseHinter(ht)
 
 	p.startTime = st
 	p.url = URL(url)
 	p.hash = hash
+	p.options = opt
 
 	return nil
 }
