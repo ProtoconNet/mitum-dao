@@ -2,11 +2,9 @@ module github.com/ProtoconNet/mitum-dao
 
 go 1.20
 
-replace github.com/ProtoconNet/mitum-currency/v3 => /Users/soonkukkang/go/src/github.com/spikeekips/mitum-currency
-
 require (
-	github.com/ProtoconNet/mitum-currency/v3 v3.0.0-alpha.0.20230627094150-a26c20ed5765
-	github.com/ProtoconNet/mitum2 v0.0.0-20230621062736-ad0a8b8967c7
+	github.com/ProtoconNet/mitum-currency/v3 v3.0.0-alpha.0.20230704001310-409e49fce5b4
+	github.com/ProtoconNet/mitum2 v0.0.0-20230704001603-99ed1a35ce71
 	github.com/alecthomas/kong v0.7.1
 	github.com/arl/statsviz v0.5.2
 	github.com/gorilla/mux v1.8.0
