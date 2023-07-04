@@ -68,6 +68,7 @@ var hinters = []encoder.DecodeDetail{
 	{Hint: types.CryptoProposalHint, Instance: types.CryptoProposal{}},
 	{Hint: types.BizProposalHint, Instance: types.BizProposal{}},
 	{Hint: types.VoterInfoHint, Instance: types.VoterInfo{}},
+	{Hint: types.VotingPowerHint, Instance: types.VotingPower{}},
 	{Hint: types.VotingPowerBoxHint, Instance: types.VotingPowerBox{}},
 
 	{Hint: state.DesignStateValueHint, Instance: state.DesignStateValue{}},
@@ -130,14 +131,14 @@ func init() {
 }
 
 func LoadHinters(enc encoder.Encoder) error {
-	for i := range Hinters {
-		if err := enc.Add(Hinters[i]); err != nil {
+	for _, hinter := range Hinters {
+		if err := enc.Add(hinter); err != nil {
 			return errors.Wrap(err, "failed to add to encoder")
 		}
 	}
 
-	for i := range SupportedProposalOperationFactHinters {
-		if err := enc.Add(SupportedProposalOperationFactHinters[i]); err != nil {
+	for _, hinter := range SupportedProposalOperationFactHinters {
+		if err := enc.Add(hinter); err != nil {
 			return errors.Wrap(err, "failed to add to encoder")
 		}
 	}

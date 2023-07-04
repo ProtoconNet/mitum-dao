@@ -21,15 +21,15 @@ func (vp *VotingPowerBox) unpack(enc encoder.Encoder, ht hint.Hint, st string, b
 	}
 	vp.total = big
 
-	votingPowers := make(map[base.Address]common.Big)
+	votingPowers := make(map[base.Address]VotingPower)
 	m, err := enc.DecodeMap(bvp)
 	if err != nil {
 		return err
 	}
 	for k := range m {
-		v, ok := m[k].(common.Big)
+		v, ok := m[k].(VotingPower)
 		if !ok {
-			return errors.Errorf("expected common.Big, not %T", m[k])
+			return errors.Errorf("expected VotingPower, not %T", m[k])
 		}
 		switch ad, err := base.DecodeAddress(k, enc); {
 		case err != nil:
