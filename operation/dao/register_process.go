@@ -2,10 +2,11 @@ package dao
 
 import (
 	"context"
-	"github.com/ProtoconNet/mitum-currency/v3/operation/processor"
-	"github.com/ProtoconNet/mitum-dao/utils"
 	"sync"
 	"time"
+
+	"github.com/ProtoconNet/mitum-currency/v3/operation/processor"
+	"github.com/ProtoconNet/mitum-dao/utils"
 
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	currencystate "github.com/ProtoconNet/mitum-currency/v3/state"
@@ -147,6 +148,10 @@ func (opp *RegisterProcessor) PreProcess(
 			fact.Delegated(),
 			fact.Sender(),
 		)
+		if err != nil {
+			return nil, base.NewBaseOperationProcessReasonError("failed to check if delegator exists, %q: %w", fact.Delegated(), err), nil
+		}
+
 		if accFound && delegatorFound {
 			return nil, base.NewBaseOperationProcessReasonError(
 				"sender already delegates the account, %q delegated by %q",
@@ -230,7 +235,7 @@ func (opp *RegisterProcessor) Process(
 
 	switch st, found, err := getStateFunc(state.StateKeyDelegators(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find delegators state, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), fact.Sender()), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find delegators state, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), fact.Sender(), err), nil
 	case found:
 		delegators, err := state.StateDelegatorsValue(st)
 		if err != nil {
