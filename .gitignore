@@ -1,2 +1,11 @@
 */**/.DS_Store
 mitum-data/**/*
+*.so
+*.dylib
+*.test
+*.out
+*.sh
+*.json
+.*.sw?
+.sw?
+.idea
