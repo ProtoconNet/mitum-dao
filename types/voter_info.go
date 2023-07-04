@@ -44,7 +44,7 @@ func (r VoterInfo) IsValid([]byte) error {
 		}
 
 		if ac.Equal(r.account) {
-			return e.Wrap(errors.Errorf("approving address is same with approved address, %q", r.Account))
+			return e.Wrap(errors.Errorf("approving address is same with approved address, %q", r.Account()))
 		}
 	}
 

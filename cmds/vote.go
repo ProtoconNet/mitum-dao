@@ -12,19 +12,20 @@ import (
 	"github.com/ProtoconNet/mitum2/util"
 )
 
-type PreSnapCommand struct {
+type VoteCommand struct {
 	BaseCommand
 	currencycmds.OperationFlags
 	Sender     currencycmds.AddressFlag    `arg:"" name:"sender" help:"sender address" required:"true"`
 	Contract   currencycmds.AddressFlag    `arg:"" name:"contract" help:"contract address of credential" required:"true"`
 	DAO        currencycmds.ContractIDFlag `arg:"" name:"dao-id" help:"dao id" required:"true"`
 	ProposalID string                      `arg:"" name:"proposal-id" help:"proposal id" required:"true"`
+	Vote       uint8                       `arg:"" name:"vote" help:"vote" required:"true"`
 	Currency   currencycmds.CurrencyIDFlag `arg:"" name:"currency-id" help:"currency id" required:"true"`
 	sender     base.Address
 	contract   base.Address
 }
 
-func (cmd *PreSnapCommand) Run(pctx context.Context) error { // nolint:dupl
+func (cmd *VoteCommand) Run(pctx context.Context) error { // nolint:dupl
 	if _, err := cmd.prepare(pctx); err != nil {
 		return err
 	}
@@ -46,7 +47,7 @@ func (cmd *PreSnapCommand) Run(pctx context.Context) error { // nolint:dupl
 	return nil
 }
 
-func (cmd *PreSnapCommand) parseFlags() error {
+func (cmd *VoteCommand) parseFlags() error {
 	if err := cmd.OperationFlags.IsValid(nil); err != nil {
 		return err
 	}
@@ -66,19 +67,20 @@ func (cmd *PreSnapCommand) parseFlags() error {
 	return nil
 }
 
-func (cmd *PreSnapCommand) createOperation() (base.Operation, error) { // nolint:dupl}
-	e := util.StringError("failed to create register operation")
+func (cmd *VoteCommand) createOperation() (base.Operation, error) { // nolint:dupl}
+	e := util.StringError("failed to create vote operation")
 
-	fact := dao.NewPreSnapFact(
+	fact := dao.NewVoteFact(
 		[]byte(cmd.Token),
 		cmd.sender,
 		cmd.contract,
 		cmd.DAO.ID,
 		cmd.ProposalID,
+		cmd.Vote,
 		cmd.Currency.CID,
 	)
 
-	op, err := dao.NewPreSnap(fact)
+	op, err := dao.NewVote(fact)
 	if err != nil {
 		return nil, e.Wrap(err)
 	}
