@@ -4,31 +4,33 @@ import (
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/encoder"
 	"github.com/ProtoconNet/mitum2/util/hint"
+	"github.com/pkg/errors"
 )
 
 func (p *CryptoProposal) unpack(enc encoder.Encoder, ht hint.Hint, st uint64, bcd []byte) error {
-	e := util.StringErrorFunc("failed to decode bson of CryptoProposal")
+	e := util.StringError("failed to decode bson of CryptoProposal")
 
 	p.BaseHinter = hint.NewBaseHinter(ht)
-	p.starttime = st
+	p.startTime = st
 
 	if hinter, err := enc.Decode(bcd); err != nil {
-		return e(err, "")
-	} else if cd, ok := hinter.(Calldata); !ok {
-		return e(util.ErrWrongType.Errorf("expected Calldata, not %T", hinter), "")
+		return e.Wrap(err)
+	} else if cd, ok := hinter.(CallData); !ok {
+		return e.Wrap(errors.Errorf("expected CallData, not %T", hinter))
 	} else {
-		p.calldata = cd
+		p.callData = cd
 	}
 
 	return nil
 }
 
-func (p *BizProposal) unpack(enc encoder.Encoder, ht hint.Hint, st uint64, url, hash string) error {
+func (p *BizProposal) unpack(_ encoder.Encoder, ht hint.Hint, st uint64, url, hash string, opt uint8) error {
 	p.BaseHinter = hint.NewBaseHinter(ht)
 
-	p.starttime = st
+	p.startTime = st
 	p.url = URL(url)
 	p.hash = hash
+	p.options = opt
 
 	return nil
 }

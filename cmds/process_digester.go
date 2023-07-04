@@ -2,7 +2,9 @@ package cmds
 
 import (
 	"context"
-
+	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
+	currencydigest "github.com/ProtoconNet/mitum-currency/v3/digest"
+	"github.com/ProtoconNet/mitum-dao/digest"
 	"github.com/ProtoconNet/mitum2/base"
 	isaacblock "github.com/ProtoconNet/mitum2/isaac/block"
 	isaacdatabase "github.com/ProtoconNet/mitum2/isaac/database"
@@ -10,16 +12,7 @@ import (
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/fixedtree"
 	"github.com/ProtoconNet/mitum2/util/logging"
-	"github.com/ProtoconNet/mitum2/util/ps"
 	"github.com/pkg/errors"
-
-	"github.com/ProtoconNet/mitum-currency/v3/digest"
-)
-
-const (
-	PNameDigester            = ps.Name("digester")
-	PNameStartDigester       = ps.Name("start_digester")
-	HookNameDigesterFollowUp = ps.Name("followup_digester")
 )
 
 func ProcessDigester(ctx context.Context) (context.Context, error) {
@@ -28,8 +21,8 @@ func ProcessDigester(ctx context.Context) (context.Context, error) {
 		return ctx, err
 	}
 
-	var st *digest.Database
-	if err := util.LoadFromContext(ctx, ContextValueDigestDatabase, &st); err != nil {
+	var st *currencydigest.Database
+	if err := util.LoadFromContext(ctx, currencycmds.ContextValueDigestDatabase, &st); err != nil {
 		return ctx, err
 	}
 
@@ -46,12 +39,12 @@ func ProcessDigester(ctx context.Context) (context.Context, error) {
 	di := digest.NewDigester(st, root, nil)
 	_ = di.SetLogging(log)
 
-	return context.WithValue(ctx, ContextValueDigester, di), nil
+	return context.WithValue(ctx, currencycmds.ContextValueDigester, di), nil
 }
 
 func ProcessStartDigester(ctx context.Context) (context.Context, error) {
 	var di *digest.Digester
-	if err := util.LoadFromContext(ctx, ContextValueDigester, &di); err != nil {
+	if err := util.LoadFromContext(ctx, currencycmds.ContextValueDigester, &di); err != nil {
 		return ctx, err
 	}
 	if di == nil {
@@ -61,7 +54,7 @@ func ProcessStartDigester(ctx context.Context) (context.Context, error) {
 	return ctx, di.Start(ctx)
 }
 
-func PdigesterFollowUp(ctx context.Context) (context.Context, error) {
+func PDigesterFollowUp(ctx context.Context) (context.Context, error) {
 	var log *logging.Logging
 	if err := util.LoadFromContextOK(ctx, launch.LoggingContextKey, &log); err != nil {
 		return ctx, err
@@ -74,8 +67,8 @@ func PdigesterFollowUp(ctx context.Context) (context.Context, error) {
 		return ctx, err
 	}
 
-	var st *digest.Database
-	if err := util.LoadFromContext(ctx, ContextValueDigestDatabase, &st); err != nil {
+	var st *currencydigest.Database
+	if err := util.LoadFromContext(ctx, currencycmds.ContextValueDigestDatabase, &st); err != nil {
 		return ctx, err
 	}
 	if st == nil {
@@ -107,8 +100,8 @@ func PdigesterFollowUp(ctx context.Context) (context.Context, error) {
 }
 
 func digestFollowup(ctx context.Context, height base.Height) error {
-	var st *digest.Database
-	if err := util.LoadFromContextOK(ctx, ContextValueDigestDatabase, &st); err != nil {
+	var st *currencydigest.Database
+	if err := util.LoadFromContextOK(ctx, currencycmds.ContextValueDigestDatabase, &st); err != nil {
 		return err
 	}
 

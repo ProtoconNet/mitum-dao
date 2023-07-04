@@ -17,13 +17,13 @@ var (
 
 type ProposeFact struct {
 	base.BaseFact
-	sender    base.Address
-	contract  base.Address
-	daoID     currencytypes.ContractID
-	proposeID string
-	starttime uint64
-	proposal  types.Proposal
-	currency  currencytypes.CurrencyID
+	sender     base.Address
+	contract   base.Address
+	daoID      currencytypes.ContractID
+	proposalID string
+	startTime  uint64
+	proposal   types.Proposal
+	currency   currencytypes.CurrencyID
 }
 
 func NewProposeFact(
@@ -31,21 +31,21 @@ func NewProposeFact(
 	sender base.Address,
 	contract base.Address,
 	daoID currencytypes.ContractID,
-	proposeID string,
-	starttime uint64,
+	proposalID string,
+	startTime uint64,
 	proposal types.Proposal,
 	currency currencytypes.CurrencyID,
 ) ProposeFact {
 	bf := base.NewBaseFact(ProposeFactHint, token)
 	fact := ProposeFact{
-		BaseFact:  bf,
-		sender:    sender,
-		contract:  contract,
-		daoID:     daoID,
-		proposeID: proposeID,
-		starttime: starttime,
-		proposal:  proposal,
-		currency:  currency,
+		BaseFact:   bf,
+		sender:     sender,
+		contract:   contract,
+		daoID:      daoID,
+		proposalID: proposalID,
+		startTime:  startTime,
+		proposal:   proposal,
+		currency:   currency,
 	}
 	fact.SetHash(fact.GenerateHash())
 
@@ -66,8 +66,8 @@ func (fact ProposeFact) Bytes() []byte {
 		fact.sender.Bytes(),
 		fact.contract.Bytes(),
 		fact.daoID.Bytes(),
-		[]byte(fact.proposeID),
-		util.Uint64ToBytes(fact.starttime),
+		[]byte(fact.proposalID),
+		util.Uint64ToBytes(fact.startTime),
 		fact.proposal.Bytes(),
 		fact.currency.Bytes(),
 	)
@@ -96,7 +96,7 @@ func (fact ProposeFact) IsValid(b []byte) error {
 		return util.ErrInvalid.Errorf("contract address is same with sender, %q", fact.sender)
 	}
 
-	if len(fact.proposeID) == 0 {
+	if len(fact.proposalID) == 0 {
 		return util.ErrInvalid.Errorf("empty propose id")
 	}
 
@@ -119,12 +119,12 @@ func (fact ProposeFact) DAOID() currencytypes.ContractID {
 	return fact.daoID
 }
 
-func (fact ProposeFact) ProposeID() string {
-	return fact.proposeID
+func (fact ProposeFact) ProposalID() string {
+	return fact.proposalID
 }
 
 func (fact ProposeFact) StartTime() uint64 {
-	return fact.starttime
+	return fact.startTime
 }
 
 func (fact ProposeFact) Proposal() types.Proposal {

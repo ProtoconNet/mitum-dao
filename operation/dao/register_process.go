@@ -2,11 +2,14 @@ package dao
 
 import (
 	"context"
+	"github.com/ProtoconNet/mitum-currency/v3/operation/processor"
+	"github.com/ProtoconNet/mitum-dao/utils"
 	"sync"
+	"time"
 
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	currencystate "github.com/ProtoconNet/mitum-currency/v3/state"
-	currency "github.com/ProtoconNet/mitum-currency/v3/state/currency"
+	"github.com/ProtoconNet/mitum-currency/v3/state/currency"
 	extensioncurrency "github.com/ProtoconNet/mitum-currency/v3/state/extension"
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum-dao/state"
@@ -23,24 +26,24 @@ var registerProcessorPool = sync.Pool{
 }
 
 func (Register) Process(
-	ctx context.Context, getStateFunc base.GetStateFunc,
+	_ context.Context, _ base.GetStateFunc,
 ) ([]base.StateMergeValue, base.OperationProcessReasonError, error) {
 	return nil, nil, nil
 }
 
 type RegisterProcessor struct {
 	*base.BaseOperationProcessor
-	getLastBlockFunc types.GetLastBlockFunc
+	getLastBlockFunc processor.GetLastBlockFunc
 }
 
-func NewRegisterProcessor(getLastBlockFunc types.GetLastBlockFunc) currencytypes.GetNewProcessor {
+func NewRegisterProcessor(getLastBlockFunc processor.GetLastBlockFunc) currencytypes.GetNewProcessor {
 	return func(
 		height base.Height,
 		getStateFunc base.GetStateFunc,
 		newPreProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 		newProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 	) (base.OperationProcessor, error) {
-		e := util.StringErrorFunc("failed to create new RegisterProcessor")
+		e := util.StringError("failed to create new RegisterProcessor")
 
 		nopp := registerProcessorPool.Get()
 		opp, ok := nopp.(*RegisterProcessor)
@@ -51,7 +54,7 @@ func NewRegisterProcessor(getLastBlockFunc types.GetLastBlockFunc) currencytypes
 		b, err := base.NewBaseOperationProcessor(
 			height, getStateFunc, newPreProcessConstraintFunc, newProcessConstraintFunc)
 		if err != nil {
-			return nil, e(err, "")
+			return nil, e.Wrap(err)
 		}
 
 		opp.BaseOperationProcessor = b
@@ -64,15 +67,15 @@ func NewRegisterProcessor(getLastBlockFunc types.GetLastBlockFunc) currencytypes
 func (opp *RegisterProcessor) PreProcess(
 	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc,
 ) (context.Context, base.OperationProcessReasonError, error) {
-	e := util.StringErrorFunc("failed to preprocess Register")
+	e := util.StringError("failed to preprocess Register")
 
 	fact, ok := op.Fact().(RegisterFact)
 	if !ok {
-		return ctx, nil, e(nil, "not RegisterFact, %T", op.Fact())
+		return ctx, nil, e.Errorf("not RegisterFact, %T", op.Fact())
 	}
 
 	if err := fact.IsValid(nil); err != nil {
-		return ctx, nil, e(err, "")
+		return ctx, nil, e.Wrap(err)
 	}
 
 	if err := currencystate.CheckExistsState(currency.StateKeyAccount(fact.Sender()), getStateFunc); err != nil {
@@ -80,110 +83,92 @@ func (opp *RegisterProcessor) PreProcess(
 	}
 
 	if err := currencystate.CheckNotExistsState(extensioncurrency.StateKeyContractAccount(fact.Sender()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("contract account cannot register and approve, %q: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("contract account cannot delegate, %q: %w", fact.Sender(), err), nil
 	}
 
 	if err := currencystate.CheckExistsState(extensioncurrency.StateKeyContractAccount(fact.Contract()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("contract account not found, %q: %w", fact.Contract(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("dao contract account not found, %q: %w", fact.Contract(), err), nil
 	}
 
 	if err := currencystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.Currency()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("currency doesn't exist, %q: %w", fact.Currency(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("fee currency doesn't exist, %q: %w", fact.Currency(), err), nil
 	}
 
 	st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), "key of design", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao not found, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("dao design state not found, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
 	design, err := state.StateDesignValue(st)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao value not found, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("dao value not found from state, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
-	delaytime := design.Policy().DelayTime()
-
-	st, err = currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposeID()), "key of proposal", getStateFunc)
+	st, err = currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal state not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
-	proposal, err := state.StateProposalValue(st)
+	p, err := state.StateProposalValue(st)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal value not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
-	starttime := (*proposal).StartTime()
-	endtime := starttime + delaytime
+	if p.Status() == types.Canceled {
+		return nil, base.NewBaseOperationProcessReasonError("already canceled proposal, %s-%s-%s", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+	}
 
-	blockmap, found, err := opp.getLastBlockFunc()
+	blockMap, found, err := opp.getLastBlockFunc()
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("get LastBlock failed: %w", err), nil
 	} else if !found {
 		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
 	}
 
-	blocktime := uint64(blockmap.Manifest().ProposedAt().Unix())
+	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blockMap)
 
-	if blocktime < starttime || endtime <= blocktime {
-		return nil, base.NewBaseOperationProcessReasonError("not registration period, must in %d <= block(%d) < %d", starttime, blocktime, endtime), nil
+	if period != types.Registration {
+		return nil, base.NewBaseOperationProcessReasonError("not registration period, registration period start : %s, end : %s", time.Unix(start, 0), time.Unix(end, 0)), nil
 	}
 
-	switch st, found, err := getStateFunc(state.StateKeyRegisterList(fact.Contract(), fact.DAOID(), fact.ProposeID())); {
+	switch st, found, err := getStateFunc(state.StateKeyVoters(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find register list, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find voters state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	case found:
-		registers, err := state.StateRegisterListValue(st)
+		voters, err := state.StateVotersValue(st)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find register list value, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find voters value from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 		}
 
-		var target base.Address
-		if fact.Approved() != nil {
-			target = fact.Approved()
-		} else {
-			target = fact.Sender()
-		}
-
-		for _, info := range registers {
-			if info.Account.Equal(target) {
-				if fact.Approved() != nil {
-					for _, acc := range info.ApprovedBy {
-						if acc.Equal(fact.Sender()) {
-							return nil, base.NewBaseOperationProcessReasonError("sender already approve the account, %q approved by %q", fact.Approved(), fact.Sender()), nil
-						}
-					}
-				} else {
-					for _, acc := range info.ApprovedBy {
-						if acc.Equal(fact.Sender()) {
-							return nil, base.NewBaseOperationProcessReasonError("already registered account, %q", fact.Sender()), nil
-						}
-					}
-				}
-			}
+		accFound, delegatorFound, err := utils.HasFieldAndSliceValue(
+			voters,
+			"account",
+			"delegators",
+			fact.Delegated(),
+			fact.Sender(),
+		)
+		if accFound && delegatorFound {
+			return nil, base.NewBaseOperationProcessReasonError(
+				"sender already delegates the account, %q delegated by %q",
+				fact.Delegated(),
+				fact.Sender(),
+			), nil
 		}
 	}
 
-	switch st, found, err := getStateFunc(state.StateKeyApprovingList(fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender())); {
+	switch st, found, err := getStateFunc(state.StateKeyDelegators(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find approving list, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find delegators state, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), fact.Sender(), err), nil
 	case found:
-		approving, err := state.StateApprovingListValue(st)
+		delegators, err := state.StateDelegatorsValue(st)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find approving list value, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find delegators value from state, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), fact.Sender(), err), nil
 		}
 
-		var target base.Address
-		if fact.Approved() != nil {
-			target = fact.Approved()
-		} else {
-			target = fact.Sender()
-		}
-
-		for _, acc := range approving {
-			if acc.Equal(target) {
-				return nil, base.NewBaseOperationProcessReasonError("already approved account, %q approved by %q", target, fact.Sender()), nil
-			}
+		if found, err := utils.HasFieldValue(delegators, "account", fact.Sender()); err != nil {
+			return nil, base.NewBaseOperationProcessReasonError("failed to check account value %s in delegators", fact.Sender()), nil
+		} else if found {
+			return nil, base.NewBaseOperationProcessReasonError("sender %s already delegates", fact.Sender()), nil
 		}
 	}
 
@@ -195,97 +180,73 @@ func (opp *RegisterProcessor) PreProcess(
 }
 
 func (opp *RegisterProcessor) Process(
-	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc) (
+	_ context.Context, op base.Operation, getStateFunc base.GetStateFunc) (
 	[]base.StateMergeValue, base.OperationProcessReasonError, error,
 ) {
-	e := util.StringErrorFunc("failed to process Register")
+	e := util.StringError("failed to process Register")
 
 	fact, ok := op.Fact().(RegisterFact)
 	if !ok {
-		return nil, nil, e(nil, "expected RegisterFact, not %T", op.Fact())
+		return nil, nil, e.Errorf("expected RegisterFact, not %T", op.Fact())
 	}
 
 	sts := make([]base.StateMergeValue, 3)
 
-	switch st, found, err := getStateFunc(state.StateKeyRegisterList(fact.Contract(), fact.DAOID(), fact.ProposeID())); {
+	var voters []types.VoterInfo
+	var key string
+	switch st, found, err := getStateFunc(state.StateKeyVoters(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find register list, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find voters state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	case found:
-		registers, err := state.StateRegisterListValue(st)
+		vs, err := state.StateVotersValue(st)
+		key = st.Key()
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find register list value, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID()), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find voters value from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 		}
 
-		var target base.Address
-		if fact.Approved() != nil {
-			target = fact.Approved()
-		} else {
-			target = fact.Sender()
-		}
-
-		for i, info := range registers {
-			if info.Account.Equal(target) {
-				accs := info.ApprovedBy
-				accs = append(accs, fact.Sender())
-
-				registers[i] = state.NewRegisterInfo(target, accs)
+		for i, info := range vs {
+			if info.Account().Equal(fact.Delegated()) {
+				delegators := info.Delegators()
+				delegators = append(delegators, fact.Sender())
+				vs[i] = types.NewVoterInfo(fact.Delegated(), delegators)
 
 				break
 			}
 
-			if i == len(registers)-1 {
-				registers = append(registers, state.NewRegisterInfo(target, []base.Address{fact.Sender()}))
+			if i == len(vs)-1 {
+				vs = append(vs, types.NewVoterInfo(fact.Delegated(), []base.Address{fact.Sender()}))
 			}
 		}
-
-		sts[0] = currencystate.NewStateMergeValue(
-			st.Key(),
-			state.NewRegisterListStateValue(registers),
-		)
+		voters = vs
 	default:
-		registers := make([]state.RegisterInfo, 1)
-		if fact.Approved() != nil {
-			registers[0] = state.NewRegisterInfo(fact.Approved(), []base.Address{fact.Sender()})
-		} else {
-			registers[0] = state.NewRegisterInfo(fact.Sender(), []base.Address{fact.Sender()})
-		}
-		sts[0] = currencystate.NewStateMergeValue(
-			st.Key(),
-			state.NewRegisterListStateValue(registers),
-		)
+		var vs []types.VoterInfo
+		vs = append(vs, types.NewVoterInfo(fact.Delegated(), []base.Address{fact.Sender()}))
+		voters = vs
 	}
+	sts[0] = currencystate.NewStateMergeValue(
+		key,
+		state.NewVotersStateValue(voters),
+	)
 
-	switch st, found, err := getStateFunc(state.StateKeyApprovingList(fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender())); {
+	switch st, found, err := getStateFunc(state.StateKeyDelegators(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find approving list, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find delegators state, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), fact.Sender()), nil
 	case found:
-		approving, err := state.StateApprovingListValue(st)
+		delegators, err := state.StateDelegatorsValue(st)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find approving list value, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposeID(), fact.Sender()), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find delegators value from state, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), fact.Sender(), err), nil
 		}
 
-		if fact.Approved() != nil {
-			approving = append(approving, fact.Approved())
-		} else {
-			approving = append(approving, fact.Sender())
-		}
+		delegators = append(delegators, types.NewDelegatorInfo(fact.Sender(), fact.Delegated()))
 
 		sts[1] = currencystate.NewStateMergeValue(
 			st.Key(),
-			state.NewApprovingListStateValue(approving),
+			state.NewDelegatorsStateValue(delegators),
 		)
 	default:
-		if fact.Approved() != nil {
-			sts[1] = currencystate.NewStateMergeValue(
-				st.Key(),
-				state.NewApprovingListStateValue([]base.Address{fact.Approved()}),
-			)
-		} else {
-			sts[1] = currencystate.NewStateMergeValue(
-				st.Key(),
-				state.NewApprovingListStateValue([]base.Address{fact.Sender()}),
-			)
-		}
+		sts[1] = currencystate.NewStateMergeValue(
+			st.Key(),
+			state.NewDelegatorsStateValue([]types.DelegatorInfo{types.NewDelegatorInfo(fact.Sender(), fact.Delegated())}))
 	}
 
 	currencyPolicy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)

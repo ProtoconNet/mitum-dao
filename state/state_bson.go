@@ -3,47 +3,47 @@ package state
 import (
 	bsonenc "github.com/ProtoconNet/mitum-currency/v3/digest/util/bson"
 	"github.com/ProtoconNet/mitum-dao/types"
-	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/hint"
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 func (de DesignStateValue) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
-			"_hint": de.Hint().String(),
-			"dao":   de.Design,
+			"_hint":  de.Hint().String(),
+			"design": de.Design,
 		},
 	)
 }
 
 type DesignStateValueBSONUnmarshaler struct {
-	Hint string   `bson:"_hint"`
-	DAO  bson.Raw `bson:"dao"`
+	Hint   string   `bson:"_hint"`
+	Design bson.Raw `bson:"design"`
 }
 
 func (de *DesignStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of DesignStateValue")
+	e := util.StringError("failed to decode bson of DesignStateValue")
 
 	var u DesignStateValueBSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(u.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	de.BaseHinter = hint.NewBaseHinter(ht)
 
 	var design types.Design
-	if err := design.DecodeBSON(u.DAO, enc); err != nil {
-		return e(err, "")
+	if err := design.DecodeBSON(u.Design, enc); err != nil {
+		return e.Wrap(err)
 	}
 
-	de.Design = design
+	de.design = design
 
 	return nil
 }
@@ -52,7 +52,7 @@ func (p ProposalStateValue) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
 			"_hint":    p.Hint().String(),
-			"proposal": p.Proposal,
+			"proposal": p.Proposal(),
 		},
 	)
 }
@@ -63,170 +63,211 @@ type ProposalStateValueBSONUnmarshaler struct {
 }
 
 func (p *ProposalStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of ProposalStateValue")
+	e := util.StringError("failed to decode bson of ProposalStateValue")
 
 	var u ProposalStateValueBSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(u.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	p.BaseHinter = hint.NewBaseHinter(ht)
 
 	if hinter, err := enc.Decode(u.Proposal); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	} else if pr, ok := hinter.(types.Proposal); !ok {
-		return e(util.ErrWrongType.Errorf("expected Proposal, not %T", hinter), "")
+		return e.Wrap(errors.Errorf("expected Proposal, not %T", hinter))
 	} else {
-		p.Proposal = pr
+		p.proposal = pr
 	}
 
 	return nil
 }
 
-func (r RegisterInfo) MarshalBSON() ([]byte, error) {
+func (dg DelegatorsStateValue) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
-			"_hint":       r.Hint().String(),
-			"account":     r.Account,
-			"approved_by": r.ApprovedBy,
+			"_hint":      dg.Hint().String(),
+			"delegators": dg.delegators,
 		},
 	)
 }
 
-func (ap ApprovingListStateValue) MarshalBSON() ([]byte, error) {
-	return bsonenc.Marshal(
-		bson.M{
-			"_hint":    ap.Hint().String(),
-			"accounts": ap.Accounts,
-		},
-	)
-}
-
-type ApprovingListStateValueBSONUnmarshaler struct {
-	Hint     string   `bson:"_hint"`
-	Accounts []string `bson:"accounts"`
-}
-
-func (ap *ApprovingListStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of ApprovingStateValue")
-
-	var u ApprovingListStateValueBSONUnmarshaler
-	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
-	}
-
-	ht, err := hint.ParseHint(u.Hint)
-	if err != nil {
-		return e(err, "")
-	}
-
-	ap.BaseHinter = hint.NewBaseHinter(ht)
-
-	acc := make([]base.Address, len(u.Accounts))
-	for i, ba := range u.Accounts {
-		ac, err := base.DecodeAddress(ba, enc)
-		if err != nil {
-			return e(err, "")
-		}
-		acc[i] = ac
-
-	}
-	ap.Accounts = acc
-
-	return nil
-}
-
-type RegisterInfoBSONUnmarshaler struct {
+type DelegatorsStateValueBSONUnmarshaler struct {
 	Hint       string   `bson:"_hint"`
-	Account    string   `bson:"account"`
-	ApprovedBy []string `bson:"approved_by"`
+	Delegators bson.Raw `bson:"delegators"`
 }
 
-func (r *RegisterInfo) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of RegisterInfo")
+func (dg *DelegatorsStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
+	e := util.StringError("failed to decode bson of DelegatorsStateValue")
 
-	var u RegisterInfoBSONUnmarshaler
+	var u DelegatorsStateValueBSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(u.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
-	r.BaseHinter = hint.NewBaseHinter(ht)
+	dg.BaseHinter = hint.NewBaseHinter(ht)
 
-	switch a, err := base.DecodeAddress(u.Account, enc); {
-	case err != nil:
-		return e(err, "")
-	default:
-		r.Account = a
+	hr, err := enc.DecodeSlice(u.Delegators)
+	if err != nil {
+		return e.Wrap(err)
 	}
 
-	acc := make([]base.Address, len(u.ApprovedBy))
-	for i, ba := range u.ApprovedBy {
-		ac, err := base.DecodeAddress(ba, enc)
-		if err != nil {
-			return e(err, "")
+	infos := make([]types.DelegatorInfo, len(hr))
+	for i, hinter := range hr {
+		rg, ok := hinter.(types.DelegatorInfo)
+		if !ok {
+			return e.Wrap(errors.Errorf("expected types.DelegatorInfo, not %T", hinter))
 		}
-		acc[i] = ac
 
+		infos[i] = rg
 	}
-	r.ApprovedBy = acc
+	dg.delegators = infos
 
 	return nil
 }
 
-func (r RegisterListStateValue) MarshalBSON() ([]byte, error) {
+func (vt VotersStateValue) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
-			"_hint":     r.Hint().String(),
-			"registers": r.Registers,
+			"_hint":     vt.Hint().String(),
+			"registers": vt.voters,
 		},
 	)
 }
 
-type RegisterListStateValueBSONUnmarshaler struct {
+type VotersStateValueBSONUnmarshaler struct {
 	Hint      string   `bson:"_hint"`
 	Registers bson.Raw `bson:"registers"`
 }
 
-func (r *RegisterListStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of RegisterListStateValue")
+func (vt *VotersStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
+	e := util.StringError("failed to decode bson of VotersStateValue")
 
-	var u RegisterListStateValueBSONUnmarshaler
+	var u VotersStateValueBSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(u.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
-	r.BaseHinter = hint.NewBaseHinter(ht)
+	vt.BaseHinter = hint.NewBaseHinter(ht)
 
-	hit, err := enc.DecodeSlice(u.Registers)
+	hr, err := enc.DecodeSlice(u.Registers)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
-	rs := make([]RegisterInfo, len(hit))
-	for i, hinter := range hit {
-		rg, ok := hinter.(RegisterInfo)
+	infos := make([]types.VoterInfo, len(hr))
+	for i, hinter := range hr {
+		rg, ok := hinter.(types.VoterInfo)
 		if !ok {
-			return e(util.ErrWrongType.Errorf("expected RegisterInfo, not %T", hinter), "")
+			return e.Wrap(errors.Errorf("expected types.VoterInfo, not %T", hinter))
 		}
 
-		rs[i] = rg
+		infos[i] = rg
 	}
-	r.Registers = rs
+	vt.voters = infos
+
+	return nil
+}
+
+//func (sh SnapHistoriesStateValue) MarshalBSON() ([]byte, error) {
+//	return bsonenc.Marshal(
+//		bson.M{
+//			"_hint":     sh.Hint().String(),
+//			"histories": sh.Histories,
+//		},
+//	)
+//}
+//
+//type SnapHistoriesStateValueBSONUnmarshaler struct {
+//	Hint      string   `bson:"_hint"`
+//	Histories bson.Raw `bson:"histories"`
+//}
+//
+//func (sh *SnapHistoriesStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
+//	e := util.StringError("failed to decode bson of SnapHistoriesStateValue")
+//
+//	var u SnapHistoriesStateValueBSONUnmarshaler
+//	if err := enc.Unmarshal(b, &u); err != nil {
+//		return e.Wrap(err)
+//	}
+//
+//	ht, err := hint.ParseHint(u.Hint)
+//	if err != nil {
+//		return e.Wrap(err)
+//	}
+//
+//	sh.BaseHinter = hint.NewBaseHinter(ht)
+//
+//	hs, err := enc.DecodeSlice(u.Histories)
+//	if err != nil {
+//		return e.Wrap(err)
+//	}
+//
+//	histories := make([]types.SnapHistory, len(hs))
+//	for i, hinter := range hs {
+//		h, ok := hinter.(types.SnapHistory)
+//		if !ok {
+//			return e.Wrap(errors.Errorf("expected types.SnapHistory, not %T", hinter))
+//		}
+//
+//		histories[i] = h
+//	}
+//	sh.Histories = histories
+//
+//	return nil
+//}
+
+func (vb VotingPowerBoxStateValue) MarshalBSON() ([]byte, error) {
+	return bsonenc.Marshal(
+		bson.M{
+			"_hint": vb.Hint().String(),
+			"votes": vb.votingPowerBox,
+		},
+	)
+}
+
+type VotesStateValueBSONUnmarshaler struct {
+	Hint           string   `bson:"_hint"`
+	VotingPowerBox bson.Raw `bson:"voting_power_box"`
+}
+
+func (vb *VotingPowerBoxStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
+	e := util.StringError("failed to decode bson of VotingPowerBoxStateValue")
+
+	var u VotesStateValueBSONUnmarshaler
+	if err := enc.Unmarshal(b, &u); err != nil {
+		return e.Wrap(err)
+	}
+
+	ht, err := hint.ParseHint(u.Hint)
+	if err != nil {
+		return e.Wrap(err)
+	}
+
+	vb.BaseHinter = hint.NewBaseHinter(ht)
+
+	if hinter, err := enc.Decode(u.VotingPowerBox); err != nil {
+		return e.Wrap(err)
+	} else if v, ok := hinter.(types.VotingPowerBox); !ok {
+		return e.Wrap(errors.Errorf("expected VotingPowerBox, not %T", hinter))
+	} else {
+		vb.votingPowerBox = v
+	}
 
 	return nil
 }

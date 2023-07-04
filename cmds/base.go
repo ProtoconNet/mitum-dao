@@ -3,6 +3,7 @@ package cmds
 import (
 	"context"
 	"fmt"
+	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
 	"io"
 	"os"
 
@@ -10,30 +11,30 @@ import (
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/encoder"
 	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
-	"github.com/ProtoconNet/mitum2/util/localtime"
 	"github.com/ProtoconNet/mitum2/util/logging"
 	"github.com/ProtoconNet/mitum2/util/ps"
 	"github.com/rs/zerolog"
 )
 
-type baseCommand struct {
-	enc  *jsonenc.Encoder
-	encs *encoder.Encoders
-	log  *zerolog.Logger
-	Out  io.Writer `kong:"-"`
+type BaseCommand struct {
+	Encoder  *jsonenc.Encoder
+	Encoders *encoder.Encoders
+	Log      *zerolog.Logger
+	Out      io.Writer `kong:"-"`
 }
 
-func NewbaseCommand() *baseCommand {
-	return &baseCommand{
+func NewBaseCommand() *BaseCommand {
+	return &BaseCommand{
 		Out: os.Stdout,
 	}
 }
 
-func (cmd *baseCommand) prepare(pctx context.Context) (context.Context, error) {
+func (cmd *BaseCommand) prepare(pctx context.Context) (context.Context, error) {
+	cmd.Out = os.Stdout
 	pps := ps.NewPS("cmd")
 
 	_ = pps.
-		AddOK(launch.PNameEncoder, PEncoder, nil)
+		AddOK(launch.PNameEncoder, currencycmds.PEncoder, nil)
 
 	_ = pps.POK(launch.PNameEncoder).
 		PostAddOK(launch.PNameAddHinters, PAddHinters)
@@ -43,7 +44,7 @@ func (cmd *baseCommand) prepare(pctx context.Context) (context.Context, error) {
 		return pctx, err
 	}
 
-	cmd.log = log.Log()
+	cmd.Log = log.Log()
 
 	pctx, err := pps.Run(pctx) //revive:disable-line:modifies-parameter
 	if err != nil {
@@ -51,50 +52,35 @@ func (cmd *baseCommand) prepare(pctx context.Context) (context.Context, error) {
 	}
 
 	return pctx, util.LoadFromContextOK(pctx,
-		launch.EncodersContextKey, &cmd.encs,
-		launch.EncoderContextKey, &cmd.enc,
+		launch.EncodersContextKey, &cmd.Encoders,
+		launch.EncoderContextKey, &cmd.Encoder,
 	)
 }
 
-func (cmd *baseCommand) print(f string, a ...interface{}) {
+func (cmd *BaseCommand) print(f string, a ...interface{}) {
 	_, _ = fmt.Fprintf(cmd.Out, f, a...)
 	_, _ = fmt.Fprintln(cmd.Out)
 }
 
 func PAddHinters(ctx context.Context) (context.Context, error) {
-	e := util.StringErrorFunc("failed to add hinters")
+	e := util.StringError("failed to add hinters")
 
 	var enc encoder.Encoder
 	if err := util.LoadFromContextOK(ctx, launch.EncoderContextKey, &enc); err != nil {
-		return ctx, e(err, "")
+		return ctx, e.Wrap(err)
 	}
 	var benc encoder.Encoder
-	if err := util.LoadFromContextOK(ctx, BEncoderContextKey, &benc); err != nil {
-		return ctx, e(err, "")
+	if err := util.LoadFromContextOK(ctx, currencycmds.BEncoderContextKey, &benc); err != nil {
+		return ctx, e.Wrap(err)
 	}
 
 	if err := LoadHinters(enc); err != nil {
-		return ctx, e(err, "")
+		return ctx, e.Wrap(err)
 	}
 
 	if err := LoadHinters(benc); err != nil {
-		return ctx, e(err, "")
+		return ctx, e.Wrap(err)
 	}
 
 	return ctx, nil
-}
-
-type OperationFlags struct {
-	Privatekey PrivatekeyFlag `arg:"" name:"privatekey" help:"privatekey to sign operation" required:"true"`
-	Token      string         `help:"token for operation" optional:""`
-	NetworkID  NetworkIDFlag  `name:"network-id" help:"network-id" required:"true"`
-	Pretty     bool           `name:"pretty" help:"pretty format"`
-}
-
-func (op *OperationFlags) IsValid([]byte) error {
-	if len(op.Token) < 1 {
-		op.Token = localtime.Now().UTC().String()
-	}
-
-	return op.NetworkID.NetworkID().IsValid(nil)
 }

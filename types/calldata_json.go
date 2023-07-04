@@ -17,7 +17,7 @@ type TransferCalldataJSONMarshaler struct {
 	Amount   currencytypes.Amount `json:"amount"`
 }
 
-func (cd TransferCalldata) MarshalJSON() ([]byte, error) {
+func (cd TransferCallData) MarshalJSON() ([]byte, error) {
 	return util.MarshalJSON(TransferCalldataJSONMarshaler{
 		BaseHinter: cd.BaseHinter,
 		Sender:     cd.sender,
@@ -33,12 +33,12 @@ type TransferCalldataJSONUnmarshaler struct {
 	Amount   json.RawMessage `json:"amount"`
 }
 
-func (cd *TransferCalldata) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of TransferCalldata")
+func (cd *TransferCallData) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+	e := util.StringError("failed to decode json of TransferCallData")
 
 	var uc TransferCalldataJSONUnmarshaler
 	if err := enc.Unmarshal(b, &uc); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	return cd.unpack(enc, uc.Hint, uc.Sender, uc.Receiver, uc.Amount)
@@ -49,7 +49,7 @@ type GovernanceCalldataJSONMarshaler struct {
 	Policy Policy `json:"policy"`
 }
 
-func (cd GovernanceCalldata) MarshalJSON() ([]byte, error) {
+func (cd GovernanceCallData) MarshalJSON() ([]byte, error) {
 	return util.MarshalJSON(GovernanceCalldataJSONMarshaler{
 		BaseHinter: cd.BaseHinter,
 		Policy:     cd.policy,
@@ -61,12 +61,12 @@ type GovernanceCalldataJSONUnmarshaler struct {
 	Policy json.RawMessage `json:"policy"`
 }
 
-func (cd *GovernanceCalldata) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode json of GovernanceCalldata")
+func (cd *GovernanceCallData) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+	e := util.StringError("failed to decode json of GovernanceCallData")
 
 	var uc GovernanceCalldataJSONUnmarshaler
 	if err := enc.Unmarshal(b, &uc); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	return cd.unpack(enc, uc.Hint, uc.Policy)

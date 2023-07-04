@@ -24,36 +24,40 @@ func StateKeyDAOPrefix(ca base.Address, daoID currencytypes.ContractID) string {
 
 type DesignStateValue struct {
 	hint.BaseHinter
-	Design types.Design
+	design types.Design
 }
 
 func NewDesignStateValue(design types.Design) DesignStateValue {
 	return DesignStateValue{
 		BaseHinter: hint.NewBaseHinter(DesignStateValueHint),
-		Design:     design,
+		design:     design,
 	}
 }
 
-func (hd DesignStateValue) Hint() hint.Hint {
-	return hd.BaseHinter.Hint()
+func (de DesignStateValue) Hint() hint.Hint {
+	return de.BaseHinter.Hint()
 }
 
-func (hd DesignStateValue) IsValid([]byte) error {
+func (de DesignStateValue) Design() types.Design {
+	return de.design
+}
+
+func (de DesignStateValue) IsValid([]byte) error {
 	e := util.ErrInvalid.Errorf("invalid DesignStateValue")
 
-	if err := hd.BaseHinter.IsValid(DesignStateValueHint.Type().Bytes()); err != nil {
+	if err := de.BaseHinter.IsValid(DesignStateValueHint.Type().Bytes()); err != nil {
 		return e.Wrap(err)
 	}
 
-	if err := hd.Design.IsValid(nil); err != nil {
+	if err := de.design.IsValid(nil); err != nil {
 		return e.Wrap(err)
 	}
 
 	return nil
 }
 
-func (hd DesignStateValue) HashBytes() []byte {
-	return hd.Design.Bytes()
+func (de DesignStateValue) HashBytes() []byte {
+	return de.design.Bytes()
 }
 
 func StateDesignValue(st base.State) (types.Design, error) {
@@ -67,15 +71,15 @@ func StateDesignValue(st base.State) (types.Design, error) {
 		return types.Design{}, errors.Errorf("invalid dao design value found, %T", v)
 	}
 
-	return d.Design, nil
+	return d.Design(), nil
 }
 
 func IsStateDesignKey(key string) bool {
 	return strings.HasPrefix(key, DAOPrefix) && strings.HasSuffix(key, DesignSuffix)
 }
 
-func StateKeyDesign(ca base.Address, daoid currencytypes.ContractID) string {
-	return fmt.Sprintf("%s%s", StateKeyDAOPrefix(ca, daoid), DesignSuffix)
+func StateKeyDesign(ca base.Address, daoID currencytypes.ContractID) string {
+	return fmt.Sprintf("%s%s", StateKeyDAOPrefix(ca, daoID), DesignSuffix)
 }
 
 var (
@@ -85,18 +89,28 @@ var (
 
 type ProposalStateValue struct {
 	hint.BaseHinter
-	Proposal types.Proposal
+	status   types.ProposalStatus
+	proposal types.Proposal
 }
 
-func NewProposalStateValue(proposal types.Proposal) ProposalStateValue {
+func NewProposalStateValue(status types.ProposalStatus, proposal types.Proposal) ProposalStateValue {
 	return ProposalStateValue{
 		BaseHinter: hint.NewBaseHinter(ProposalStateValueHint),
-		Proposal:   proposal,
+		status:     status,
+		proposal:   proposal,
 	}
 }
 
 func (p ProposalStateValue) Hint() hint.Hint {
 	return p.BaseHinter.Hint()
+}
+
+func (p ProposalStateValue) Status() types.ProposalStatus {
+	return p.status
+}
+
+func (p ProposalStateValue) Proposal() types.Proposal {
+	return p.proposal
 }
 
 func (p ProposalStateValue) IsValid([]byte) error {
@@ -106,70 +120,64 @@ func (p ProposalStateValue) IsValid([]byte) error {
 		return e.Wrap(err)
 	}
 
-	if err := p.Proposal.IsValid(nil); err != nil {
-		return e.Wrap(err)
-	}
-
 	return nil
 }
 
 func (p ProposalStateValue) HashBytes() []byte {
-	return p.Proposal.Bytes()
+	return p.proposal.Bytes()
 }
 
-func StateProposalValue(st base.State) (*types.Proposal, error) {
+func StateProposalValue(st base.State) (ProposalStateValue, error) {
 	v := st.Value()
 	if v == nil {
-		return nil, util.ErrNotFound.Errorf("proposal not found in State")
+		return ProposalStateValue{}, util.ErrNotFound.Errorf("proposal not found in State")
 	}
 
 	d, ok := v.(ProposalStateValue)
 	if !ok {
-		return nil, errors.Errorf("invalid proposal value found, %T", v)
+		return ProposalStateValue{}, errors.Errorf("invalid proposal value found, %T", v)
 	}
 
-	p := d.Proposal
-
-	return &p, nil
+	return d, nil
 }
 
 func IsStateProposalKey(key string) bool {
 	return strings.HasPrefix(key, DAOPrefix) && strings.HasSuffix(key, ProposalSuffix)
 }
 
-func StateKeyProposal(ca base.Address, daoid currencytypes.ContractID, pid string) string {
-	return fmt.Sprintf("%s-%s%s", StateKeyDAOPrefix(ca, daoid), pid, ProposalSuffix)
+func StateKeyProposal(ca base.Address, daoID currencytypes.ContractID, pid string) string {
+	return fmt.Sprintf("%s-%s%s", StateKeyDAOPrefix(ca, daoID), pid, ProposalSuffix)
 }
 
 var (
-	ApprovingListStateValueHint = hint.MustNewHint("mitum-dao-approving-list-state-value-v0.0.1")
-	ApprovingListSuffix         = ":approving-list"
+	DelegatorsStateValueHint = hint.MustNewHint("mitum-dao-delegators-state-value-v0.0.1")
+	DelegatorsSuffix         = ":delegators"
 )
 
-type ApprovingListStateValue struct {
+type DelegatorsStateValue struct {
 	hint.BaseHinter
-	Accounts []base.Address
+	delegators []types.DelegatorInfo
 }
 
-func NewApprovingListStateValue(accounts []base.Address) ApprovingListStateValue {
-	return ApprovingListStateValue{
-		BaseHinter: hint.NewBaseHinter(ApprovingListStateValueHint),
-		Accounts:   accounts,
+func NewDelegatorsStateValue(delegators []types.DelegatorInfo) DelegatorsStateValue {
+	return DelegatorsStateValue{
+		BaseHinter: hint.NewBaseHinter(DelegatorsStateValueHint),
+		delegators: delegators,
 	}
 }
 
-func (ap ApprovingListStateValue) Hint() hint.Hint {
-	return ap.BaseHinter.Hint()
+func (dg DelegatorsStateValue) Hint() hint.Hint {
+	return dg.BaseHinter.Hint()
 }
 
-func (ap ApprovingListStateValue) IsValid([]byte) error {
-	e := util.ErrInvalid.Errorf("invalid ApprovingListStateValue")
+func (dg DelegatorsStateValue) IsValid([]byte) error {
+	e := util.ErrInvalid.Errorf("invalid DelegatorsStateValue")
 
-	if err := ap.BaseHinter.IsValid(ApprovingListStateValueHint.Type().Bytes()); err != nil {
+	if err := dg.BaseHinter.IsValid(DelegatorsStateValueHint.Type().Bytes()); err != nil {
 		return e.Wrap(err)
 	}
 
-	for _, ac := range ap.Accounts {
+	for _, ac := range dg.delegators {
 		if err := ac.IsValid(nil); err != nil {
 			return e.Wrap(err)
 		}
@@ -178,164 +186,234 @@ func (ap ApprovingListStateValue) IsValid([]byte) error {
 	return nil
 }
 
-func (ap ApprovingListStateValue) HashBytes() []byte {
-	ba := make([][]byte, len(ap.Accounts))
+func (dg DelegatorsStateValue) HashBytes() []byte {
+	ba := make([][]byte, len(dg.delegators))
 
-	for i, ac := range ap.Accounts {
-		ba[i] = ac.Bytes()
+	for i, delegator := range dg.delegators {
+		ba[i] = delegator.Bytes()
 	}
 
 	return util.ConcatBytesSlice(ba...)
 }
 
-func StateApprovingListValue(st base.State) ([]base.Address, error) {
+func StateDelegatorsValue(st base.State) ([]types.DelegatorInfo, error) {
 	v := st.Value()
 	if v == nil {
-		return nil, util.ErrNotFound.Errorf("approving list not found in State")
+		return nil, util.ErrNotFound.Errorf("delegators not found in State")
 	}
 
-	ap, ok := v.(ApprovingListStateValue)
+	ap, ok := v.(DelegatorsStateValue)
 	if !ok {
-		return nil, errors.Errorf("invalid approving list value found, %T", v)
+		return nil, errors.Errorf("invalid delegators value found, %T", v)
 	}
 
-	return ap.Accounts, nil
+	return ap.delegators, nil
 }
 
-func IsStateApprovingListKey(key string) bool {
-	return strings.HasPrefix(key, DAOPrefix) && strings.HasSuffix(key, ApprovingListSuffix)
+func IsStateDelegatorsKey(key string) bool {
+	return strings.HasPrefix(key, DAOPrefix) && strings.HasSuffix(key, DelegatorsSuffix)
 }
 
-func StateKeyApprovingList(ca base.Address, daoid currencytypes.ContractID, pid string, ac base.Address) string {
-	return fmt.Sprintf("%s-%s-%s%s", StateKeyDAOPrefix(ca, daoid), pid, ac.String(), ApprovingListSuffix)
-}
-
-var RegisterInfoHint = hint.MustNewHint("mitum-dao-register-info-v0.0.1")
-
-type RegisterInfo struct {
-	hint.BaseHinter
-	Account    base.Address
-	ApprovedBy []base.Address
-}
-
-func NewRegisterInfo(account base.Address, approvedBy []base.Address) RegisterInfo {
-	return RegisterInfo{
-		BaseHinter: hint.NewBaseHinter(RegisterInfoHint),
-		Account:    account,
-		ApprovedBy: approvedBy,
-	}
-}
-
-func (r RegisterInfo) Hint() hint.Hint {
-	return r.BaseHinter.Hint()
-}
-
-func (r RegisterInfo) IsValid([]byte) error {
-	e := util.ErrInvalid.Errorf("invalid RegisterInfo")
-
-	if err := r.BaseHinter.IsValid(nil); err != nil {
-		return e.Wrap(err)
-	}
-
-	if err := r.Account.IsValid(nil); err != nil {
-		return e.Wrap(err)
-	}
-
-	for _, ac := range r.ApprovedBy {
-		if err := ac.IsValid(nil); err != nil {
-			return e.Wrap(err)
-		}
-
-		if ac.Equal(r.Account) {
-			return e.Wrap(errors.Errorf("approving address is same with approved address, %q", r.Account))
-		}
-	}
-
-	return nil
-}
-
-func (r RegisterInfo) Bytes() []byte {
-	ba := make([][]byte, len(r.ApprovedBy)+1)
-
-	ba[0] = r.Account.Bytes()
-
-	for i, ac := range r.ApprovedBy {
-		ba[i+1] = ac.Bytes()
-	}
-
-	return util.ConcatBytesSlice(ba...)
+func StateKeyDelegators(ca base.Address, daoID currencytypes.ContractID, pid string) string {
+	return fmt.Sprintf("%s-%s%s", StateKeyDAOPrefix(ca, daoID), pid, DelegatorsSuffix)
 }
 
 var (
-	RegisterListStateValueHint = hint.MustNewHint("mitum-dao-register-list-state-value-v0.0.1")
-	RegisterListSuffix         = ":register-list"
+	VotersStateValueHint = hint.MustNewHint("mitum-dao-voters-state-value-v0.0.1")
+	VotersSuffix         = ":voters"
 )
 
-type RegisterListStateValue struct {
+type VotersStateValue struct {
 	hint.BaseHinter
-	Registers []RegisterInfo
+	voters []types.VoterInfo
 }
 
-func NewRegisterListStateValue(registers []RegisterInfo) RegisterListStateValue {
-	return RegisterListStateValue{
-		BaseHinter: hint.NewBaseHinter(RegisterListStateValueHint),
-		Registers:  registers,
+func NewVotersStateValue(voters []types.VoterInfo) VotersStateValue {
+	return VotersStateValue{
+		BaseHinter: hint.NewBaseHinter(VotersStateValueHint),
+		voters:     voters,
 	}
 }
 
-func (r RegisterListStateValue) Hint() hint.Hint {
-	return r.BaseHinter.Hint()
+func (vt VotersStateValue) Hint() hint.Hint {
+	return vt.BaseHinter.Hint()
 }
 
-func (r RegisterListStateValue) IsValid([]byte) error {
-	e := util.ErrInvalid.Errorf("invalid RegisterListStateValue")
+func (vt VotersStateValue) Voters() []types.VoterInfo {
+	return vt.voters
+}
 
-	if err := r.BaseHinter.IsValid(RegisterListStateValueHint.Type().Bytes()); err != nil {
+func (vt VotersStateValue) IsValid([]byte) error {
+	e := util.ErrInvalid.Errorf("invalid VotersStateValue")
+
+	if err := vt.BaseHinter.IsValid(VotersStateValueHint.Type().Bytes()); err != nil {
 		return e.Wrap(err)
 	}
 
 	founds := map[string]struct{}{}
-	for _, info := range r.Registers {
+	for _, info := range vt.voters {
 		if err := info.IsValid(nil); err != nil {
 			return e.Wrap(err)
 		}
 
-		if _, found := founds[info.Account.String()]; found {
-			return e.Wrap(errors.Errorf("duplicate register account found, %q", info.Account))
+		if _, found := founds[info.Account().String()]; found {
+			return e.Wrap(errors.Errorf("duplicate voter account found, %q", info.Account()))
 		}
 	}
 
 	return nil
 }
 
-func (r RegisterListStateValue) HashBytes() []byte {
-	bs := make([][]byte, len(r.Registers))
+func (vt VotersStateValue) HashBytes() []byte {
+	bs := make([][]byte, len(vt.voters))
 
-	for i, br := range r.Registers {
+	for i, br := range vt.voters {
 		bs[i] = br.Bytes()
 	}
 
 	return util.ConcatBytesSlice(bs...)
 }
 
-func StateRegisterListValue(st base.State) ([]RegisterInfo, error) {
+func StateVotersValue(st base.State) ([]types.VoterInfo, error) {
 	v := st.Value()
 	if v == nil {
-		return nil, util.ErrNotFound.Errorf("register list not found in State")
+		return nil, util.ErrNotFound.Errorf("voters not found in State")
 	}
 
-	r, ok := v.(RegisterListStateValue)
+	r, ok := v.(VotersStateValue)
 	if !ok {
-		return nil, errors.Errorf("invalid register list value found, %T", v)
+		return nil, errors.Errorf("invalid voters value found, %T", v)
 	}
 
-	return r.Registers, nil
+	return r.voters, nil
 }
 
-func IsStateRegisterListKey(key string) bool {
-	return strings.HasPrefix(key, DAOPrefix) && strings.HasSuffix(key, RegisterListSuffix)
+func IsStateVotersKey(key string) bool {
+	return strings.HasPrefix(key, DAOPrefix) && strings.HasSuffix(key, VotersSuffix)
 }
 
-func StateKeyRegisterList(ca base.Address, daoid currencytypes.ContractID, pid string) string {
-	return fmt.Sprintf("%s-%s%s", StateKeyDAOPrefix(ca, daoid), pid, RegisterListSuffix)
+func StateKeyVoters(ca base.Address, daoID currencytypes.ContractID, pid string) string {
+	return fmt.Sprintf("%s-%s%s", StateKeyDAOPrefix(ca, daoID), pid, VotersSuffix)
+}
+
+//var (
+//	ProposalStatusStateValueHint = hint.MustNewHint("mitum-dao-proposal-status-state-value-v0.0.1")
+//	ProposalStatusSuffix         = ":proposalstatus"
+//)
+
+//type ProposalStatusStateValue struct {
+//	hint.BaseHinter
+//	proposalStatus types.ProposalStatus
+//}
+//
+//func NewProposalStatusStateValue(proposalStatus types.ProposalStatus) ProposalStatusStateValue {
+//	return ProposalStatusStateValue{
+//		BaseHinter:     hint.NewBaseHinter(ProposalStatusStateValueHint),
+//		proposalStatus: proposalStatus,
+//	}
+//}
+//
+//func (ps ProposalStatusStateValue) Hint() hint.Hint {
+//	return ps.BaseHinter.Hint()
+//}
+//
+//func (ps ProposalStatusStateValue) ProposalStatus() types.ProposalStatus {
+//	return ps.proposalStatus
+//}
+//
+//func (ps ProposalStatusStateValue) IsValid([]byte) error {
+//	e := util.ErrInvalid.Errorf("invalid ProposalStatusStateValue")
+//
+//	if err := ps.BaseHinter.IsValid(ProposalStatusStateValueHint.Type().Bytes()); err != nil {
+//		return e.Wrap(err)
+//	}
+//
+//	return nil
+//}
+//
+//func (ps ProposalStatusStateValue) HashBytes() []byte {
+//	return ps.proposalStatus.Bytes()
+//}
+//
+//func StateProposalStatusValue(st base.State) (types.ProposalStatus, error) {
+//	v := st.Value()
+//	if v == nil {
+//		return types.NilStatus, util.ErrNotFound.Errorf("ProposalStatus value not found in State")
+//	}
+//
+//	ps, ok := v.(ProposalStatusStateValue)
+//	if !ok {
+//		return types.NilStatus, errors.Errorf("invalid ProposalStatus value found, %T", v)
+//	}
+//
+//	return ps.proposalStatus, nil
+//}
+//
+//func IsStateProposalStatusKey(key string) bool {
+//	return strings.HasPrefix(key, DAOPrefix) && strings.HasSuffix(key, ProposalStatusSuffix)
+//}
+//
+//func StateKeyProposalStatus(ca base.Address, daoID currencytypes.ContractID, pid string) string {
+//	return fmt.Sprintf("%s-%s%s", StateKeyDAOPrefix(ca, daoID), pid, ProposalStatusSuffix)
+//}
+
+var (
+	VotingPowerBoxStateValueHint = hint.MustNewHint("mitum-dao-voting-power-box-state-value-v0.0.1")
+	VotingPowerBoxSuffix         = ":votingpowerbox"
+)
+
+type VotingPowerBoxStateValue struct {
+	hint.BaseHinter
+	votingPowerBox types.VotingPowerBox
+}
+
+func NewVotingPowerBoxStateValue(votingPowerBox types.VotingPowerBox) VotingPowerBoxStateValue {
+	return VotingPowerBoxStateValue{
+		BaseHinter:     hint.NewBaseHinter(VotingPowerBoxStateValueHint),
+		votingPowerBox: votingPowerBox,
+	}
+}
+
+func (vb VotingPowerBoxStateValue) Hint() hint.Hint {
+	return vb.BaseHinter.Hint()
+}
+
+func (vb VotingPowerBoxStateValue) VotingPowerBox() types.VotingPowerBox {
+	return vb.votingPowerBox
+}
+
+func (vb VotingPowerBoxStateValue) IsValid([]byte) error {
+	e := util.ErrInvalid.Errorf("invalid VotingPowerBoxStateValue")
+
+	if err := vb.BaseHinter.IsValid(VotingPowerBoxStateValueHint.Type().Bytes()); err != nil {
+		return e.Wrap(err)
+	}
+
+	return nil
+}
+
+func (vb VotingPowerBoxStateValue) HashBytes() []byte {
+	return vb.votingPowerBox.Bytes()
+}
+
+func StateVotingPowerBoxValue(st base.State) (types.VotingPowerBox, error) {
+	v := st.Value()
+	if v == nil {
+		return types.VotingPowerBox{}, util.ErrNotFound.Errorf("VotingPowerBox not found in State")
+	}
+
+	r, ok := v.(VotingPowerBoxStateValue)
+	if !ok {
+		return types.VotingPowerBox{}, errors.Errorf("invalid VotingPowerBox value found, %T", v)
+	}
+
+	return r.votingPowerBox, nil
+}
+
+func IsVotingPowerBoxKey(key string) bool {
+	return strings.HasPrefix(key, DAOPrefix) && strings.HasSuffix(key, VotingPowerBoxSuffix)
+}
+
+func StateKeyVotingPowerBox(ca base.Address, daoID currencytypes.ContractID, pid string) string {
+	return fmt.Sprintf("%s-%s%s", StateKeyDAOPrefix(ca, daoID), pid, VotingPowerBoxSuffix)
 }

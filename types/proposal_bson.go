@@ -10,65 +10,67 @@ import (
 func (p CryptoProposal) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
-			"_hint":     p.Hint().String(),
-			"starttime": p.starttime,
-			"calldata":  p.calldata,
+			"_hint":      p.Hint().String(),
+			"start_time": p.startTime,
+			"call_data":  p.callData,
 		},
 	)
 }
 
 type CryptoProposalBSONUnmarshaler struct {
 	Hint      string   `bson:"_hint"`
-	StartTime uint64   `bson:"starttime"`
-	Calldata  bson.Raw `bson:"calldata"`
+	StartTime uint64   `bson:"start_time"`
+	CallData  bson.Raw `bson:"call_data"`
 }
 
 func (p *CryptoProposal) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of CryptoProposal")
+	e := util.StringError("failed to decode bson of CryptoProposal")
 
 	var up CryptoProposalBSONUnmarshaler
 	if err := enc.Unmarshal(b, &up); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(up.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
-	return p.unpack(enc, ht, up.StartTime, up.Calldata)
+	return p.unpack(enc, ht, up.StartTime, up.CallData)
 }
 
 func (p BizProposal) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
-			"_hint":     p.Hint().String(),
-			"starttime": p.starttime,
-			"url":       p.url,
-			"hash":      p.hash,
+			"_hint":      p.Hint().String(),
+			"start_time": p.startTime,
+			"url":        p.url,
+			"hash":       p.hash,
+			"options":    p.options,
 		},
 	)
 }
 
 type BizProposalBSONUnmarshaler struct {
 	Hint      string `bson:"_hint"`
-	StartTime uint64 `bson:"starttime"`
+	StartTime uint64 `bson:"start_time"`
 	Url       string `bson:"url"`
 	Hash      string `bson:"hash"`
+	Options   uint8  `bson:"options"`
 }
 
 func (p *BizProposal) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of BizProposal")
+	e := util.StringError("failed to decode bson of BizProposal")
 
 	var up BizProposalBSONUnmarshaler
 	if err := enc.Unmarshal(b, &up); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(up.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
-	return p.unpack(enc, ht, up.StartTime, up.Url, up.Hash)
+	return p.unpack(enc, ht, up.StartTime, up.Url, up.Hash, up.Options)
 }

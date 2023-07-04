@@ -43,15 +43,15 @@ func (wl Whitelist) Bytes() []byte {
 }
 
 func (wl Whitelist) IsValid([]byte) error {
-	e := util.StringErrorFunc("invalid whitelist")
+	e := util.StringError("invalid whitelist")
 
 	if err := util.CheckIsValiders(nil, false, wl.BaseHinter); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	for _, ac := range wl.accounts {
 		if err := ac.IsValid(nil); err != nil {
-			return e(err, "")
+			return e.Wrap(err)
 		}
 	}
 
@@ -80,35 +80,41 @@ var PolicyHint = hint.MustNewHint("mitum-dao-policy-v0.0.1")
 
 type Policy struct {
 	hint.BaseHinter
-	token     currencytypes.CurrencyID
-	threshold currencytypes.Amount
-	fee       currencytypes.Amount
-	whitelist Whitelist
-	delaytime uint64
-	snaptime  uint64
-	timelock  uint64
-	turnout   PercentRatio
-	quorum    PercentRatio
+	token                currencytypes.CurrencyID
+	threshold            currencytypes.Amount
+	fee                  currencytypes.Amount
+	whitelist            Whitelist
+	proposalReviewPeriod uint64
+	registrationPeriod   uint64
+	preSnapshotPeriod    uint64
+	votingPeriod         uint64
+	postSnapshotPeriod   uint64
+	executionDelayPeriod uint64
+	turnout              PercentRatio
+	quorum               PercentRatio
 }
 
 func NewPolicy(
 	token currencytypes.CurrencyID,
 	fee, threshold currencytypes.Amount,
 	whitelist Whitelist,
-	delaytime, snaptime, timelock uint64,
+	proposalReviewPeriod, registrationPeriod, preSnapshotPeriod, votingPeriod, postSnapshotPeriod, executionDelayPeriod uint64,
 	turnout, quorum PercentRatio,
 ) Policy {
 	return Policy{
-		BaseHinter: hint.NewBaseHinter(PolicyHint),
-		token:      token,
-		fee:        fee,
-		threshold:  threshold,
-		whitelist:  whitelist,
-		delaytime:  delaytime,
-		snaptime:   snaptime,
-		timelock:   timelock,
-		turnout:    turnout,
-		quorum:     quorum,
+		BaseHinter:           hint.NewBaseHinter(PolicyHint),
+		token:                token,
+		fee:                  fee,
+		threshold:            threshold,
+		whitelist:            whitelist,
+		proposalReviewPeriod: proposalReviewPeriod,
+		registrationPeriod:   registrationPeriod,
+		preSnapshotPeriod:    preSnapshotPeriod,
+		votingPeriod:         votingPeriod,
+		postSnapshotPeriod:   postSnapshotPeriod,
+		executionDelayPeriod: executionDelayPeriod,
+		turnout:              turnout,
+		quorum:               quorum,
 	}
 }
 
@@ -118,16 +124,19 @@ func (po Policy) Bytes() []byte {
 		po.fee.Bytes(),
 		po.threshold.Bytes(),
 		po.whitelist.Bytes(),
-		util.Uint64ToBytes(po.delaytime),
-		util.Uint64ToBytes(po.snaptime),
-		util.Uint64ToBytes(po.timelock),
+		util.Uint64ToBytes(po.proposalReviewPeriod),
+		util.Uint64ToBytes(po.registrationPeriod),
+		util.Uint64ToBytes(po.preSnapshotPeriod),
+		util.Uint64ToBytes(po.votingPeriod),
+		util.Uint64ToBytes(po.postSnapshotPeriod),
+		util.Uint64ToBytes(po.executionDelayPeriod),
 		po.turnout.Bytes(),
 		po.quorum.Bytes(),
 	)
 }
 
 func (po Policy) IsValid([]byte) error {
-	e := util.StringErrorFunc("invalid dao policy")
+	e := util.StringError("invalid dao policy")
 
 	if err := util.CheckIsValiders(nil, false,
 		po.BaseHinter,
@@ -138,7 +147,7 @@ func (po Policy) IsValid([]byte) error {
 		po.turnout,
 		po.quorum,
 	); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	return nil
@@ -160,16 +169,28 @@ func (po Policy) Whitelist() Whitelist {
 	return po.whitelist
 }
 
-func (po Policy) DelayTime() uint64 {
-	return po.delaytime
+func (po Policy) ProposalReviewPeriod() uint64 {
+	return po.proposalReviewPeriod
 }
 
-func (po Policy) SnapTime() uint64 {
-	return po.snaptime
+func (po Policy) RegistrationPeriod() uint64 {
+	return po.registrationPeriod
 }
 
-func (po Policy) TimeLock() uint64 {
-	return po.timelock
+func (po Policy) PreSnapshotPeriod() uint64 {
+	return po.preSnapshotPeriod
+}
+
+func (po Policy) VotingPeriod() uint64 {
+	return po.votingPeriod
+}
+
+func (po Policy) PostSnapshotPeriod() uint64 {
+	return po.postSnapshotPeriod
+}
+
+func (po Policy) ExecutionDelayPeriod() uint64 {
+	return po.executionDelayPeriod
 }
 
 func (po Policy) Turnout() PercentRatio {

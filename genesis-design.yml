@@ -3,7 +3,7 @@ facts:
     nodes:
       - _hint: currency-node-v0.0.1
         address: no0sas
-        publickey: 27kpTQCEPhrMugHxPzAq174mgCZiSBP66rZsqjCHMYhLAmpu
+        publickey: bXTT1hoetSKYPUmfu3bMRcs8aU342MTTzhgeCQ1bTavBmpu
 
   - _hint: currency-genesis-network-policy-fact-v0.0.1
     policy:
@@ -15,10 +15,10 @@ facts:
         limit: 1
       max_suffrage_size: 3
   - _hint: mitum-currency-genesis-currencies-operation-fact-v0.0.1
-    genesis_node_key: 27kpTQCEPhrMugHxPzAq174mgCZiSBP66rZsqjCHMYhLAmpu
+    genesis_node_key: bXTT1hoetSKYPUmfu3bMRcs8aU342MTTzhgeCQ1bTavBmpu
     keys:
-      _hint: mitum-currency-keys-v0.0.1  
-      keys: 
+      _hint: mitum-currency-keys-v0.0.1
+      keys:
         - _hint: mitum-currency-key-v0.0.1
           key: kYJADZP1XKNvUNn7XHY39yisp9QCfU1LtyxGw2HRjQwXmpu
           # D4QPRNSTgYmgRymYVS1mLgyGtCbzeAPYhd5r4jNQahwampr
@@ -26,7 +26,7 @@ facts:
       threshold: 100
     currencies:
       - _hint: mitum-currency-currency-design-v0.0.1
-        amount: 
+        amount:
           _hint: mitum-currency-amount-v0.0.1
           amount: "1000000000000000000000000000"
           currency: MCC
@@ -36,7 +36,6 @@ facts:
           new_account_min_balance: "1"
           feeer:
             _hint: mitum-currency-fixed-feeer-v0.0.1
-            receiver: 2E5qNuz9HsXydeTTdG1a3SZtj1iBWNUyVyfHYNcs4gSgmca
+            receiver: FQacpLf7kQQQQGhHv43pehSZn4mCjz1qViky5DG36ZPAmca
             amount: "1"
-            exchange_min_amount: "1"
         aggregate: "1000000000000000000000000000"

@@ -2,12 +2,13 @@ package dao
 
 import (
 	"context"
+	"github.com/ProtoconNet/mitum-dao/types"
 	"sync"
 
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	currencystate "github.com/ProtoconNet/mitum-currency/v3/state"
-	currency "github.com/ProtoconNet/mitum-currency/v3/state/currency"
-	extensioncurrency "github.com/ProtoconNet/mitum-currency/v3/state/extension"
+	"github.com/ProtoconNet/mitum-currency/v3/state/currency"
+	stateextionsion "github.com/ProtoconNet/mitum-currency/v3/state/extension"
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum-dao/state"
 	"github.com/ProtoconNet/mitum2/base"
@@ -22,7 +23,7 @@ var proposeProcessorPool = sync.Pool{
 }
 
 func (Propose) Process(
-	ctx context.Context, getStateFunc base.GetStateFunc,
+	_ context.Context, _ base.GetStateFunc,
 ) ([]base.StateMergeValue, base.OperationProcessReasonError, error) {
 	return nil, nil, nil
 }
@@ -38,7 +39,7 @@ func NewProposeProcessor() currencytypes.GetNewProcessor {
 		newPreProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 		newProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 	) (base.OperationProcessor, error) {
-		e := util.StringErrorFunc("failed to create new ProposeProcessor")
+		e := util.StringError("failed to create new ProposeProcessor")
 
 		nopp := proposeProcessorPool.Get()
 		opp, ok := nopp.(*ProposeProcessor)
@@ -49,7 +50,7 @@ func NewProposeProcessor() currencytypes.GetNewProcessor {
 		b, err := base.NewBaseOperationProcessor(
 			height, getStateFunc, newPreProcessConstraintFunc, newProcessConstraintFunc)
 		if err != nil {
-			return nil, e(err, "")
+			return nil, e.Wrap(err)
 		}
 
 		opp.BaseOperationProcessor = b
@@ -61,26 +62,26 @@ func NewProposeProcessor() currencytypes.GetNewProcessor {
 func (opp *ProposeProcessor) PreProcess(
 	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc,
 ) (context.Context, base.OperationProcessReasonError, error) {
-	e := util.StringErrorFunc("failed to preprocess Propose")
+	e := util.StringError("failed to preprocess Propose")
 
 	fact, ok := op.Fact().(ProposeFact)
 	if !ok {
-		return ctx, nil, e(nil, "not ProposeFact, %T", op.Fact())
+		return ctx, nil, e.Errorf("not ProposeFact, %T", op.Fact())
 	}
 
 	if err := fact.IsValid(nil); err != nil {
-		return ctx, nil, e(err, "")
+		return ctx, nil, e.Wrap(err)
 	}
 
 	if err := currencystate.CheckExistsState(currency.StateKeyAccount(fact.Sender()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("sender not found, %q: %w", fact.Sender(), err), nil
 	}
 
-	if err := currencystate.CheckNotExistsState(extensioncurrency.StateKeyContractAccount(fact.Sender()), getStateFunc); err != nil {
+	if err := currencystate.CheckNotExistsState(stateextionsion.StateKeyContractAccount(fact.Sender()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("contract account cannot propose proposal, %q: %w", fact.Sender(), err), nil
 	}
 
-	if err := currencystate.CheckExistsState(extensioncurrency.StateKeyContractAccount(fact.Contract()), getStateFunc); err != nil {
+	if err := currencystate.CheckExistsState(stateextionsion.StateKeyContractAccount(fact.Contract()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("contract account not found, %q: %w", fact.Contract(), err), nil
 	}
 
@@ -149,22 +150,22 @@ func (opp *ProposeProcessor) PreProcess(
 }
 
 func (opp *ProposeProcessor) Process(
-	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc) (
+	_ context.Context, op base.Operation, getStateFunc base.GetStateFunc) (
 	[]base.StateMergeValue, base.OperationProcessReasonError, error,
 ) {
-	e := util.StringErrorFunc("failed to process Propose")
+	e := util.StringError("failed to process Propose")
 
 	fact, ok := op.Fact().(ProposeFact)
 	if !ok {
-		return nil, nil, e(nil, "expected ProposeFact, not %T", op.Fact())
+		return nil, nil, e.Errorf("expected ProposeFact, not %T", op.Fact())
 	}
 
-	sts := []base.StateMergeValue{}
+	var sts []base.StateMergeValue
 
 	sts = append(sts,
 		currencystate.NewStateMergeValue(
-			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposeID()),
-			state.NewProposalStateValue(fact.Proposal()),
+			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
+			state.NewProposalStateValue(types.Proposed, fact.Proposal()),
 		),
 	)
 

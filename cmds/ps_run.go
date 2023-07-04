@@ -1,24 +1,18 @@
 package cmds
 
 import (
+	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
 	"github.com/ProtoconNet/mitum2/launch"
 	"github.com/ProtoconNet/mitum2/util/ps"
-)
-
-var (
-	PNameDigest           = ps.Name("digest")
-	PNameDigestStart      = ps.Name("digest_star")
-	PNameMongoDBsDataBase = ps.Name("mongodb_database")
-	PNameDigestDataBase   = ps.Name("digest_database")
 )
 
 func DefaultRunPS() *ps.PS {
 	pps := ps.NewPS("cmd-run")
 
 	_ = pps.
-		AddOK(launch.PNameEncoder, PEncoder, nil).
+		AddOK(launch.PNameEncoder, currencycmds.PEncoder, nil).
 		AddOK(launch.PNameDesign, launch.PLoadDesign, nil, launch.PNameEncoder).
-		AddOK(PNameDigestDesign, PLoadDigestDesign, nil, launch.PNameEncoder).
+		AddOK(currencycmds.PNameDigestDesign, currencycmds.PLoadDigestDesign, nil, launch.PNameEncoder).
 		AddOK(launch.PNameTimeSyncer, launch.PStartTimeSyncer, launch.PCloseTimeSyncer, launch.PNameDesign).
 		AddOK(launch.PNameLocal, launch.PLocal, nil, launch.PNameDesign).
 		AddOK(launch.PNameStorage, launch.PStorage, nil, launch.PNameLocal).
@@ -39,18 +33,18 @@ func DefaultRunPS() *ps.PS {
 			launch.PNameStartMemberlist,
 			launch.PNameStartNetwork,
 			launch.PNameStates).
-		AddOK(PNameMongoDBsDataBase, ProcessDatabase, nil, PNameDigestDesign, launch.PNameStorage).
-		AddOK(PNameDigestDataBase, ProcessDigestDatabase, nil, PNameMongoDBsDataBase).
-		AddOK(PNameDigester, ProcessDigester, nil, PNameDigestDataBase).
-		AddOK(PNameDigest, ProcessDigestAPI, nil, PNameDigestDesign, PNameDigestDataBase, launch.PNameMemberlist).
-		AddOK(PNameDigestStart, ProcessStartDigestAPI, nil, PNameDigest).
-		AddOK(PNameStartDigester, ProcessStartDigester, nil, PNameDigestStart)
+		AddOK(currencycmds.PNameMongoDBsDataBase, currencycmds.ProcessDatabase, nil, currencycmds.PNameDigestDesign, launch.PNameStorage).
+		AddOK(currencycmds.PNameDigester, ProcessDigester, nil, currencycmds.PNameMongoDBsDataBase).
+		AddOK(currencycmds.PNameDigest, currencycmds.ProcessDigestAPI, nil, currencycmds.PNameDigestDesign, currencycmds.PNameMongoDBsDataBase, launch.PNameMemberlist).
+		AddOK(currencycmds.PNameDigestStart, currencycmds.ProcessStartDigestAPI, nil, currencycmds.PNameDigest).
+		AddOK(currencycmds.PNameStartDigester, ProcessStartDigester, nil, currencycmds.PNameDigestStart)
 
 	_ = pps.POK(launch.PNameEncoder).
 		PostAddOK(launch.PNameAddHinters, PAddHinters)
 
 	_ = pps.POK(launch.PNameDesign).
-		PostAddOK(launch.PNameCheckDesign, launch.PCheckDesign)
+		PostAddOK(launch.PNameCheckDesign, launch.PCheckDesign).
+		PostAddOK(launch.PNameINITObjectCache, launch.PINITObjectCache)
 
 	_ = pps.POK(launch.PNameLocal).
 		PostAddOK(launch.PNameDiscoveryFlag, launch.PDiscoveryFlag)
@@ -59,7 +53,8 @@ func DefaultRunPS() *ps.PS {
 		PreAddOK(launch.PNameCheckLocalFS, launch.PCheckLocalFS).
 		PreAddOK(launch.PNameLoadDatabase, launch.PLoadDatabase).
 		PostAddOK(launch.PNameCheckLeveldbStorage, launch.PCheckLeveldbStorage).
-		PostAddOK(launch.PNameCheckLoadFromDatabase, launch.PLoadFromDatabase).
+		PostAddOK(launch.PNameLoadFromDatabase, launch.PLoadFromDatabase).
+		PostAddOK(launch.PNameCheckBlocksOfStorage, launch.PCheckBlocksOfStorage).
 		PostAddOK(launch.PNameNodeInfo, launch.PNodeInfo)
 
 	_ = pps.POK(launch.PNameNetwork).
@@ -71,20 +66,21 @@ func DefaultRunPS() *ps.PS {
 		PreAddOK(launch.PNameLastConsensusNodesWatcher, launch.PLastConsensusNodesWatcher).
 		PostAddOK(launch.PNameBallotbox, launch.PBallotbox).
 		PostAddOK(launch.PNameLongRunningMemberlistJoin, launch.PLongRunningMemberlistJoin).
-		PostAddOK(launch.PNameCallbackBroadcaster, launch.PCallbackBroadcaster).
 		PostAddOK(launch.PNameSuffrageVoting, launch.PSuffrageVoting)
 
 	_ = pps.POK(launch.PNameStates).
 		PreAddOK(launch.PNameProposerSelector, launch.PProposerSelector).
 		PreAddOK(launch.PNameOperationProcessorsMap, POperationProcessorsMap).
-		PreAddOK(launch.PNameNetworkHandlers, PNetworkHandlers).
+		PreAddOK(launch.PNameNetworkHandlers, currencycmds.PNetworkHandlers).
 		PreAddOK(launch.PNameNodeInConsensusNodesFunc, launch.PNodeInConsensusNodesFunc).
 		PreAddOK(launch.PNameProposalProcessors, launch.PProposalProcessors).
 		PreAddOK(launch.PNameBallotStuckResolver, launch.PBallotStuckResolver).
 		PostAddOK(launch.PNamePatchLastConsensusNodesWatcher, launch.PPatchLastConsensusNodesWatcher).
 		PostAddOK(launch.PNameStatesSetHandlers, launch.PStatesSetHandlers).
 		PostAddOK(launch.PNameWatchDesign, launch.PWatchDesign).
-		PostAddOK(launch.PNamePatchMemberlist, launch.PPatchMemberlist)
+		PostAddOK(launch.PNamePatchMemberlist, launch.PPatchMemberlist).
+		PostAddOK(launch.PNameStatesNetworkHandlers, currencycmds.PStatesNetworkHandlers).
+		PostAddOK(launch.PNameHandoverNetworkHandlers, launch.PHandoverNetworkHandlers)
 
 	return pps
 }

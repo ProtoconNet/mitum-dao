@@ -2,6 +2,7 @@ package cmds
 
 import (
 	"context"
+	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
 
 	"github.com/pkg/errors"
 
@@ -11,24 +12,17 @@ import (
 )
 
 type RegisterCommand struct {
-	baseCommand
-	OperationFlags
-	Sender    AddressFlag    `arg:"" name:"sender" help:"sender address" required:"true"`
-	Contract  AddressFlag    `arg:"" name:"contract" help:"contract address of credential" required:"true"`
-	DAO       ContractIDFlag `arg:"" name:"dao-id" help:"dao id" required:"true"`
-	ProposeID string         `arg:"" name:"propose-id" help:"propose id" required:"true"`
-	Currency  CurrencyIDFlag `arg:"" name:"currency-id" help:"currency id" required:"true"`
-	Approved  AddressFlag    `name:"approved" help:"target address to approve"`
-	sender    base.Address
-	contract  base.Address
-	approved  base.Address
-}
-
-func NewRegisterCommand() RegisterCommand {
-	cmd := NewbaseCommand()
-	return RegisterCommand{
-		baseCommand: *cmd,
-	}
+	BaseCommand
+	currencycmds.OperationFlags
+	Sender     currencycmds.AddressFlag    `arg:"" name:"sender" help:"sender address" required:"true"`
+	Contract   currencycmds.AddressFlag    `arg:"" name:"contract" help:"contract address of credential" required:"true"`
+	DAO        currencycmds.ContractIDFlag `arg:"" name:"dao-id" help:"dao id" required:"true"`
+	ProposalID string                      `arg:"" name:"proposal-id" help:"proposal id" required:"true"`
+	Currency   currencycmds.CurrencyIDFlag `arg:"" name:"currency-id" help:"currency id" required:"true"`
+	Delegated  currencycmds.AddressFlag    `arg:"" name:"delegated" help:"target address to be delegated" required:"true"`
+	sender     base.Address
+	contract   base.Address
+	delegated  base.Address
 }
 
 func (cmd *RegisterCommand) Run(pctx context.Context) error { // nolint:dupl
@@ -36,8 +30,8 @@ func (cmd *RegisterCommand) Run(pctx context.Context) error { // nolint:dupl
 		return err
 	}
 
-	encs = cmd.encs
-	enc = cmd.enc
+	encs = cmd.Encoders
+	enc = cmd.Encoder
 
 	if err := cmd.parseFlags(); err != nil {
 		return err
@@ -48,7 +42,7 @@ func (cmd *RegisterCommand) Run(pctx context.Context) error { // nolint:dupl
 		return err
 	}
 
-	PrettyPrint(cmd.Out, op)
+	currencycmds.PrettyPrint(cmd.Out, op)
 
 	return nil
 }
@@ -70,39 +64,35 @@ func (cmd *RegisterCommand) parseFlags() error {
 	}
 	cmd.contract = contract
 
-	if cmd.Approved.s != "" {
-		ap, err := cmd.Approved.Encode(enc)
-		if err != nil {
-			return errors.Wrapf(err, "invalid approved account format, %q", cmd.Approved.String())
-		}
-		cmd.approved = ap
-	} else {
-		cmd.approved = nil
+	delegated, err := cmd.Delegated.Encode(enc)
+	if err != nil {
+		return errors.Wrapf(err, "invalid delegated account format, %q", cmd.Delegated.String())
 	}
+	cmd.delegated = delegated
 
 	return nil
 }
 
 func (cmd *RegisterCommand) createOperation() (base.Operation, error) { // nolint:dupl}
-	e := util.StringErrorFunc("failed to create register operation")
+	e := util.StringError("failed to create register operation")
 
 	fact := dao.NewRegisterFact(
 		[]byte(cmd.Token),
 		cmd.sender,
 		cmd.contract,
 		cmd.DAO.ID,
-		cmd.ProposeID,
-		cmd.approved,
+		cmd.ProposalID,
+		cmd.delegated,
 		cmd.Currency.CID,
 	)
 
 	op, err := dao.NewRegister(fact)
 	if err != nil {
-		return nil, e(err, "")
+		return nil, e.Wrap(err)
 	}
 	err = op.HashSign(cmd.Privatekey, cmd.NetworkID.NetworkID())
 	if err != nil {
-		return nil, e(err, "")
+		return nil, e.Wrap(err)
 	}
 
 	return op, nil

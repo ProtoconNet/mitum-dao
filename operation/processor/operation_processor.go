@@ -3,21 +3,19 @@ package processor
 import (
 	"context"
 	"fmt"
-	"io"
-	"sync"
-
 	"github.com/ProtoconNet/mitum-currency/v3/common"
-	currency "github.com/ProtoconNet/mitum-currency/v3/operation/currency"
+	"github.com/ProtoconNet/mitum-currency/v3/operation/currency"
 	extensioncurrency "github.com/ProtoconNet/mitum-currency/v3/operation/extension"
-	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
+	"github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum-dao/operation/dao"
-	"github.com/ProtoconNet/mitum-dao/types"
-	"github.com/ProtoconNet/mitum2/base"
+	mitumbase "github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/hint"
 	"github.com/ProtoconNet/mitum2/util/logging"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"io"
+	"sync"
 )
 
 var operationProcessorPool = sync.Pool{
@@ -29,32 +27,30 @@ var operationProcessorPool = sync.Pool{
 type DuplicationType string
 
 const (
-	DuplicationTypeSender      DuplicationType = "sender"
-	DuplicationTypeCurrency    DuplicationType = "currency"
-	DuplicationTypeContractDAO DuplicationType = "contract-dao"
+	DuplicationTypeSender   DuplicationType = "sender"
+	DuplicationTypeCurrency DuplicationType = "currency"
 )
 
 type OperationProcessor struct {
 	sync.RWMutex
 	*logging.Logging
-	*base.BaseOperationProcessor
+	*mitumbase.BaseOperationProcessor
 	processorHintSet     *hint.CompatibleSet
-	fee                  map[currencytypes.CurrencyID]common.Big
+	fee                  map[types.CurrencyID]common.Big
 	duplicated           map[string]DuplicationType
 	duplicatedNewAddress map[string]struct{}
 	processorClosers     *sync.Map
-	GetLastBlockFunc     types.GetLastBlockFunc
-	GetStateFunc         base.GetStateFunc
+	GetStateFunc         mitumbase.GetStateFunc
 }
 
 func NewOperationProcessor() *OperationProcessor {
 	m := sync.Map{}
 	return &OperationProcessor{
 		Logging: logging.NewLogging(func(c zerolog.Context) zerolog.Context {
-			return c.Str("module", "mitum-dao-operations-processor")
+			return c.Str("module", "mitum-currency-operations-processor")
 		}),
 		processorHintSet:     hint.NewCompatibleSet(),
-		fee:                  map[currencytypes.CurrencyID]common.Big{},
+		fee:                  map[types.CurrencyID]common.Big{},
 		duplicated:           map[string]DuplicationType{},
 		duplicatedNewAddress: map[string]struct{}{},
 		processorClosers:     &m,
@@ -62,12 +58,11 @@ func NewOperationProcessor() *OperationProcessor {
 }
 
 func (opr *OperationProcessor) New(
-	height base.Height,
-	getStateFunc base.GetStateFunc,
-	getLastBlockFunc types.GetLastBlockFunc,
-	newPreProcessConstraintFunc base.NewOperationProcessorProcessFunc,
-	newProcessConstraintFunc base.NewOperationProcessorProcessFunc) (*OperationProcessor, error) {
-	e := util.StringErrorFunc("failed to create new OperationProcessor")
+	height mitumbase.Height,
+	getStateFunc mitumbase.GetStateFunc,
+	newPreProcessConstraintFunc mitumbase.NewOperationProcessorProcessFunc,
+	newProcessConstraintFunc mitumbase.NewOperationProcessorProcessFunc) (*OperationProcessor, error) {
+	e := util.StringError("failed to create new OperationProcessor")
 
 	nopr := operationProcessorPool.Get().(*OperationProcessor)
 	if nopr.processorHintSet == nil {
@@ -90,51 +85,50 @@ func (opr *OperationProcessor) New(
 		nopr.Logging = opr.Logging
 	}
 
-	b, err := base.NewBaseOperationProcessor(
+	b, err := mitumbase.NewBaseOperationProcessor(
 		height, getStateFunc, newPreProcessConstraintFunc, newProcessConstraintFunc)
 	if err != nil {
-		return nil, e(err, "")
+		return nil, e.Wrap(err)
 	}
 
 	nopr.BaseOperationProcessor = b
 	nopr.GetStateFunc = getStateFunc
-	nopr.GetLastBlockFunc = getLastBlockFunc
 	return nopr, nil
 }
 
 func (opr *OperationProcessor) SetProcessor(
 	hint hint.Hint,
-	newProcessor currencytypes.GetNewProcessor,
-) (base.OperationProcessor, error) {
+	newProcessor types.GetNewProcessor,
+) error {
 	if err := opr.processorHintSet.Add(hint, newProcessor); err != nil {
 		if !errors.Is(err, util.ErrFound) {
-			return nil, err
+			return err
 		}
 	}
 
-	return opr, nil
+	return nil
 }
 
-func (opr *OperationProcessor) PreProcess(ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc) (context.Context, base.OperationProcessReasonError, error) {
-	e := util.StringErrorFunc("failed to preprocess for OperationProcessor")
+func (opr *OperationProcessor) PreProcess(ctx context.Context, op mitumbase.Operation, getStateFunc mitumbase.GetStateFunc) (context.Context, mitumbase.OperationProcessReasonError, error) {
+	e := util.StringError("failed to preprocess for OperationProcessor")
 
 	if opr.processorClosers == nil {
 		opr.processorClosers = &sync.Map{}
 	}
 
-	var sp base.OperationProcessor
+	var sp mitumbase.OperationProcessor
 	switch i, known, err := opr.getNewProcessor(op); {
 	case err != nil:
-		return ctx, base.NewBaseOperationProcessReasonError(err.Error()), nil
+		return ctx, mitumbase.NewBaseOperationProcessReasonError(err.Error()), nil
 	case !known:
-		return ctx, nil, e(nil, "failed to getNewProcessor, %T", op)
+		return ctx, nil, e.Errorf("failed to getNewProcessor, %T", op)
 	default:
 		sp = i
 	}
 
 	switch _, reasonerr, err := sp.PreProcess(ctx, op, getStateFunc); {
 	case err != nil:
-		return ctx, nil, e(err, "")
+		return ctx, nil, e.Wrap(err)
 	case reasonerr != nil:
 		return ctx, reasonerr, nil
 	}
@@ -142,19 +136,19 @@ func (opr *OperationProcessor) PreProcess(ctx context.Context, op base.Operation
 	return ctx, nil, nil
 }
 
-func (opr *OperationProcessor) Process(ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc) ([]base.StateMergeValue, base.OperationProcessReasonError, error) {
-	e := util.StringErrorFunc("failed to process for OperationProcessor")
+func (opr *OperationProcessor) Process(ctx context.Context, op mitumbase.Operation, getStateFunc mitumbase.GetStateFunc) ([]mitumbase.StateMergeValue, mitumbase.OperationProcessReasonError, error) {
+	e := util.StringError("failed to process for OperationProcessor")
 
 	if err := opr.checkDuplication(op); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("duplication found: %w", err), nil
+		return nil, mitumbase.NewBaseOperationProcessReasonError("duplication found: %w", err), nil
 	}
 
-	var sp base.OperationProcessor
+	var sp mitumbase.OperationProcessor
 	switch i, known, err := opr.getNewProcessor(op); {
 	case err != nil:
-		return nil, nil, e(err, "")
+		return nil, nil, e.Wrap(err)
 	case !known:
-		return nil, nil, e(nil, "failed to getNewProcessor")
+		return nil, nil, e.Errorf("failed to getNewProcessor")
 	default:
 		sp = i
 	}
@@ -164,13 +158,13 @@ func (opr *OperationProcessor) Process(ctx context.Context, op base.Operation, g
 	return stateMergeValues, reasonerr, err
 }
 
-func (opr *OperationProcessor) checkDuplication(op base.Operation) error {
+func (opr *OperationProcessor) checkDuplication(op mitumbase.Operation) error {
 	opr.Lock()
 	defer opr.Unlock()
 
 	var did string
 	var didtype DuplicationType
-	var newAddresses []base.Address
+	var newAddresses []mitumbase.Address
 
 	switch t := op.(type) {
 	case currency.CreateAccounts:
@@ -252,6 +246,13 @@ func (opr *OperationProcessor) checkDuplication(op base.Operation) error {
 		}
 		did = fact.Sender().String()
 		didtype = DuplicationTypeSender
+	case dao.PreSnap:
+		fact, ok := t.Fact().(dao.PreSnapFact)
+		if !ok {
+			return errors.Errorf("expected PreSnapFact, not %T", t.Fact())
+		}
+		did = fact.Sender().String()
+		didtype = DuplicationTypeSender
 	default:
 		return nil
 	}
@@ -280,7 +281,7 @@ func (opr *OperationProcessor) checkDuplication(op base.Operation) error {
 	return nil
 }
 
-func (opr *OperationProcessor) checkNewAddressDuplication(as []base.Address) error {
+func (opr *OperationProcessor) checkNewAddressDuplication(as []mitumbase.Address) error {
 	for i := range as {
 		if _, found := opr.duplicatedNewAddress[as[i].String()]; found {
 			return errors.Errorf("new address already processed")
@@ -312,7 +313,7 @@ func (opr *OperationProcessor) Cancel() error {
 	return nil
 }
 
-func (opr *OperationProcessor) getNewProcessor(op base.Operation) (base.OperationProcessor, bool, error) {
+func (opr *OperationProcessor) getNewProcessor(op mitumbase.Operation) (mitumbase.OperationProcessor, bool, error) {
 	switch i, err := opr.getNewProcessorFromHintset(op); {
 	case err != nil:
 		return nil, false, err
@@ -331,21 +332,22 @@ func (opr *OperationProcessor) getNewProcessor(op base.Operation) (base.Operatio
 		currency.SuffrageInflation,
 		dao.CreateDAO,
 		dao.Propose,
-		dao.Register:
+		dao.Register,
+		dao.PreSnap:
 		return nil, false, errors.Errorf("%T needs SetProcessor", t)
 	default:
 		return nil, false, nil
 	}
 }
 
-func (opr *OperationProcessor) getNewProcessorFromHintset(op base.Operation) (base.OperationProcessor, error) {
-	var f currencytypes.GetNewProcessor
+func (opr *OperationProcessor) getNewProcessorFromHintset(op mitumbase.Operation) (mitumbase.OperationProcessor, error) {
+	var f types.GetNewProcessor
 
 	if hinter, ok := op.(hint.Hinter); !ok {
 		return nil, nil
 	} else if i := opr.processorHintSet.Find(hinter.Hint()); i == nil {
 		return nil, nil
-	} else if j, ok := i.(currencytypes.GetNewProcessor); !ok {
+	} else if j, ok := i.(types.GetNewProcessor); !ok {
 		return nil, errors.Errorf("invalid GetNewProcessor func, %T", i)
 	} else {
 		f = j

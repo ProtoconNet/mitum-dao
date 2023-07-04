@@ -2,15 +2,9 @@ package cmds
 
 import (
 	"context"
-	"net"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-
 	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
-	"github.com/ProtoconNet/mitum-currency/v3/digest"
+	currencydigest "github.com/ProtoconNet/mitum-currency/v3/digest"
+	"github.com/ProtoconNet/mitum-dao/digest"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/isaac"
 	isaacnetwork "github.com/ProtoconNet/mitum2/isaac/network"
@@ -22,8 +16,14 @@ import (
 	"github.com/ProtoconNet/mitum2/util/logging"
 	"github.com/ProtoconNet/mitum2/util/ps"
 	"github.com/arl/statsviz"
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 type RunCommand struct { //nolint:govet //...
@@ -36,10 +36,6 @@ type RunCommand struct { //nolint:govet //...
 	exitf           func(error)
 	log             *zerolog.Logger
 	holded          bool
-}
-
-func NewRunCommand() RunCommand {
-	return RunCommand{}
 }
 
 func (cmd *RunCommand) Run(pctx context.Context) error {
@@ -79,11 +75,11 @@ func (cmd *RunCommand) Run(pctx context.Context) error {
 		PreAddOK(ps.Name("when-new-block-saved-in-consensus-state-func"), cmd.pWhenNewBlockSavedInConsensusStateFunc).
 		PreAddOK(ps.Name("when-new-block-confirmed-func"), cmd.pWhenNewBlockConfirmed)
 	_ = pps.POK(launch.PNameStates).
-		PreAddOK(PNameOperationProcessorsMap, POperationProcessorsMap)
-	_ = pps.POK(PNameDigest).
-		PostAddOK(PNameDigestAPIHandlers, cmd.pDigestAPIHandlers)
-	_ = pps.POK(PNameDigester).
-		PostAddOK(PNameDigesterFollowUp, PdigesterFollowUp)
+		PreAddOK(launch.PNameOperationProcessorsMap, POperationProcessorsMap)
+	_ = pps.POK(currencycmds.PNameDigest).
+		PostAddOK(currencycmds.PNameDigestAPIHandlers, cmd.pDigestAPIHandlers)
+	_ = pps.POK(currencycmds.PNameDigester).
+		PostAddOK(currencycmds.PNameDigesterFollowUp, PDigesterFollowUp)
 
 	_ = pps.SetLogging(log)
 
@@ -110,7 +106,7 @@ func (cmd *RunCommand) Run(pctx context.Context) error {
 	return cmd.run(pctx)
 }
 
-var errHoldStop = util.NewError("hold stop")
+var errHoldStop = util.NewIDError("hold stop")
 
 func (cmd *RunCommand) run(pctx context.Context) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
@@ -188,22 +184,22 @@ func (cmd *RunCommand) pWhenNewBlockSavedInConsensusStateFunc(pctx context.Conte
 		return pctx, err
 	}
 
-	f := func(height base.Height) {
-		l := log.Log().With().Interface("height", height).Logger()
+	f := func(bm base.BlockMap) {
+		l := log.Log().With().
+			Interface("blockmap", bm).
+			Interface("height", bm.Manifest().Height()).
+			Logger()
 
-		if cmd.Hold.IsSet() && height == cmd.Hold.Height() {
+		if cmd.Hold.IsSet() && bm.Manifest().Height() == cmd.Hold.Height() {
 			l.Debug().Msg("will be stopped by hold")
 
-			cmd.exitf(errHoldStop.Call())
+			cmd.exitf(errHoldStop.WithStack())
 
 			return
 		}
 	}
 
-	pctx = context.WithValue(pctx, launch.WhenNewBlockSavedInConsensusStateFuncContextKey, f)
-	//revive:disable-next-line:modifies-parameter
-
-	return pctx, nil
+	return context.WithValue(pctx, launch.WhenNewBlockSavedInConsensusStateFuncContextKey, f), nil
 }
 
 func (cmd *RunCommand) pWhenNewBlockConfirmed(pctx context.Context) (context.Context, error) {
@@ -218,7 +214,7 @@ func (cmd *RunCommand) pWhenNewBlockConfirmed(pctx context.Context) (context.Con
 		return pctx, err
 	}
 
-	if err := util.LoadFromContext(pctx, ContextValueDigester, &di); err != nil {
+	if err := util.LoadFromContext(pctx, currencycmds.ContextValueDigester, &di); err != nil {
 		return pctx, err
 	}
 
@@ -232,7 +228,7 @@ func (cmd *RunCommand) pWhenNewBlockConfirmed(pctx context.Context) (context.Con
 
 			if cmd.Hold.IsSet() && height == cmd.Hold.Height() {
 				l.Debug().Msg("will be stopped by hold")
-				cmd.exitf(errHoldStop.Call())
+				cmd.exitf(errHoldStop.WithStack())
 
 				return
 			}
@@ -243,7 +239,7 @@ func (cmd *RunCommand) pWhenNewBlockConfirmed(pctx context.Context) (context.Con
 
 			if cmd.Hold.IsSet() && height == cmd.Hold.Height() {
 				l.Debug().Msg("will be stopped by hold")
-				cmd.exitf(errHoldStop.Call())
+				cmd.exitf(errHoldStop.WithStack())
 
 				return
 			}
@@ -305,31 +301,33 @@ func (cmd *RunCommand) runHTTPState(bind string) error {
 		return errors.Wrap(err, "failed to parse --http-state")
 	}
 
-	mux := http.NewServeMux()
-	if err := statsviz.Register(mux); err != nil {
+	m := http.NewServeMux()
+	if err := statsviz.Register(m); err != nil {
 		return errors.Wrap(err, "failed to register statsviz for http-state")
 	}
 
 	cmd.log.Debug().Stringer("bind", addr).Msg("statsviz started")
 
 	go func() {
-		_ = http.ListenAndServe(addr.String(), mux)
+		_ = http.ListenAndServe(addr.String(), m)
 	}()
 
 	return nil
 }
 
 func (cmd *RunCommand) pDigestAPIHandlers(ctx context.Context) (context.Context, error) {
-	var params base.LocalParams
+	var isaacparams *isaac.Params
 	var local base.LocalNode
 
-	util.LoadFromContextOK(ctx,
+	if err := util.LoadFromContextOK(ctx,
 		launch.LocalContextKey, &local,
-		launch.LocalParamsContextKey, &params,
-	)
+		launch.ISAACParamsContextKey, &isaacparams,
+	); err != nil {
+		return nil, err
+	}
 
 	var design currencycmds.DigestDesign
-	if err := util.LoadFromContext(ctx, ContextValueDigestDesign, &design); err != nil {
+	if err := util.LoadFromContext(ctx, currencycmds.ContextValueDigestDesign, &design); err != nil {
 		if errors.Is(err, util.ErrNotFound) {
 			return ctx, nil
 		}
@@ -346,7 +344,22 @@ func (cmd *RunCommand) pDigestAPIHandlers(ctx context.Context) (context.Context,
 		return ctx, err
 	}
 
-	handlers, err := cmd.setDigestHandlers(ctx, local, params, design, cache)
+	var dnt *currencydigest.HTTP2Server
+	if err := util.LoadFromContext(ctx, currencycmds.ContextValueDigestNetwork, &dnt); err != nil {
+		return ctx, err
+	}
+	router := dnt.Router()
+
+	defaultHandlers, err := cmd.setDigestDefaultHandlers(ctx, isaacparams, cache, router)
+	if err != nil {
+		return ctx, err
+	}
+
+	if err := defaultHandlers.Initialize(); err != nil {
+		return ctx, err
+	}
+
+	handlers, err := cmd.setDigestHandlers(ctx, isaacparams, cache, router)
 	if err != nil {
 		return ctx, err
 	}
@@ -355,17 +368,11 @@ func (cmd *RunCommand) pDigestAPIHandlers(ctx context.Context) (context.Context,
 		return ctx, err
 	}
 
-	var dnt *digest.HTTP2Server
-	if err := util.LoadFromContext(ctx, ContextValueDigestNetwork, &dnt); err != nil {
-		return ctx, err
-	}
-	dnt.SetRouter(handlers.Router())
-
 	return ctx, nil
 }
 
-func (cmd *RunCommand) loadCache(_ context.Context, design currencycmds.DigestDesign) (digest.Cache, error) {
-	c, err := digest.NewCacheFromURI(design.Cache().String())
+func (cmd *RunCommand) loadCache(_ context.Context, design currencycmds.DigestDesign) (currencydigest.Cache, error) {
+	c, err := currencydigest.NewCacheFromURI(design.Cache().String())
 	if err != nil {
 		cmd.log.Err(err).Str("cache", design.Cache().String()).Msg("failed to connect cache server")
 		cmd.log.Warn().Msg("instead of remote cache server, internal mem cache can be available, `memory://`")
@@ -375,48 +382,63 @@ func (cmd *RunCommand) loadCache(_ context.Context, design currencycmds.DigestDe
 	return c, nil
 }
 
-func (cmd *RunCommand) setDigestHandlers(
+func (cmd *RunCommand) setDigestDefaultHandlers(
 	ctx context.Context,
-	local base.LocalNode,
-	params base.LocalParams,
-	design currencycmds.DigestDesign,
-	cache digest.Cache,
-) (*digest.Handlers, error) {
-	var st *digest.Database
-	if err := util.LoadFromContext(ctx, ContextValueDigestDatabase, &st); err != nil {
+	params *isaac.Params,
+	cache currencydigest.Cache,
+	router *mux.Router,
+) (*currencydigest.Handlers, error) {
+	var st *currencydigest.Database
+	if err := util.LoadFromContext(ctx, currencycmds.ContextValueDigestDatabase, &st); err != nil {
 		return nil, err
 	}
 
-	handlers := digest.NewHandlers(ctx, params.NetworkID(), encs, enc, st, cache)
-	i, err := cmd.setDigestSendHandler(ctx, local, params, handlers)
+	handlers := currencydigest.NewHandlers(ctx, params.NetworkID(), encs, enc, st, cache, router)
+
+	h, err := cmd.setDigestNetworkClient(ctx, params, handlers)
 	if err != nil {
 		return nil, err
 	}
-	handlers = i
+	handlers = h
 
 	return handlers, nil
 }
 
-func (cmd *RunCommand) setDigestSendHandler(
+func (cmd *RunCommand) setDigestHandlers(
 	ctx context.Context,
-	local base.LocalNode,
-	params base.LocalParams,
-	handlers *digest.Handlers,
+	params *isaac.Params,
+	cache currencydigest.Cache,
+	router *mux.Router,
 ) (*digest.Handlers, error) {
-	var memberlist *quicmemberlist.Memberlist
-	if err := util.LoadFromContextOK(ctx, launch.MemberlistContextKey, &memberlist); err != nil {
+	var st *currencydigest.Database
+	if err := util.LoadFromContext(ctx, currencycmds.ContextValueDigestDatabase, &st); err != nil {
+		return nil, err
+	}
+
+	handlers := digest.NewHandlers(ctx, params.NetworkID(), encs, enc, st, cache, router)
+
+	return handlers, nil
+}
+
+func (cmd *RunCommand) setDigestNetworkClient(
+	ctx context.Context,
+	params *isaac.Params,
+	handlers *currencydigest.Handlers,
+) (*currencydigest.Handlers, error) {
+	var memberList *quicmemberlist.Memberlist
+	if err := util.LoadFromContextOK(ctx, launch.MemberlistContextKey, &memberList); err != nil {
 		return nil, err
 	}
 
 	client := launch.NewNetworkClient( //nolint:gomnd //...
-		encs, enc, time.Second*2,
-		base.NetworkID([]byte(params.NetworkID())),
+		encs, enc,
+		(*params).NetworkID(),
 	)
 
-	handlers = handlers.SetSend(
-		NewSendHandler(local.Privatekey(), params.NetworkID(), func() (*isaacnetwork.QuicstreamClient, *quicmemberlist.Memberlist, error) { // nolint:contextcheck
-			return client, memberlist, nil
-		}),
+	handlers = handlers.SetNetworkClientFunc(
+		func() (*isaacnetwork.QuicstreamClient, *quicmemberlist.Memberlist, error) { // nolint:contextcheck
+			return client, memberList, nil
+		},
 	)
 
 	cmd.log.Debug().Msg("send handler attached")

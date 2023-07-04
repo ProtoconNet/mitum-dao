@@ -6,7 +6,7 @@ import (
 
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	currencystate "github.com/ProtoconNet/mitum-currency/v3/state"
-	currency "github.com/ProtoconNet/mitum-currency/v3/state/currency"
+	"github.com/ProtoconNet/mitum-currency/v3/state/currency"
 	extensioncurrency "github.com/ProtoconNet/mitum-currency/v3/state/extension"
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum-dao/state"
@@ -23,7 +23,7 @@ var createDAOProcessorPool = sync.Pool{
 }
 
 func (CreateDAO) Process(
-	ctx context.Context, getStateFunc base.GetStateFunc,
+	_ context.Context, _ base.GetStateFunc,
 ) ([]base.StateMergeValue, base.OperationProcessReasonError, error) {
 	return nil, nil, nil
 }
@@ -39,7 +39,7 @@ func NewCreateDAOProcessor() currencytypes.GetNewProcessor {
 		newPreProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 		newProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 	) (base.OperationProcessor, error) {
-		e := util.StringErrorFunc("failed to create new CreateDAOProcessor")
+		e := util.StringError("failed to create new CreateDAOProcessor")
 
 		nopp := createDAOProcessorPool.Get()
 		opp, ok := nopp.(*CreateDAOProcessor)
@@ -50,7 +50,7 @@ func NewCreateDAOProcessor() currencytypes.GetNewProcessor {
 		b, err := base.NewBaseOperationProcessor(
 			height, getStateFunc, newPreProcessConstraintFunc, newProcessConstraintFunc)
 		if err != nil {
-			return nil, e(err, "")
+			return nil, e.Wrap(err)
 		}
 
 		opp.BaseOperationProcessor = b
@@ -62,15 +62,15 @@ func NewCreateDAOProcessor() currencytypes.GetNewProcessor {
 func (opp *CreateDAOProcessor) PreProcess(
 	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc,
 ) (context.Context, base.OperationProcessReasonError, error) {
-	e := util.StringErrorFunc("failed to preprocess CreateDAO")
+	e := util.StringError("failed to preprocess CreateDAO")
 
 	fact, ok := op.Fact().(CreateDAOFact)
 	if !ok {
-		return ctx, nil, e(nil, "not CreateDAOFact, %T", op.Fact())
+		return ctx, nil, e.Errorf("not CreateDAOFact, %T", op.Fact())
 	}
 
 	if err := fact.IsValid(nil); err != nil {
-		return ctx, nil, e(err, "")
+		return ctx, nil, e.Wrap(err)
 	}
 
 	if err := currencystate.CheckExistsState(currency.StateKeyAccount(fact.Sender()), getStateFunc); err != nil {
@@ -103,6 +103,11 @@ func (opp *CreateDAOProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("currency doesn't exist, %q: %w", fact.Currency(), err), nil
 	}
 
+	st, err = currencystate.ExistsState(currency.StateKeyCurrencyDesign(fact.VotingPowerToken()), "key of currency design", getStateFunc)
+	if err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("currency design not found, %q: %w", fact.VotingPowerToken(), err), nil
+	}
+
 	if err := currencystate.CheckFactSignsByState(fact.Sender(), op.Signs(), getStateFunc); err != nil {
 		return ctx, base.NewBaseOperationProcessReasonError("invalid signing: %w", err), nil
 	}
@@ -111,17 +116,21 @@ func (opp *CreateDAOProcessor) PreProcess(
 }
 
 func (opp *CreateDAOProcessor) Process(
-	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc) (
+	_ context.Context, op base.Operation, getStateFunc base.GetStateFunc) (
 	[]base.StateMergeValue, base.OperationProcessReasonError, error,
 ) {
-	e := util.StringErrorFunc("failed to process CreateDAO")
+	e := util.StringError("failed to process CreateDAO")
 
 	fact, ok := op.Fact().(CreateDAOFact)
 	if !ok {
-		return nil, nil, e(nil, "expected CreateDAOFact, not %T", op.Fact())
+		return nil, nil, e.Errorf("expected CreateDAOFact, not %T", op.Fact())
 	}
 
-	policy := types.NewPolicy(fact.votingPowerToken, fact.fee, fact.threshold, fact.whitelist, fact.delaytime, fact.snaptime, fact.timelock, fact.turnout, fact.quorum)
+	policy := types.NewPolicy(
+		fact.votingPowerToken, fact.fee, fact.threshold, fact.whitelist,
+		fact.proposalReviewPeriod, fact.registrationPeriod, fact.preSnapshotPeriod, fact.votingPeriod,
+		fact.postSnapshotPeriod, fact.executionDelayPeriod, fact.turnout, fact.quorum,
+	)
 	if err := policy.IsValid(nil); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("invalid dao policy, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
 	}

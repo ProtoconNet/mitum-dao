@@ -17,7 +17,7 @@ var (
 	GovernanceCalldataHint = hint.MustNewHint("mitum-dao-governance-calldata-v0.0.1")
 )
 
-type Calldata interface {
+type CallData interface {
 	util.IsValider
 	hint.Hinter
 	Type() string
@@ -25,15 +25,15 @@ type Calldata interface {
 	Addresses() []base.Address
 }
 
-type TransferCalldata struct {
+type TransferCallData struct {
 	hint.BaseHinter
 	sender   base.Address
 	receiver base.Address
 	amount   currencytypes.Amount
 }
 
-func NewTransferCalldata(sender base.Address, receiver base.Address, amount currencytypes.Amount) TransferCalldata {
-	return TransferCalldata{
+func NewTransferCallData(sender base.Address, receiver base.Address, amount currencytypes.Amount) TransferCallData {
+	return TransferCallData{
 		BaseHinter: hint.NewBaseHinter(TransferCalldataHint),
 		sender:     sender,
 		receiver:   receiver,
@@ -41,27 +41,27 @@ func NewTransferCalldata(sender base.Address, receiver base.Address, amount curr
 	}
 }
 
-func (TransferCalldata) Type() string {
+func (TransferCallData) Type() string {
 	return CalldataTransfer
 }
 
-func (cd TransferCalldata) Bytes() []byte {
+func (cd TransferCallData) Bytes() []byte {
 	return util.ConcatBytesSlice(cd.sender.Bytes(), cd.receiver.Bytes(), cd.amount.Bytes())
 }
 
-func (cd TransferCalldata) Sender() base.Address {
+func (cd TransferCallData) Sender() base.Address {
 	return cd.sender
 }
 
-func (cd TransferCalldata) Receiver() base.Address {
+func (cd TransferCallData) Receiver() base.Address {
 	return cd.receiver
 }
 
-func (cd TransferCalldata) Amount() currencytypes.Amount {
+func (cd TransferCallData) Amount() currencytypes.Amount {
 	return cd.amount
 }
 
-func (cd TransferCalldata) IsValid([]byte) error {
+func (cd TransferCallData) IsValid([]byte) error {
 	if err := cd.BaseHinter.IsValid(nil); err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (cd TransferCalldata) IsValid([]byte) error {
 	return nil
 }
 
-func (cd TransferCalldata) Addresses() []base.Address {
+func (cd TransferCallData) Addresses() []base.Address {
 	as := make([]base.Address, 2)
 
 	as[0] = cd.sender
@@ -90,31 +90,31 @@ func (cd TransferCalldata) Addresses() []base.Address {
 	return as
 }
 
-type GovernanceCalldata struct {
+type GovernanceCallData struct {
 	hint.BaseHinter
 	policy Policy
 }
 
-func NewGovernanceCalldata(policy Policy) GovernanceCalldata {
-	return GovernanceCalldata{
+func NewGovernanceCallData(policy Policy) GovernanceCallData {
+	return GovernanceCallData{
 		BaseHinter: hint.NewBaseHinter(GovernanceCalldataHint),
 		policy:     policy,
 	}
 }
 
-func (GovernanceCalldata) Type() string {
+func (GovernanceCallData) Type() string {
 	return CalldataGovernance
 }
 
-func (cd GovernanceCalldata) Bytes() []byte {
+func (cd GovernanceCallData) Bytes() []byte {
 	return cd.policy.Bytes()
 }
 
-func (cd GovernanceCalldata) Policy() Policy {
+func (cd GovernanceCallData) Policy() Policy {
 	return cd.policy
 }
 
-func (cd GovernanceCalldata) IsValid([]byte) error {
+func (cd GovernanceCallData) IsValid([]byte) error {
 	if err := cd.BaseHinter.IsValid(nil); err != nil {
 		return err
 	}
@@ -126,6 +126,6 @@ func (cd GovernanceCalldata) IsValid([]byte) error {
 	return nil
 }
 
-func (cd GovernanceCalldata) Addresses() []base.Address {
+func (cd GovernanceCallData) Addresses() []base.Address {
 	return cd.policy.whitelist.accounts
 }

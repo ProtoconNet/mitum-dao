@@ -13,36 +13,36 @@ import (
 func (fact RegisterFact) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
-			"_hint":     fact.Hint().String(),
-			"sender":    fact.sender,
-			"contract":  fact.contract,
-			"daoid":     fact.daoID,
-			"proposeid": fact.proposeID,
-			"approved":  fact.approved,
-			"currency":  fact.currency,
-			"hash":      fact.BaseFact.Hash().String(),
-			"token":     fact.BaseFact.Token(),
+			"_hint":       fact.Hint().String(),
+			"sender":      fact.sender,
+			"contract":    fact.contract,
+			"dao_id":      fact.daoID,
+			"proposal_id": fact.proposalID,
+			"delegated":   fact.delegated,
+			"currency":    fact.currency,
+			"hash":        fact.BaseFact.Hash().String(),
+			"token":       fact.BaseFact.Token(),
 		},
 	)
 }
 
 type RegisterFactBSONUnmarshaler struct {
-	Hint      string `bson:"_hint"`
-	Sender    string `bson:"sender"`
-	Contract  string `bson:"contract"`
-	DAOID     string `bson:"daoid"`
-	ProposeID string `bson:"proposeid"`
-	Approved  string `bson:"approved"`
-	Currency  string `bson:"currency"`
+	Hint       string `bson:"_hint"`
+	Sender     string `bson:"sender"`
+	Contract   string `bson:"contract"`
+	DAOID      string `bson:"dao_id"`
+	ProposalID string `bson:"proposal_id"`
+	Delegated  string `bson:"delegated"`
+	Currency   string `bson:"currency"`
 }
 
 func (fact *RegisterFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of RegisterFact")
+	e := util.StringError("failed to decode bson of RegisterFact")
 
 	var ubf common.BaseFactBSONUnmarshaler
 
 	if err := enc.Unmarshal(b, &ubf); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	fact.BaseFact.SetHash(valuehash.NewBytesFromString(ubf.Hash))
@@ -50,12 +50,12 @@ func (fact *RegisterFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 
 	var uf RegisterFactBSONUnmarshaler
 	if err := bson.Unmarshal(b, &uf); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	ht, err := hint.ParseHint(uf.Hint)
 	if err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 	fact.BaseHinter = hint.NewBaseHinter(ht)
 
@@ -63,8 +63,8 @@ func (fact *RegisterFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		uf.Sender,
 		uf.Contract,
 		uf.DAOID,
-		uf.ProposeID,
-		uf.Approved,
+		uf.ProposalID,
+		uf.Delegated,
 		uf.Currency,
 	)
 }
@@ -80,11 +80,11 @@ func (op Register) MarshalBSON() ([]byte, error) {
 }
 
 func (op *Register) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringErrorFunc("failed to decode bson of Register")
+	e := util.StringError("failed to decode bson of Register")
 
 	var ubo common.BaseOperation
 	if err := ubo.DecodeBSON(b, enc); err != nil {
-		return e(err, "")
+		return e.Wrap(err)
 	}
 
 	op.BaseOperation = ubo
