@@ -10,56 +10,76 @@ import (
 	"github.com/pkg/errors"
 )
 
-//var (
-//	VotingPowerHint = hint.MustNewHint("mitum-dao-voting-power-v0.0.1")
-//)
+var (
+	VotingPowerHint = hint.MustNewHint("mitum-dao-voting-power-v0.0.1")
+)
 
-//	type VotingPower struct {
-//		hint.BaseHinter
-//		account base.Address
-//		amount  common.Big
-//	}
-//
-//	func NewVotingPower(account base.Address, votingPower common.Big) VotingPower {
-//		return VotingPower{
-//			BaseHinter: hint.NewBaseHinter(VotingPowerHint),
-//			account:    account,
-//			amount:     votingPower,
-//		}
-//	}
-//
-//	func (vp VotingPower) Hint() hint.Hint {
-//		return vp.BaseHinter.Hint()
-//	}
-//
-//	func (vp VotingPower) IsValid([]byte) error {
-//		e := util.ErrInvalid.Errorf("invalid Amount")
-//
-//		if err := vp.BaseHinter.IsValid(VotingPowerHint.Type().Bytes()); err != nil {
-//			return e.Wrap(err)
-//		}
-//
-//		if err := util.CheckIsValiders(nil, false, vp.account, vp.amount); err != nil {
-//			return e.Wrap(err)
-//		}
-//
-//		return nil
-//	}
-//
-//	func (vp VotingPower) Bytes() []byte {
-//		return util.ConcatBytesSlice(
-//			vp.account.Bytes(),
-//			vp.amount.Bytes(),
-//		)
-//	}
-//
-//	func (vp VotingPower) Account() base.Address {
-//		return vp.account
-//	}
-//
-//	func (vp VotingPower) Amount() common.Big {
-//		return vp.amount
-//	}
+type VotingPower struct {
+	hint.BaseHinter
+	account base.Address
+	voted   bool
+	amount  common.Big
+}
+
+func NewVotingPower(account base.Address, votingPower common.Big) VotingPower {
+	return VotingPower{
+		BaseHinter: hint.NewBaseHinter(VotingPowerHint),
+		account:    account,
+		voted:      false,
+		amount:     votingPower,
+	}
+}
+
+func (vp VotingPower) Hint() hint.Hint {
+	return vp.BaseHinter.Hint()
+}
+
+func (vp VotingPower) IsValid([]byte) error {
+	e := util.ErrInvalid.Errorf("invalid Amount")
+
+	if err := vp.BaseHinter.IsValid(VotingPowerHint.Type().Bytes()); err != nil {
+		return e.Wrap(err)
+	}
+
+	if err := util.CheckIsValiders(nil, false, vp.account, vp.amount); err != nil {
+		return e.Wrap(err)
+	}
+
+	return nil
+}
+
+func (vp VotingPower) Bytes() []byte {
+	var v int8
+	if vp.voted {
+		v = 1
+	}
+
+	return util.ConcatBytesSlice(
+		[]byte{byte(v)},
+		vp.account.Bytes(),
+		vp.amount.Bytes(),
+	)
+}
+
+func (vp VotingPower) Account() base.Address {
+	return vp.account
+}
+
+func (vp VotingPower) Amount() common.Big {
+	return vp.amount
+}
+
+func (vp *VotingPower) SetAmount(amount common.Big) {
+	vp.amount = amount
+}
+
+func (vp VotingPower) Voted() bool {
+	return vp.voted
+}
+
+func (vp *VotingPower) SetVoted(voted bool) {
+	vp.voted = voted
+}
 
 var (
 	VotingPowerBoxHint = hint.MustNewHint("mitum-dao-voting-power-box-v0.0.1")
@@ -68,11 +88,11 @@ var (
 type VotingPowerBox struct {
 	hint.BaseHinter
 	total        common.Big
-	votingPowers map[base.Address]common.Big
+	votingPowers map[base.Address]VotingPower
 	result       map[uint8]common.Big
 }
 
-func NewVotingPowerBox(total common.Big, votingPowers map[base.Address]common.Big) VotingPowerBox {
+func NewVotingPowerBox(total common.Big, votingPowers map[base.Address]VotingPower) VotingPowerBox {
 	return VotingPowerBox{
 		BaseHinter:   hint.NewBaseHinter(VotingPowerBoxHint),
 		total:        total,
@@ -94,7 +114,7 @@ func (vp VotingPowerBox) IsValid([]byte) error {
 			return e.Wrap(err)
 		}
 
-		total = total.Add(vp)
+		total = total.Add(vp.Amount())
 	}
 
 	if total.Compare(vp.total) != 0 {
@@ -128,7 +148,7 @@ func (vp VotingPowerBox) Total() common.Big {
 	return vp.total
 }
 
-func (vp VotingPowerBox) VotingPowers() map[base.Address]common.Big {
+func (vp VotingPowerBox) VotingPowers() map[base.Address]VotingPower {
 	return vp.votingPowers
 }
 
@@ -140,7 +160,7 @@ func (vp *VotingPowerBox) SetTotal(total common.Big) {
 	vp.total = total
 }
 
-func (vp *VotingPowerBox) SetVotingPowers(votingPowers map[base.Address]common.Big) {
+func (vp *VotingPowerBox) SetVotingPowers(votingPowers map[base.Address]VotingPower) {
 	vp.votingPowers = votingPowers
 }
 
