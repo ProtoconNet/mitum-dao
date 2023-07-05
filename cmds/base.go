@@ -3,9 +3,10 @@ package cmds
 import (
 	"context"
 	"fmt"
-	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
 	"io"
 	"os"
+
+	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
 
 	"github.com/ProtoconNet/mitum2/launch"
 	"github.com/ProtoconNet/mitum2/util"

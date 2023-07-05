@@ -103,8 +103,7 @@ func (opp *CreateDAOProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("currency doesn't exist, %q: %w", fact.Currency(), err), nil
 	}
 
-	st, err = currencystate.ExistsState(currency.StateKeyCurrencyDesign(fact.VotingPowerToken()), "key of currency design", getStateFunc)
-	if err != nil {
+	if err := currencystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.VotingPowerToken()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("currency design not found, %q: %w", fact.VotingPowerToken(), err), nil
 	}
 

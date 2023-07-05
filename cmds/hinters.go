@@ -81,6 +81,7 @@ var hinters = []encoder.DecodeDetail{
 	{Hint: dao.ProposeHint, Instance: dao.Propose{}},
 	{Hint: dao.RegisterHint, Instance: dao.Register{}},
 	{Hint: dao.PreSnapHint, Instance: dao.PreSnap{}},
+	{Hint: dao.VoteHint, Instance: dao.Vote{}},
 
 	{Hint: digestisaac.ManifestHint, Instance: digestisaac.Manifest{}},
 	{Hint: digest.AccountValueHint, Instance: digest.AccountValue{}},
@@ -112,6 +113,7 @@ var supportedProposalOperationFactHinters = []encoder.DecodeDetail{
 	{Hint: dao.ProposeFactHint, Instance: dao.ProposeFact{}},
 	{Hint: dao.RegisterFactHint, Instance: dao.RegisterFact{}},
 	{Hint: dao.PreSnapFactHint, Instance: dao.PreSnapFact{}},
+	{Hint: dao.VoteFactHint, Instance: dao.VoteFact{}},
 
 	{Hint: isaacoperation.GenesisNetworkPolicyFactHint, Instance: isaacoperation.GenesisNetworkPolicyFact{}},
 	{Hint: isaacoperation.SuffrageCandidateFactHint, Instance: isaacoperation.SuffrageCandidateFact{}},

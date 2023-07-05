@@ -2,6 +2,8 @@ package dao
 
 import (
 	"context"
+	"sync"
+
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	"github.com/ProtoconNet/mitum-currency/v3/operation/processor"
 	currencystate "github.com/ProtoconNet/mitum-currency/v3/state"
@@ -13,7 +15,6 @@ import (
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/pkg/errors"
-	"sync"
 )
 
 var preSnapProcessorPool = sync.Pool{
@@ -126,7 +127,7 @@ func (opp *PreSnapProcessor) PreProcess(
 
 	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blocMap)
 	if period != types.PreSnapshot {
-		return nil, base.NewBaseOperationProcessReasonError("currency time is not within the PreSnapshotPeriod, PreSnapshotPeriod start : %s, end %s", start, end), nil
+		return nil, base.NewBaseOperationProcessReasonError("currency time is not within the PreSnapshotPeriod, PreSnapshotPeriod start : %d, end %d", start, end), nil
 	}
 
 	_, err = currencystate.ExistsState(state.StateKeyVoters(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of voters", getStateFunc)
@@ -195,11 +196,10 @@ func (opp *PreSnapProcessor) Process(
 			votingPowerBox = vb
 		}
 	default:
-		votingPowerBox = types.NewVotingPowerBox(common.ZeroBig, map[base.Address]common.Big{})
+		votingPowerBox = types.NewVotingPowerBox(common.ZeroBig, map[base.Address]types.VotingPower{})
 	}
 
-	st, err = currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
-	if err != nil {
+	if err := currencystate.CheckExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
@@ -215,7 +215,7 @@ func (opp *PreSnapProcessor) Process(
 		}
 
 		total := common.ZeroBig
-		votingPowers := map[base.Address]common.Big{}
+		votingPowers := map[base.Address]types.VotingPower{}
 		for _, info := range voters {
 			votingPower := common.ZeroBig
 			for _, delegator := range info.Delegators() {
@@ -231,7 +231,7 @@ func (opp *PreSnapProcessor) Process(
 
 				votingPower = votingPower.Add(b.Big())
 			}
-			votingPowers[info.Account()] = votingPower
+			votingPowers[info.Account()] = types.NewVotingPower(info.Account(), votingPower)
 			total = total.Add(votingPower)
 		}
 		votingPowerBox.SetVotingPowers(votingPowers)

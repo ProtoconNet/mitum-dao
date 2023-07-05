@@ -3,6 +3,9 @@ package processor
 import (
 	"context"
 	"fmt"
+	"io"
+	"sync"
+
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	"github.com/ProtoconNet/mitum-currency/v3/operation/currency"
 	extensioncurrency "github.com/ProtoconNet/mitum-currency/v3/operation/extension"
@@ -14,8 +17,6 @@ import (
 	"github.com/ProtoconNet/mitum2/util/logging"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"io"
-	"sync"
 )
 
 var operationProcessorPool = sync.Pool{
@@ -253,6 +254,13 @@ func (opr *OperationProcessor) checkDuplication(op mitumbase.Operation) error {
 		}
 		did = fact.Sender().String()
 		didtype = DuplicationTypeSender
+	case dao.Vote:
+		fact, ok := t.Fact().(dao.VoteFact)
+		if !ok {
+			return errors.Errorf("expected VoteFact, not %T", t.Fact())
+		}
+		did = fact.Sender().String()
+		didtype = DuplicationTypeSender
 	default:
 		return nil
 	}
@@ -333,7 +341,8 @@ func (opr *OperationProcessor) getNewProcessor(op mitumbase.Operation) (mitumbas
 		dao.CreateDAO,
 		dao.Propose,
 		dao.Register,
-		dao.PreSnap:
+		dao.PreSnap,
+		dao.Vote:
 		return nil, false, errors.Errorf("%T needs SetProcessor", t)
 	default:
 		return nil, false, nil
