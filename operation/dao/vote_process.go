@@ -14,6 +14,7 @@ import (
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum-dao/state"
 	"github.com/ProtoconNet/mitum-dao/types"
+	daoutil "github.com/ProtoconNet/mitum-dao/utils"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/pkg/errors"
@@ -139,21 +140,18 @@ func (opp *VoteProcessor) PreProcess(
 	case err != nil:
 		return nil, base.NewBaseOperationProcessReasonError("failed to find voters state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	case !found:
-		return nil, base.NewBaseOperationProcessReasonError("sender is not registered as voter, %s, %s-%s-%s: %w", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find voters state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	default:
 		voters, err := state.StateVotersValue(st)
 		if err != nil {
 			return nil, base.NewBaseOperationProcessReasonError("failed to find voters value from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 		}
 
-		for i, voter := range voters {
-			if voter.Account().Equal(fact.Sender()) {
-				break
-			}
-
-			if i == len(voters)-1 {
-				return nil, base.NewBaseOperationProcessReasonError("sender is not registered as voter, %s, %s-%s-%s", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
-			}
+		switch has, err := daoutil.HasFieldValue(voters, "account", fact.Sender()); {
+		case err != nil:
+			return nil, base.NewBaseOperationProcessReasonError("failed to check if sender is registered as voter, %s, %s-%s-%s", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+		case !has:
+			return nil, base.NewBaseOperationProcessReasonError("sender is not registered as voter, %s, %s-%s-%s", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
 		}
 	}
 
@@ -200,14 +198,14 @@ func (opp *VoteProcessor) Process(
 	switch st, found, err := getStateFunc(state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
 	case err != nil:
 		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
-	case found:
+	case !found:
+		return nil, base.NewBaseOperationProcessReasonError("voting power box state not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+	default:
 		vpb, err := state.StateVotingPowerBoxValue(st)
 		if err != nil {
 			return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box value from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 		}
 		votingPowerBox = vpb
-	default:
-		votingPowerBox = types.NewVotingPowerBox(common.ZeroBig, map[base.Address]types.VotingPower{})
 	}
 
 	vp, found := votingPowerBox.VotingPowers()[fact.Sender()]
