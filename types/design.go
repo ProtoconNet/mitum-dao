@@ -45,7 +45,7 @@ func (de Design) IsValid([]byte) error {
 		de.daoID,
 		de.policy,
 	); err != nil {
-		return util.ErrInvalid.Errorf("invalid Design: %w", err)
+		return util.ErrInvalid.Errorf("invalid Design: %v", err)
 	}
 
 	return nil

@@ -67,7 +67,7 @@ func (cd TransferCallData) IsValid([]byte) error {
 	}
 
 	if err := util.CheckIsValiders(nil, false, cd.sender, cd.receiver, cd.amount); err != nil {
-		return util.ErrInvalid.Errorf("invalid transfer calldata: %w", err)
+		return util.ErrInvalid.Errorf("invalid transfer calldata: %v", err)
 	}
 
 	if !cd.amount.Big().OverZero() {
@@ -120,7 +120,7 @@ func (cd GovernanceCallData) IsValid([]byte) error {
 	}
 
 	if err := cd.policy.IsValid(nil); err != nil {
-		return util.ErrInvalid.Errorf("governance calldata - invalid policy: %w", err)
+		return util.ErrInvalid.Errorf("governance calldata - invalid policy: %v", err)
 	}
 
 	return nil

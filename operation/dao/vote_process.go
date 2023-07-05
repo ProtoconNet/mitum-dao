@@ -166,8 +166,12 @@ func (opp *VoteProcessor) PreProcess(
 			return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box value from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 		}
 
-		powers := vpb.VotingPowers()
-		if _, found := powers[fact.Sender()]; found {
+		vp, found := vpb.VotingPowers()[fact.Sender()]
+		if !found {
+			return nil, base.NewBaseOperationProcessReasonError("sender voting power not found, %s, %s-%s-%s", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+		}
+
+		if vp.Voted() {
 			return nil, base.NewBaseOperationProcessReasonError("sender already voted, %s, %s-%s-%s", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
 		}
 	}
@@ -192,30 +196,6 @@ func (opp *VoteProcessor) Process(
 
 	sts := make([]base.StateMergeValue, 2)
 
-	var delegators []base.Address
-	switch st, found, err := getStateFunc(state.StateKeyVoters(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
-	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find voter state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
-	case found:
-		vs, err := state.StateVotersValue(st)
-		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find voter value from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
-		}
-
-		for i, vt := range vs {
-			if vt.Account().Equal(fact.Sender()) {
-				delegators = vt.Delegators()
-				break
-			}
-
-			if i == len(vs)-1 {
-				return nil, base.NewBaseOperationProcessReasonError("sender is not voter, %s, %s-%s-%s: %w", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
-			}
-		}
-	default:
-		return nil, base.NewBaseOperationProcessReasonError("sender is not voter, %s, %s-%s-%s: %w", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
-	}
-
 	var votingPowerBox types.VotingPowerBox
 	switch st, found, err := getStateFunc(state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
 	case err != nil:
@@ -227,48 +207,28 @@ func (opp *VoteProcessor) Process(
 		}
 		votingPowerBox = vpb
 	default:
-		votingPowerBox = types.NewVotingPowerBox(common.ZeroBig, map[base.Address]common.Big{})
+		votingPowerBox = types.NewVotingPowerBox(common.ZeroBig, map[base.Address]types.VotingPower{})
 	}
 
-	st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), "key of design", getStateFunc)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao design state not found, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
+	vp, found := votingPowerBox.VotingPowers()[fact.Sender()]
+	if !found {
+		return nil, base.NewBaseOperationProcessReasonError("sender voting power not found, %s, %s-%s-%s", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
 	}
+	vp.SetVoted(true)
 
-	design, err := state.StateDesignValue(st)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao value not found from state, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
-	}
+	vpb := votingPowerBox.VotingPowers()
+	vpb[fact.Sender()] = vp
+	votingPowerBox.SetVotingPowers(vpb)
 
-	token := design.Policy().Token()
-
-	addTotal := common.ZeroBig
-	for _, delegator := range delegators {
-		st, err = currencystate.ExistsState(currency.StateKeyBalance(delegator, token), "key of delegator balance", getStateFunc)
-		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("delegator balance not found, %q: %w", delegator, err), nil
-		}
-
-		b, err := currency.StateBalanceValue(st)
-		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to get balance value, %q: %w", currency.StateKeyBalance(delegator, token), err), nil
-		}
-
-		addTotal = addTotal.Add(b.Big())
-	}
-
-	total := votingPowerBox.Total().Add(addTotal)
-
-	powers := votingPowerBox.VotingPowers()
-	powers[fact.Sender()] = addTotal
+	total := votingPowerBox.Total().Add(vp.Amount())
+	votingPowerBox.SetTotal(total)
 
 	result := votingPowerBox.Result()
 	if _, found := result[fact.Vote()]; found {
-		result[fact.Vote()] = result[fact.Vote()].Add(addTotal)
+		result[fact.Vote()] = result[fact.Vote()].Add(vp.Amount())
+	} else {
+		result[fact.Vote()] = common.ZeroBig.Add(vp.Amount())
 	}
-
-	votingPowerBox.SetTotal(total)
-	votingPowerBox.SetVotingPowers(powers)
 	votingPowerBox.SetResult(result)
 
 	sts[0] = currencystate.NewStateMergeValue(
@@ -290,7 +250,7 @@ func (opp *VoteProcessor) Process(
 		return nil, base.NewBaseOperationProcessReasonError("failed to check fee of currency, %q: %w", fact.Currency(), err), nil
 	}
 
-	st, err = currencystate.ExistsState(currency.StateKeyBalance(fact.Sender(), fact.Currency()), "key of sender balance", getStateFunc)
+	st, err := currencystate.ExistsState(currency.StateKeyBalance(fact.Sender(), fact.Currency()), "key of sender balance", getStateFunc)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("sender balance not found, %q: %w", fact.Sender(), err), nil
 	}

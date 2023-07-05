@@ -196,7 +196,7 @@ func (opp *PreSnapProcessor) Process(
 			votingPowerBox = vb
 		}
 	default:
-		votingPowerBox = types.NewVotingPowerBox(common.ZeroBig, map[base.Address]common.Big{})
+		votingPowerBox = types.NewVotingPowerBox(common.ZeroBig, map[base.Address]types.VotingPower{})
 	}
 
 	if err := currencystate.CheckExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), getStateFunc); err != nil {
@@ -215,7 +215,7 @@ func (opp *PreSnapProcessor) Process(
 		}
 
 		total := common.ZeroBig
-		votingPowers := map[base.Address]common.Big{}
+		votingPowers := map[base.Address]types.VotingPower{}
 		for _, info := range voters {
 			votingPower := common.ZeroBig
 			for _, delegator := range info.Delegators() {
@@ -231,7 +231,7 @@ func (opp *PreSnapProcessor) Process(
 
 				votingPower = votingPower.Add(b.Big())
 			}
-			votingPowers[info.Account()] = votingPower
+			votingPowers[info.Account()] = types.NewVotingPower(info.Account(), votingPower)
 			total = total.Add(votingPower)
 		}
 		votingPowerBox.SetVotingPowers(votingPowers)
