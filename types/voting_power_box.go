@@ -19,6 +19,7 @@ type VotingPower struct {
 	hint.BaseHinter
 	account base.Address
 	voted   bool
+	voteFor uint8
 	amount  common.Big
 }
 
@@ -27,6 +28,7 @@ func NewVotingPower(account base.Address, votingPower common.Big) VotingPower {
 		BaseHinter: hint.NewBaseHinter(VotingPowerHint),
 		account:    account,
 		voted:      false,
+		voteFor:    0,
 		amount:     votingPower,
 	}
 }
@@ -57,6 +59,7 @@ func (vp VotingPower) Bytes() []byte {
 
 	return util.ConcatBytesSlice(
 		[]byte{byte(v)},
+		util.Uint8ToBytes(vp.voteFor),
 		vp.account.Bytes(),
 		vp.amount.Bytes(),
 	)
@@ -80,6 +83,14 @@ func (vp VotingPower) Voted() bool {
 
 func (vp *VotingPower) SetVoted(voted bool) {
 	vp.voted = voted
+}
+
+func (vp VotingPower) VoteFor() uint8 {
+	return vp.voteFor
+}
+
+func (vp *VotingPower) SetVoteFor(voteFor uint8) {
+	vp.voteFor = voteFor
 }
 
 var (

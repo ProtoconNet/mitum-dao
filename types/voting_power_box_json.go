@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
@@ -13,6 +14,7 @@ type VotingPowerJSONMarshaler struct {
 	hint.BaseHinter
 	Account     base.Address `json:"account"`
 	Voted       bool         `json:"voted"`
+	VoteFor     uint8        `json:"vote_for"`
 	VotingPower string       `json:"voting_power"`
 }
 
@@ -28,6 +30,7 @@ func (vp VotingPower) MarshalJSON() ([]byte, error) {
 type VotingPowerJSONUnmarshaler struct {
 	Account     string `json:"account"`
 	Voted       bool   `json:"voted"`
+	VoteFor     uint8  `json:"vote_for"`
 	VotingPower string `json:"voting_power"`
 }
 
@@ -52,6 +55,7 @@ func (vp *VotingPower) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 	}
 	vp.amount = big
 	vp.voted = u.Voted
+	vp.voteFor = u.VoteFor
 
 	return nil
 }

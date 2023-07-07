@@ -2,6 +2,7 @@ package cmds
 
 import (
 	"context"
+
 	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
 	"github.com/ProtoconNet/mitum-currency/v3/operation/currency"
 	"github.com/ProtoconNet/mitum-currency/v3/operation/extension"
@@ -92,6 +93,16 @@ func POperationProcessorsMap(pctx context.Context) (context.Context, error) {
 	} else if err := opr.SetProcessor(
 		dao.PreSnapHint,
 		dao.NewPreSnapProcessor(db.LastBlockMap),
+	); err != nil {
+		return pctx, err
+	} else if err := opr.SetProcessor(
+		dao.VoteHint,
+		dao.NewVoteProcessor(db.LastBlockMap),
+	); err != nil {
+		return pctx, err
+	} else if err := opr.SetProcessor(
+		dao.PostSnapHint,
+		dao.NewPostSnapProcessor(db.LastBlockMap),
 	); err != nil {
 		return pctx, err
 	}
@@ -196,6 +207,24 @@ func POperationProcessorsMap(pctx context.Context) (context.Context, error) {
 	})
 
 	_ = set.Add(dao.PreSnapHint, func(height base.Height) (base.OperationProcessor, error) {
+		return opr.New(
+			height,
+			db.State,
+			nil,
+			nil,
+		)
+	})
+
+	_ = set.Add(dao.PostSnapHint, func(height base.Height) (base.OperationProcessor, error) {
+		return opr.New(
+			height,
+			db.State,
+			nil,
+			nil,
+		)
+	})
+
+	_ = set.Add(dao.VoteHint, func(height base.Height) (base.OperationProcessor, error) {
 		return opr.New(
 			height,
 			db.State,

@@ -2,7 +2,6 @@ package cmds
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 
@@ -56,11 +55,6 @@ func (cmd *BaseCommand) prepare(pctx context.Context) (context.Context, error) {
 		launch.EncodersContextKey, &cmd.Encoders,
 		launch.EncoderContextKey, &cmd.Encoder,
 	)
-}
-
-func (cmd *BaseCommand) print(f string, a ...interface{}) {
-	_, _ = fmt.Fprintf(cmd.Out, f, a...)
-	_, _ = fmt.Fprintln(cmd.Out)
 }
 
 func PAddHinters(ctx context.Context) (context.Context, error) {
