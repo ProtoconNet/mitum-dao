@@ -187,10 +187,10 @@ func (opp *PostSnapProcessor) Process(
 	var ovpb types.VotingPowerBox
 	switch st, found, err := getStateFunc(state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find voters state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	case found:
 		if vb, err := state.StateVotingPowerBoxValue(st); err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find voters value from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box value from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 		} else {
 			ovpb = vb
 		}
