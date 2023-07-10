@@ -115,9 +115,7 @@ func (opp *PostSnapProcessor) PreProcess(
 	if p.Status() == types.Canceled {
 		return nil, base.NewBaseOperationProcessReasonError("already canceled proposal, %s-%s-%s", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
 	} else if p.Status() == types.PostSnapped {
-		return nil, base.NewBaseOperationProcessReasonError("already postSnapped, %s-%s-%s", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
-	} else if p.Status() != types.PreSnapped {
-		return nil, base.NewBaseOperationProcessReasonError("already processed, %s-%s-%s", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("already post snapped, %s-%s-%s", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
 	}
 
 	blocMap, found, err := opp.getLastBlockFunc()
@@ -134,10 +132,6 @@ func (opp *PostSnapProcessor) PreProcess(
 
 	if err := currencystate.CheckExistsState(state.StateKeyVoters(fact.Contract(), fact.DAOID(), fact.ProposalID()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("voters state not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
-	}
-
-	if err := currencystate.CheckExistsState(state.StateKeyDelegators(fact.Contract(), fact.DAOID(), fact.ProposalID()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("delegators state not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
 	if err := currencystate.CheckExistsState(state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID()), getStateFunc); err != nil {
@@ -184,6 +178,10 @@ func (opp *PostSnapProcessor) Process(
 		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
+	if p.Status() != types.PreSnapped {
+		return nil, base.NewBaseOperationProcessReasonError("proposal not pre-snapped, proposal will be expired, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+	}
+
 	var ovpb types.VotingPowerBox
 	switch st, found, err := getStateFunc(state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
 	case err != nil:
@@ -218,6 +216,11 @@ func (opp *PostSnapProcessor) Process(
 		}
 
 		for _, info := range voters {
+			if !ovpb.VotingPowers()[info.Account()].Voted() {
+				nvps[info.Account()] = ovpb.VotingPowers()[info.Account()]
+				continue
+			}
+
 			vp := common.ZeroBig
 			for _, delegator := range info.Delegators() {
 				st, err = currencystate.ExistsState(currency.StateKeyBalance(delegator, votingPowerToken), "key of balance", getStateFunc)
