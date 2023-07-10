@@ -188,19 +188,15 @@ func (opp *PreSnapProcessor) Process(
 	var votingPowerBox types.VotingPowerBox
 	switch st, found, err := getStateFunc(state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find voters state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	case found:
 		if vb, err := state.StateVotingPowerBoxValue(st); err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find voters value from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box value from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 		} else {
 			votingPowerBox = vb
 		}
 	default:
 		votingPowerBox = types.NewVotingPowerBox(common.ZeroBig, map[base.Address]types.VotingPower{})
-	}
-
-	if err := currencystate.CheckExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
 	votingPowerToken := design.Policy().Token()
@@ -211,7 +207,7 @@ func (opp *PreSnapProcessor) Process(
 	case found:
 		voters, err := state.StateVotersValue(st)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find voters value, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find voters value from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 		}
 
 		total := common.ZeroBig

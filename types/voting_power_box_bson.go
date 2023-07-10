@@ -15,6 +15,7 @@ func (vp VotingPower) MarshalBSON() ([]byte, error) {
 			"_hint":        vp.Hint().String(),
 			"account":      vp.account,
 			"voted":        vp.voted,
+			"vote_for":     vp.voteFor,
 			"voting_power": vp.amount,
 		},
 	)
@@ -24,6 +25,7 @@ type VotingPowerBSONUnmarshaler struct {
 	Hint        string `bson:"_hint"`
 	Account     string `bson:"account"`
 	Voted       bool   `bson:"voted"`
+	VoteFor     uint8  `bson:"vote_for"`
 	VotingPower string `bson:"voting_power"`
 }
 
@@ -55,6 +57,7 @@ func (vp *VotingPower) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 	}
 	vp.amount = big
 	vp.voted = u.Voted
+	vp.voteFor = u.VoteFor
 
 	return nil
 }

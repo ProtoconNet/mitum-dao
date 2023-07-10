@@ -213,13 +213,11 @@ func (opp *VoteProcessor) Process(
 		return nil, base.NewBaseOperationProcessReasonError("sender voting power not found, %s, %s-%s-%s", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
 	}
 	vp.SetVoted(true)
+	vp.SetVoteFor(fact.Vote())
 
 	vpb := votingPowerBox.VotingPowers()
 	vpb[fact.Sender()] = vp
 	votingPowerBox.SetVotingPowers(vpb)
-
-	total := votingPowerBox.Total().Add(vp.Amount())
-	votingPowerBox.SetTotal(total)
 
 	result := votingPowerBox.Result()
 	if _, found := result[fact.Vote()]; found {

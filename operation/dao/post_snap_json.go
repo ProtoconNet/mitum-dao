@@ -8,7 +8,7 @@ import (
 	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
 )
 
-type PreSnapFactJSONMarshaler struct {
+type SnapFactJSONMarshaler struct {
 	base.BaseFactJSONMarshaler
 	Owner      base.Address             `json:"sender"`
 	Contract   base.Address             `json:"contract"`
@@ -17,8 +17,8 @@ type PreSnapFactJSONMarshaler struct {
 	Currency   currencytypes.CurrencyID `json:"currency"`
 }
 
-func (fact PreSnapFact) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(PreSnapFactJSONMarshaler{
+func (fact PostSnapFact) MarshalJSON() ([]byte, error) {
+	return util.MarshalJSON(SnapFactJSONMarshaler{
 		BaseFactJSONMarshaler: fact.BaseFact.JSONMarshaler(),
 		Owner:                 fact.sender,
 		Contract:              fact.contract,
@@ -28,7 +28,7 @@ func (fact PreSnapFact) MarshalJSON() ([]byte, error) {
 	})
 }
 
-type PreSnapFactJSONUnMarshaler struct {
+type SnapFactJSONUnMarshaler struct {
 	base.BaseFactJSONUnmarshaler
 	Owner      string `json:"sender"`
 	Contract   string `json:"contract"`
@@ -37,10 +37,10 @@ type PreSnapFactJSONUnMarshaler struct {
 	Currency   string `json:"currency"`
 }
 
-func (fact *PreSnapFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringError("failed to decode json of PreSnapFact")
+func (fact *PostSnapFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+	e := util.StringError("failed to decode json of PostSnapFact")
 
-	var uf PreSnapFactJSONUnMarshaler
+	var uf SnapFactJSONUnMarshaler
 	if err := enc.Unmarshal(b, &uf); err != nil {
 		return e.Wrap(err)
 	}
@@ -56,18 +56,18 @@ func (fact *PreSnapFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 	)
 }
 
-type PreSnapMarshaler struct {
+type SnapMarshaler struct {
 	common.BaseOperationJSONMarshaler
 }
 
-func (op PreSnap) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(PreSnapMarshaler{
+func (op PostSnap) MarshalJSON() ([]byte, error) {
+	return util.MarshalJSON(SnapMarshaler{
 		BaseOperationJSONMarshaler: op.BaseOperation.JSONMarshaler(),
 	})
 }
 
-func (op *PreSnap) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringError("failed to decode json of PreSnap")
+func (op *PostSnap) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+	e := util.StringError("failed to decode json of PostSnap")
 
 	var ubo common.BaseOperation
 	if err := ubo.DecodeJSON(b, enc); err != nil {

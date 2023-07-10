@@ -12,7 +12,7 @@ import (
 	"github.com/ProtoconNet/mitum2/util"
 )
 
-type PreSnapCommand struct {
+type PostSnapCommand struct {
 	BaseCommand
 	currencycmds.OperationFlags
 	Sender     currencycmds.AddressFlag    `arg:"" name:"sender" help:"sender address" required:"true"`
@@ -24,7 +24,7 @@ type PreSnapCommand struct {
 	contract   base.Address
 }
 
-func (cmd *PreSnapCommand) Run(pctx context.Context) error { // nolint:dupl
+func (cmd *PostSnapCommand) Run(pctx context.Context) error { // nolint:dupl
 	if _, err := cmd.prepare(pctx); err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (cmd *PreSnapCommand) Run(pctx context.Context) error { // nolint:dupl
 	return nil
 }
 
-func (cmd *PreSnapCommand) parseFlags() error {
+func (cmd *PostSnapCommand) parseFlags() error {
 	if err := cmd.OperationFlags.IsValid(nil); err != nil {
 		return err
 	}
@@ -66,10 +66,10 @@ func (cmd *PreSnapCommand) parseFlags() error {
 	return nil
 }
 
-func (cmd *PreSnapCommand) createOperation() (base.Operation, error) { // nolint:dupl}
-	e := util.StringError("failed to create pre snap operation")
+func (cmd *PostSnapCommand) createOperation() (base.Operation, error) { // nolint:dupl}
+	e := util.StringError("failed to create post snap operation")
 
-	fact := dao.NewPreSnapFact(
+	fact := dao.NewPostSnapFact(
 		[]byte(cmd.Token),
 		cmd.sender,
 		cmd.contract,
@@ -78,7 +78,7 @@ func (cmd *PreSnapCommand) createOperation() (base.Operation, error) { // nolint
 		cmd.Currency.CID,
 	)
 
-	op, err := dao.NewPreSnap(fact)
+	op, err := dao.NewPostSnap(fact)
 	if err != nil {
 		return nil, e.Wrap(err)
 	}

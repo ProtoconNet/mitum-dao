@@ -6,4 +6,5 @@ type DAOCommand struct {
 	Register  RegisterCommand  `cmd:"" name:"register" help:"register to vote"`
 	PreSnap   PreSnapCommand   `cmd:"" name:"pre-snap" help:"snap voting powers"`
 	Vote      VoteCommand      `cmd:"" name:"vote" help:"vote to proposal"`
+	PostSnap  PostSnapCommand  `cmd:"" name:"post-snap" help:"snap voting powers"`
 }
