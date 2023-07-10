@@ -219,9 +219,6 @@ func (opp *VoteProcessor) Process(
 	vpb[fact.Sender()] = vp
 	votingPowerBox.SetVotingPowers(vpb)
 
-	total := votingPowerBox.Total().Add(vp.Amount())
-	votingPowerBox.SetTotal(total)
-
 	result := votingPowerBox.Result()
 	if _, found := result[fact.Vote()]; found {
 		result[fact.Vote()] = result[fact.Vote()].Add(vp.Amount())
