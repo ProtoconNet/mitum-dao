@@ -279,21 +279,21 @@ func (opp *PostSnapProcessor) Process(
 
 	currencyPolicy := currencyDesign.Policy()
 
-	turnout := design.Policy().Turnout().Quorum(currencyDesign.Aggregate())
-	quorum := design.Policy().Quorum().Quorum(votedTotal)
+	actualTurnoutCount := design.Policy().Turnout().Quorum(currencyDesign.Aggregate())
+	actualTurnoutQuorum := design.Policy().Quorum().Quorum(votedTotal)
 
-	if nvpb.Total().Compare(turnout) < 0 {
+	if nvpb.Total().Compare(actualTurnoutCount) < 0 {
 		sts = append(sts, currencystate.NewStateMergeValue(
 			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
 			state.NewProposalStateValue(types.Canceled, p.Proposal()),
 		))
-	} else if votedTotal.Compare(quorum) < 0 {
+	} else if votedTotal.Compare(actualTurnoutQuorum) < 0 {
 		sts = append(sts, currencystate.NewStateMergeValue(
 			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
 			state.NewProposalStateValue(types.Rejected, p.Proposal()),
 		))
 	} else if p.Proposal().Type() == types.ProposalCrypto {
-		if votingResult[0].Compare(quorum) >= 0 {
+		if votingResult[0].Compare(actualTurnoutQuorum) >= 0 {
 			sts = append(sts, currencystate.NewStateMergeValue(
 				state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
 				state.NewProposalStateValue(types.Completed, p.Proposal()),
@@ -316,7 +316,7 @@ func (opp *PostSnapProcessor) Process(
 				break
 			}
 
-			if votingResult[i].Compare(quorum) >= 0 {
+			if votingResult[i].Compare(actualTurnoutQuorum) >= 0 {
 				if len(overQuorum) == 0 {
 					overQuorum[votingResult[i].String()] = []uint8{i}
 					maxVotingPower = votingResult[i]
