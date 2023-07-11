@@ -213,17 +213,6 @@ func (opp *PreSnapProcessor) Process(
 		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
-	if p.Status() != types.Proposed {
-		sts = append(sts,
-			currencystate.NewStateMergeValue(
-				st.Key(),
-				state.NewProposalStateValue(types.Canceled, p.Proposal()),
-			),
-		)
-
-		return sts, nil, nil
-	}
-
 	var votingPowerBox types.VotingPowerBox
 	switch st, found, err := getStateFunc(state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
 	case err != nil:
