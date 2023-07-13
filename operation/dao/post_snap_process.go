@@ -319,20 +319,20 @@ func (opp *PostSnapProcessor) Process(
 	}
 
 	actualTurnoutCount := design.Policy().Turnout().Quorum(currencyDesign.Aggregate())
-	actualTurnoutQuorum := design.Policy().Quorum().Quorum(votedTotal)
+	actualQuorumCount := design.Policy().Quorum().Quorum(votedTotal)
 
 	if nvpb.Total().Compare(actualTurnoutCount) < 0 {
 		sts = append(sts, currencystate.NewStateMergeValue(
 			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
 			state.NewProposalStateValue(types.Canceled, p.Proposal()),
 		))
-	} else if votedTotal.Compare(actualTurnoutQuorum) < 0 {
+	} else if votedTotal.Compare(actualQuorumCount) < 0 {
 		sts = append(sts, currencystate.NewStateMergeValue(
 			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
 			state.NewProposalStateValue(types.Rejected, p.Proposal()),
 		))
 	} else if p.Proposal().Type() == types.ProposalCrypto {
-		if votingResult[0].Compare(actualTurnoutQuorum) >= 0 && votingResult[0].Compare(votingResult[1]) > 0 {
+		if votingResult[0].Compare(actualQuorumCount) >= 0 && votingResult[0].Compare(votingResult[1]) > 0 {
 			sts = append(sts, currencystate.NewStateMergeValue(
 				state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
 				state.NewProposalStateValue(types.Completed, p.Proposal()),
@@ -346,31 +346,22 @@ func (opp *PostSnapProcessor) Process(
 	} else if p.Proposal().Type() == types.ProposalBiz {
 		options := p.Proposal().Options() - 1
 
-		overQuorum := map[string][]uint8{}
-		var maxVotingPower = common.ZeroBig
+		var count = 0
+		var mvp = common.ZeroBig
 		var i uint8 = 0
 
 		for ; i < options; i++ {
-			if votingResult[i].Compare(actualTurnoutQuorum) >= 0 {
-				if len(overQuorum) == 0 {
-					overQuorum[votingResult[i].String()] = []uint8{i}
-					maxVotingPower = votingResult[i]
-					continue
-				}
-
-				if _, found := overQuorum[votingResult[i].String()]; !found {
-					overQuorum[votingResult[i].String()] = []uint8{}
-				}
-
-				overQuorum[votingResult[i].String()] = append(overQuorum[votingResult[i].String()], i)
-
-				if votingResult[i].Compare(maxVotingPower) > 0 {
-					maxVotingPower = votingResult[i]
+			if votingResult[i].Compare(actualQuorumCount) >= 0 {
+				if mvp.Compare(votingResult[i]) < 0 {
+					count = 1
+					mvp = votingResult[i]
+				} else if mvp.Equal(votingResult[i]) {
+					count += 1
 				}
 			}
 		}
 
-		if len(overQuorum[maxVotingPower.String()]) != 1 {
+		if count != 1 {
 			sts = append(sts, currencystate.NewStateMergeValue(
 				state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
 				state.NewProposalStateValue(types.Rejected, p.Proposal()),

@@ -272,8 +272,8 @@ func (opp *PreSnapProcessor) Process(
 		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power token currency design value from state, %s: %w", votingPowerToken, err), nil
 	}
 
-	turnoutBig := design.Policy().Turnout().Quorum(currencyDesign.Aggregate())
-	if votingPowerBox.Total().Compare(turnoutBig) < 0 {
+	actualTurnoutCount := design.Policy().Turnout().Quorum(currencyDesign.Aggregate())
+	if votingPowerBox.Total().Compare(actualTurnoutCount) < 0 {
 		sts = append(sts, currencystate.NewStateMergeValue(
 			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
 			state.NewProposalStateValue(types.Canceled, p.Proposal()),
