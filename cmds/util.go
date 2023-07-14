@@ -105,6 +105,11 @@ func POperationProcessorsMap(pctx context.Context) (context.Context, error) {
 		dao.NewPostSnapProcessor(db.LastBlockMap),
 	); err != nil {
 		return pctx, err
+	} else if err := opr.SetProcessor(
+		dao.ExecuteHint,
+		dao.NewPostSnapProcessor(db.LastBlockMap),
+	); err != nil {
+		return pctx, err
 	}
 
 	_ = set.Add(currency.CreateAccountsHint, func(height base.Height) (base.OperationProcessor, error) {
@@ -215,6 +220,15 @@ func POperationProcessorsMap(pctx context.Context) (context.Context, error) {
 		)
 	})
 
+	_ = set.Add(dao.VoteHint, func(height base.Height) (base.OperationProcessor, error) {
+		return opr.New(
+			height,
+			db.State,
+			nil,
+			nil,
+		)
+	})
+
 	_ = set.Add(dao.PostSnapHint, func(height base.Height) (base.OperationProcessor, error) {
 		return opr.New(
 			height,
@@ -224,7 +238,7 @@ func POperationProcessorsMap(pctx context.Context) (context.Context, error) {
 		)
 	})
 
-	_ = set.Add(dao.VoteHint, func(height base.Height) (base.OperationProcessor, error) {
+	_ = set.Add(dao.ExecuteHint, func(height base.Height) (base.OperationProcessor, error) {
 		return opr.New(
 			height,
 			db.State,
