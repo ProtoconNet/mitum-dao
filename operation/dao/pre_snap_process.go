@@ -81,7 +81,7 @@ func (opp *PreSnapProcessor) PreProcess(
 	}
 
 	if err := currencystate.CheckNotExistsState(extensioncurrency.StateKeyContractAccount(fact.Sender()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("contract account cannot preSnap, %q: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("contract account cannot pre-snap, %q: %w", fact.Sender(), err), nil
 	}
 
 	if err := currencystate.CheckExistsState(extensioncurrency.StateKeyContractAccount(fact.Contract()), getStateFunc); err != nil {
@@ -127,21 +127,18 @@ func (opp *PreSnapProcessor) PreProcess(
 
 	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blocMap)
 	if period != types.PreSnapshot {
-		return nil, base.NewBaseOperationProcessReasonError("currency time is not within the PreSnapshotPeriod, PreSnapshotPeriod start : %d, end %d", start, end), nil
+		return nil, base.NewBaseOperationProcessReasonError("current time is not within the PreSnapshotPeriod, PreSnapshotPeriod start : %d, end %d", start, end), nil
 	}
 
-	_, err = currencystate.ExistsState(state.StateKeyVoters(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of voters", getStateFunc)
-	if err != nil {
+	if err := currencystate.CheckExistsState(state.StateKeyVoters(fact.Contract(), fact.DAOID(), fact.ProposalID()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("voters state not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
-	_, err = currencystate.ExistsState(state.StateKeyDelegators(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of delegators", getStateFunc)
-	if err != nil {
+	if err := currencystate.CheckExistsState(state.StateKeyDelegators(fact.Contract(), fact.DAOID(), fact.ProposalID()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("delegators state not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
-	_, err = currencystate.NotExistsState(state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of voting power box", getStateFunc)
-	if err != nil {
+	if err := currencystate.CheckNotExistsState(state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("voting power box state already created, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
@@ -164,6 +161,37 @@ func (opp *PreSnapProcessor) Process(
 	}
 
 	var sts []base.StateMergeValue
+
+	{ // caculate operation fee
+		policy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)
+		if err != nil {
+			return nil, base.NewBaseOperationProcessReasonError("failed to find currency policy, %s: %w", fact.Currency(), err), nil
+		}
+
+		fee, err := policy.Feeer().Fee(common.ZeroBig)
+		if err != nil {
+			return nil, base.NewBaseOperationProcessReasonError("failed to check fee of currency, %q: %w", fact.Currency(), err), nil
+		}
+
+		st, err := currencystate.ExistsState(currency.StateKeyBalance(fact.Sender(), fact.Currency()), "key of sender balance", getStateFunc)
+		if err != nil {
+			return nil, base.NewBaseOperationProcessReasonError("sender balance not found, %q: %w", fact.Sender(), err), nil
+		}
+		sb := currencystate.NewStateMergeValue(st.Key(), st.Value())
+
+		switch b, err := currency.StateBalanceValue(st); {
+		case err != nil:
+			return nil, base.NewBaseOperationProcessReasonError("failed to get balance value, %q: %w", currency.StateKeyBalance(fact.Sender(), fact.Currency()), err), nil
+		case b.Big().Compare(fee) < 0:
+			return nil, base.NewBaseOperationProcessReasonError("not enough balance of sender, %q", fact.Sender()), nil
+		}
+
+		v, ok := sb.Value().(currency.BalanceStateValue)
+		if !ok {
+			return nil, base.NewBaseOperationProcessReasonError("expected BalanceStateValue, not %T", sb.Value()), nil
+		}
+		sts = append(sts, currencystate.NewStateMergeValue(sb.Key(), currency.NewBalanceStateValue(v.Amount.WithBig(v.Amount.Big().Sub(fee)))))
+	}
 
 	st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), "key of design", getStateFunc)
 	if err != nil {
@@ -234,44 +262,34 @@ func (opp *PreSnapProcessor) Process(
 		votingPowerBox.SetTotal(total)
 	}
 
-	sts = append(sts, currencystate.NewStateMergeValue(
-		state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-		state.NewVotingPowerBoxStateValue(votingPowerBox),
-	))
-
-	sts = append(sts, currencystate.NewStateMergeValue(
-		state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-		state.NewProposalStateValue(types.PreSnapped, p.Proposal()),
-	))
-
-	currencyPolicy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)
+	st, err = currencystate.ExistsState(currency.StateKeyCurrencyDesign(votingPowerToken), "key of currency design", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("currency not found, %q: %w", fact.Currency(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power token currency design, %s: %w", votingPowerToken, err), nil
 	}
 
-	fee, err := currencyPolicy.Feeer().Fee(common.ZeroBig)
+	currencyDesign, err := currency.StateCurrencyDesignValue(st)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("failed to check fee of currency, %q: %w", fact.Currency(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power token currency design value from state, %s: %w", votingPowerToken, err), nil
 	}
 
-	st, err = currencystate.ExistsState(currency.StateKeyBalance(fact.Sender(), fact.Currency()), "key of sender balance", getStateFunc)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("sender balance not found, %q: %w", fact.Sender(), err), nil
+	actualTurnoutCount := design.Policy().Turnout().Quorum(currencyDesign.Aggregate())
+	if votingPowerBox.Total().Compare(actualTurnoutCount) < 0 {
+		sts = append(sts, currencystate.NewStateMergeValue(
+			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
+			state.NewProposalStateValue(types.Canceled, p.Proposal()),
+		))
+	} else {
+		sts = append(sts,
+			currencystate.NewStateMergeValue(
+				state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
+				state.NewProposalStateValue(types.PreSnapped, p.Proposal()),
+			),
+			currencystate.NewStateMergeValue(
+				state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID()),
+				state.NewVotingPowerBoxStateValue(votingPowerBox),
+			),
+		)
 	}
-	sb := currencystate.NewStateMergeValue(st.Key(), st.Value())
-
-	switch b, err := currency.StateBalanceValue(st); {
-	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to get balance value, %q: %w", currency.StateKeyBalance(fact.Sender(), fact.Currency()), err), nil
-	case b.Big().Compare(fee) < 0:
-		return nil, base.NewBaseOperationProcessReasonError("not enough balance of sender, %q", fact.Sender()), nil
-	}
-
-	v, ok := sb.Value().(currency.BalanceStateValue)
-	if !ok {
-		return nil, base.NewBaseOperationProcessReasonError("expected BalanceStateValue, not %T", sb.Value()), nil
-	}
-	sts = append(sts, currencystate.NewStateMergeValue(sb.Key(), currency.NewBalanceStateValue(v.Amount.WithBig(v.Amount.Big().Sub(fee)))))
 
 	return sts, nil, nil
 }

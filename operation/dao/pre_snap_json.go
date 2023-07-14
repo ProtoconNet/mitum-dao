@@ -56,12 +56,12 @@ func (fact *PreSnapFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 	)
 }
 
-type PreSnapMarshaler struct {
+type PreSnapJSONMarshaler struct {
 	common.BaseOperationJSONMarshaler
 }
 
 func (op PreSnap) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(PreSnapMarshaler{
+	return util.MarshalJSON(PreSnapJSONMarshaler{
 		BaseOperationJSONMarshaler: op.BaseOperation.JSONMarshaler(),
 	})
 }

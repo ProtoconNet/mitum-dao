@@ -8,7 +8,7 @@ import (
 	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
 )
 
-type SnapFactJSONMarshaler struct {
+type PostSnapFactJSONMarshaler struct {
 	base.BaseFactJSONMarshaler
 	Owner      base.Address             `json:"sender"`
 	Contract   base.Address             `json:"contract"`
@@ -18,7 +18,7 @@ type SnapFactJSONMarshaler struct {
 }
 
 func (fact PostSnapFact) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(SnapFactJSONMarshaler{
+	return util.MarshalJSON(PostSnapFactJSONMarshaler{
 		BaseFactJSONMarshaler: fact.BaseFact.JSONMarshaler(),
 		Owner:                 fact.sender,
 		Contract:              fact.contract,
@@ -28,7 +28,7 @@ func (fact PostSnapFact) MarshalJSON() ([]byte, error) {
 	})
 }
 
-type SnapFactJSONUnMarshaler struct {
+type PostSnapFactJSONUnMarshaler struct {
 	base.BaseFactJSONUnmarshaler
 	Owner      string `json:"sender"`
 	Contract   string `json:"contract"`
@@ -40,7 +40,7 @@ type SnapFactJSONUnMarshaler struct {
 func (fact *PostSnapFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 	e := util.StringError("failed to decode json of PostSnapFact")
 
-	var uf SnapFactJSONUnMarshaler
+	var uf PostSnapFactJSONUnMarshaler
 	if err := enc.Unmarshal(b, &uf); err != nil {
 		return e.Wrap(err)
 	}
@@ -56,12 +56,12 @@ func (fact *PostSnapFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 	)
 }
 
-type SnapMarshaler struct {
+type PostSnapJSONMarshaler struct {
 	common.BaseOperationJSONMarshaler
 }
 
 func (op PostSnap) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(SnapMarshaler{
+	return util.MarshalJSON(PostSnapJSONMarshaler{
 		BaseOperationJSONMarshaler: op.BaseOperation.JSONMarshaler(),
 	})
 }
