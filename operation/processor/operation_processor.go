@@ -268,6 +268,13 @@ func (opr *OperationProcessor) checkDuplication(op mitumbase.Operation) error {
 		}
 		did = fact.Sender().String()
 		didtype = DuplicationTypeSender
+	case dao.Execute:
+		fact, ok := t.Fact().(dao.ExecuteFact)
+		if !ok {
+			return errors.Errorf("expected ExecuteFact, not %T", t.Fact())
+		}
+		did = fact.Sender().String()
+		didtype = DuplicationTypeSender
 	default:
 		return nil
 	}
@@ -350,7 +357,8 @@ func (opr *OperationProcessor) getNewProcessor(op mitumbase.Operation) (mitumbas
 		dao.Register,
 		dao.PreSnap,
 		dao.Vote,
-		dao.PostSnap:
+		dao.PostSnap,
+		dao.Execute:
 		return nil, false, errors.Errorf("%T needs SetProcessor", t)
 	default:
 		return nil, false, nil
