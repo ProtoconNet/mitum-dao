@@ -218,46 +218,12 @@ func (opp *ExecuteProcessor) Process(
 		return sts, nil, nil
 	}
 
-	execute := false
+	sts = append(sts, currencystate.NewStateMergeValue(
+		state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
+		state.NewProposalStateValue(types.Executed, p.Proposal()),
+	))
 
 	if p.Proposal().Type() == types.ProposalCrypto {
-		var vpb types.VotingPowerBox
-		switch st, found, err := getStateFunc(state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
-		case err != nil:
-			return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
-		case found:
-			vpb, err = state.StateVotingPowerBoxValue(st)
-			if err != nil {
-				return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box value from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
-			}
-		default:
-			return nil, base.NewBaseOperationProcessReasonError("voting power box state not found, %s-%s-%s", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
-		}
-
-		actualTurnoutQuorum := design.Policy().Quorum().Quorum(vpb.Total())
-
-		agree, reject := vpb.Result()[0], vpb.Result()[1]
-
-		if agree.Compare(actualTurnoutQuorum) >= 0 && agree.Compare(reject) >= 0 {
-			sts = append(sts, currencystate.NewStateMergeValue(
-				state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-				state.NewProposalStateValue(types.Executed, p.Proposal()),
-			))
-			execute = true
-		} else {
-			sts = append(sts, currencystate.NewStateMergeValue(
-				state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-				state.NewProposalStateValue(types.Rejected, p.Proposal()),
-			))
-		}
-	} else if p.Proposal().Type() == types.ProposalBiz {
-		sts = append(sts, currencystate.NewStateMergeValue(
-			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-			state.NewProposalStateValue(types.Executed, p.Proposal()),
-		))
-	}
-
-	if execute {
 		cp, _ := p.Proposal().(types.CryptoProposal)
 
 		switch cp.CallData().Type() {
