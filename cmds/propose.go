@@ -2,6 +2,7 @@ package cmds
 
 import (
 	"context"
+
 	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
 
 	"github.com/pkg/errors"
@@ -121,7 +122,7 @@ func (cmd *ProposeCommand) parseFlags() error {
 				return err
 			}
 
-			proposal := types.NewCryptoProposal(cmd.StartTime, callData)
+			proposal := types.NewCryptoProposal(sender, cmd.StartTime, callData)
 			if err := proposal.IsValid(nil); err != nil {
 				return err
 			}
@@ -160,7 +161,7 @@ func (cmd *ProposeCommand) parseFlags() error {
 				return err
 			}
 
-			proposal := types.NewCryptoProposal(cmd.StartTime, calldata)
+			proposal := types.NewCryptoProposal(sender, cmd.StartTime, calldata)
 			if err := proposal.IsValid(nil); err != nil {
 				return err
 			}
@@ -169,7 +170,7 @@ func (cmd *ProposeCommand) parseFlags() error {
 			return errors.Errorf("invalid calldata option, %s", cmd.CalldataOption)
 		}
 	} else if cmd.Option == types.ProposalBiz {
-		proposal := types.NewBizProposal(cmd.StartTime, cmd.URL, cmd.Hash, cmd.Options)
+		proposal := types.NewBizProposal(sender, cmd.StartTime, cmd.URL, cmd.Hash, cmd.Options)
 		if err := proposal.IsValid(nil); err != nil {
 			return err
 		}

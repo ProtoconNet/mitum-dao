@@ -86,6 +86,11 @@ func POperationProcessorsMap(pctx context.Context) (context.Context, error) {
 	); err != nil {
 		return pctx, err
 	} else if err := opr.SetProcessor(
+		dao.ProposeHint,
+		dao.NewCancelProposeProcessor(db.LastBlockMap),
+	); err != nil {
+		return pctx, err
+	} else if err := opr.SetProcessor(
 		dao.RegisterHint,
 		dao.NewRegisterProcessor(db.LastBlockMap),
 	); err != nil {
@@ -194,6 +199,15 @@ func POperationProcessorsMap(pctx context.Context) (context.Context, error) {
 	})
 
 	_ = set.Add(dao.ProposeHint, func(height base.Height) (base.OperationProcessor, error) {
+		return opr.New(
+			height,
+			db.State,
+			nil,
+			nil,
+		)
+	})
+
+	_ = set.Add(dao.CancelProposeHint, func(height base.Height) (base.OperationProcessor, error) {
 		return opr.New(
 			height,
 			db.State,
