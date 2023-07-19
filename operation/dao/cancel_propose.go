@@ -10,11 +10,11 @@ import (
 )
 
 var (
-	CancelProposeFactHint = hint.MustNewHint("mitum-dao-cancel-propose-operation-fact-v0.0.1")
-	CancelProposeHint     = hint.MustNewHint("mitum-dao-cancel-propose-operation-v0.0.1")
+	CancelProposalFactHint = hint.MustNewHint("mitum-dao-cancel-proposal-operation-fact-v0.0.1")
+	CancelProposalHint     = hint.MustNewHint("mitum-dao-cancel-proposal-operation-v0.0.1")
 )
 
-type CancelProposeFact struct {
+type CancelProposalFact struct {
 	base.BaseFact
 	sender     base.Address
 	contract   base.Address
@@ -23,16 +23,16 @@ type CancelProposeFact struct {
 	currency   currencytypes.CurrencyID
 }
 
-func NewCancelProposeFact(
+func NewCancelProposalFact(
 	token []byte,
 	sender base.Address,
 	contract base.Address,
 	daoID currencytypes.ContractID,
 	proposalID string,
 	currency currencytypes.CurrencyID,
-) CancelProposeFact {
-	bf := base.NewBaseFact(CancelProposeFactHint, token)
-	fact := CancelProposeFact{
+) CancelProposalFact {
+	bf := base.NewBaseFact(CancelProposalFactHint, token)
+	fact := CancelProposalFact{
 		BaseFact:   bf,
 		sender:     sender,
 		contract:   contract,
@@ -45,15 +45,15 @@ func NewCancelProposeFact(
 	return fact
 }
 
-func (fact CancelProposeFact) Hash() util.Hash {
+func (fact CancelProposalFact) Hash() util.Hash {
 	return fact.BaseFact.Hash()
 }
 
-func (fact CancelProposeFact) GenerateHash() util.Hash {
+func (fact CancelProposalFact) GenerateHash() util.Hash {
 	return valuehash.NewSHA256(fact.Bytes())
 }
 
-func (fact CancelProposeFact) Bytes() []byte {
+func (fact CancelProposalFact) Bytes() []byte {
 	return util.ConcatBytesSlice(
 		fact.Token(),
 		fact.sender.Bytes(),
@@ -64,7 +64,7 @@ func (fact CancelProposeFact) Bytes() []byte {
 	)
 }
 
-func (fact CancelProposeFact) IsValid(b []byte) error {
+func (fact CancelProposalFact) IsValid(b []byte) error {
 	if err := fact.BaseHinter.IsValid(nil); err != nil {
 		return err
 	}
@@ -93,31 +93,31 @@ func (fact CancelProposeFact) IsValid(b []byte) error {
 	return nil
 }
 
-func (fact CancelProposeFact) Token() base.Token {
+func (fact CancelProposalFact) Token() base.Token {
 	return fact.BaseFact.Token()
 }
 
-func (fact CancelProposeFact) Sender() base.Address {
+func (fact CancelProposalFact) Sender() base.Address {
 	return fact.sender
 }
 
-func (fact CancelProposeFact) Contract() base.Address {
+func (fact CancelProposalFact) Contract() base.Address {
 	return fact.contract
 }
 
-func (fact CancelProposeFact) DAOID() currencytypes.ContractID {
+func (fact CancelProposalFact) DAOID() currencytypes.ContractID {
 	return fact.daoID
 }
 
-func (fact CancelProposeFact) ProposalID() string {
+func (fact CancelProposalFact) ProposalID() string {
 	return fact.proposalID
 }
 
-func (fact CancelProposeFact) Currency() currencytypes.CurrencyID {
+func (fact CancelProposalFact) Currency() currencytypes.CurrencyID {
 	return fact.currency
 }
 
-func (fact CancelProposeFact) Addresses() ([]base.Address, error) {
+func (fact CancelProposalFact) Addresses() ([]base.Address, error) {
 	as := make([]base.Address, 2)
 
 	as[0] = fact.sender
@@ -126,15 +126,15 @@ func (fact CancelProposeFact) Addresses() ([]base.Address, error) {
 	return as, nil
 }
 
-type CancelPropose struct {
+type CancelProposal struct {
 	common.BaseOperation
 }
 
-func NewCancelPropose(fact CancelProposeFact) (CancelPropose, error) {
-	return CancelPropose{BaseOperation: common.NewBaseOperation(CancelProposeHint, fact)}, nil
+func NewCancelProposal(fact CancelProposalFact) (CancelProposal, error) {
+	return CancelProposal{BaseOperation: common.NewBaseOperation(CancelProposalHint, fact)}, nil
 }
 
-func (op *CancelPropose) HashSign(priv base.Privatekey, networkID base.NetworkID) error {
+func (op *CancelProposal) HashSign(priv base.Privatekey, networkID base.NetworkID) error {
 	err := op.Sign(priv, networkID)
 	if err != nil {
 		return err

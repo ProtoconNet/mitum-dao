@@ -12,7 +12,7 @@ import (
 	"github.com/ProtoconNet/mitum2/util"
 )
 
-type CancelProposeCommand struct {
+type CancelProposalCommand struct {
 	BaseCommand
 	currencycmds.OperationFlags
 	Sender     currencycmds.AddressFlag    `arg:"" name:"sender" help:"sender address" required:"true"`
@@ -24,7 +24,7 @@ type CancelProposeCommand struct {
 	contract   base.Address
 }
 
-func (cmd *CancelProposeCommand) Run(pctx context.Context) error { // nolint:dupl
+func (cmd *CancelProposalCommand) Run(pctx context.Context) error { // nolint:dupl
 	if _, err := cmd.prepare(pctx); err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (cmd *CancelProposeCommand) Run(pctx context.Context) error { // nolint:dup
 	return nil
 }
 
-func (cmd *CancelProposeCommand) parseFlags() error {
+func (cmd *CancelProposalCommand) parseFlags() error {
 	if err := cmd.OperationFlags.IsValid(nil); err != nil {
 		return err
 	}
@@ -66,10 +66,10 @@ func (cmd *CancelProposeCommand) parseFlags() error {
 	return nil
 }
 
-func (cmd *CancelProposeCommand) createOperation() (base.Operation, error) { // nolint:dupl}
-	e := util.StringError("failed to create cancel propose operation")
+func (cmd *CancelProposalCommand) createOperation() (base.Operation, error) { // nolint:dupl}
+	e := util.StringError("failed to create cancel proposal operation")
 
-	fact := dao.NewCancelProposeFact(
+	fact := dao.NewCancelProposalFact(
 		[]byte(cmd.Token),
 		cmd.sender,
 		cmd.contract,
@@ -78,7 +78,7 @@ func (cmd *CancelProposeCommand) createOperation() (base.Operation, error) { // 
 		cmd.Currency.CID,
 	)
 
-	op, err := dao.NewCancelPropose(fact)
+	op, err := dao.NewCancelProposal(fact)
 	if err != nil {
 		return nil, e.Wrap(err)
 	}

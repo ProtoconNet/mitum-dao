@@ -8,7 +8,7 @@ import (
 	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
 )
 
-type CancelProposeFactJSONMarshaler struct {
+type CancelProposalFactJSONMarshaler struct {
 	base.BaseFactJSONMarshaler
 	Owner      base.Address             `json:"sender"`
 	Contract   base.Address             `json:"contract"`
@@ -17,8 +17,8 @@ type CancelProposeFactJSONMarshaler struct {
 	Currency   currencytypes.CurrencyID `json:"currency"`
 }
 
-func (fact CancelProposeFact) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(CancelProposeFactJSONMarshaler{
+func (fact CancelProposalFact) MarshalJSON() ([]byte, error) {
+	return util.MarshalJSON(CancelProposalFactJSONMarshaler{
 		BaseFactJSONMarshaler: fact.BaseFact.JSONMarshaler(),
 		Owner:                 fact.sender,
 		Contract:              fact.contract,
@@ -28,7 +28,7 @@ func (fact CancelProposeFact) MarshalJSON() ([]byte, error) {
 	})
 }
 
-type CancelProposeFactJSONUnMarshaler struct {
+type CancelProposalFactJSONUnMarshaler struct {
 	base.BaseFactJSONUnmarshaler
 	Owner      string `json:"sender"`
 	Contract   string `json:"contract"`
@@ -37,10 +37,10 @@ type CancelProposeFactJSONUnMarshaler struct {
 	Currency   string `json:"currency"`
 }
 
-func (fact *CancelProposeFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringError("failed to decode json of CancelProposeFact")
+func (fact *CancelProposalFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+	e := util.StringError("failed to decode json of CancelProposalFact")
 
-	var uf CancelProposeFactJSONUnMarshaler
+	var uf CancelProposalFactJSONUnMarshaler
 	if err := enc.Unmarshal(b, &uf); err != nil {
 		return e.Wrap(err)
 	}
@@ -56,18 +56,18 @@ func (fact *CancelProposeFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error 
 	)
 }
 
-type CancelProposeJSONMarshaler struct {
+type CancelProposalJSONMarshaler struct {
 	common.BaseOperationJSONMarshaler
 }
 
-func (op CancelPropose) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(CancelProposeJSONMarshaler{
+func (op CancelProposal) MarshalJSON() ([]byte, error) {
+	return util.MarshalJSON(CancelProposalJSONMarshaler{
 		BaseOperationJSONMarshaler: op.BaseOperation.JSONMarshaler(),
 	})
 }
 
-func (op *CancelPropose) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringError("failed to decode json of CancelPropose")
+func (op *CancelProposal) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+	e := util.StringError("failed to decode json of CancelProposal")
 
 	var ubo common.BaseOperation
 	if err := ubo.DecodeJSON(b, enc); err != nil {

@@ -7,10 +7,10 @@ import (
 	"github.com/ProtoconNet/mitum2/util/encoder"
 )
 
-func (fact *CancelProposeFact) unpack(enc encoder.Encoder,
+func (fact *CancelProposalFact) unpack(enc encoder.Encoder,
 	sa, ca, did, pid, cid string,
 ) error {
-	e := util.StringError("failed to unmarshal CancelProposeFact")
+	e := util.StringError("failed to unmarshal CancelProposalFact")
 
 	fact.daoID = currencytypes.ContractID(did)
 	fact.proposalID = pid

@@ -79,7 +79,7 @@ var hinters = []encoder.DecodeDetail{
 
 	{Hint: dao.CreateDAOHint, Instance: dao.CreateDAO{}},
 	{Hint: dao.ProposeHint, Instance: dao.Propose{}},
-	{Hint: dao.CancelProposeHint, Instance: dao.CancelPropose{}},
+	{Hint: dao.CancelProposalHint, Instance: dao.CancelProposal{}},
 	{Hint: dao.RegisterHint, Instance: dao.Register{}},
 	{Hint: dao.PreSnapHint, Instance: dao.PreSnap{}},
 	{Hint: dao.VoteHint, Instance: dao.Vote{}},
@@ -114,7 +114,7 @@ var supportedProposalOperationFactHinters = []encoder.DecodeDetail{
 
 	{Hint: dao.CreateDAOFactHint, Instance: dao.CreateDAOFact{}},
 	{Hint: dao.ProposeFactHint, Instance: dao.ProposeFact{}},
-	{Hint: dao.CancelProposeFactHint, Instance: dao.CancelProposeFact{}},
+	{Hint: dao.CancelProposalFactHint, Instance: dao.CancelProposalFact{}},
 	{Hint: dao.RegisterFactHint, Instance: dao.RegisterFact{}},
 	{Hint: dao.PreSnapFactHint, Instance: dao.PreSnapFact{}},
 	{Hint: dao.VoteFactHint, Instance: dao.VoteFact{}},

@@ -10,7 +10,7 @@ import (
 	"github.com/ProtoconNet/mitum2/util/valuehash"
 )
 
-func (fact CancelProposeFact) MarshalBSON() ([]byte, error) {
+func (fact CancelProposalFact) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
 			"_hint":       fact.Hint().String(),
@@ -25,7 +25,7 @@ func (fact CancelProposeFact) MarshalBSON() ([]byte, error) {
 	)
 }
 
-type CancelProposeFactBSONUnmarshaler struct {
+type CancelProposalFactBSONUnmarshaler struct {
 	Hint       string `bson:"_hint"`
 	Sender     string `bson:"sender"`
 	Contract   string `bson:"contract"`
@@ -34,8 +34,8 @@ type CancelProposeFactBSONUnmarshaler struct {
 	Currency   string `bson:"currency"`
 }
 
-func (fact *CancelProposeFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringError("failed to decode bson of CancelProposeFact")
+func (fact *CancelProposalFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
+	e := util.StringError("failed to decode bson of CancelProposalFact")
 
 	var ubf common.BaseFactBSONUnmarshaler
 
@@ -46,7 +46,7 @@ func (fact *CancelProposeFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error 
 	fact.BaseFact.SetHash(valuehash.NewBytesFromString(ubf.Hash))
 	fact.BaseFact.SetToken(ubf.Token)
 
-	var uf CancelProposeFactBSONUnmarshaler
+	var uf CancelProposalFactBSONUnmarshaler
 	if err := bson.Unmarshal(b, &uf); err != nil {
 		return e.Wrap(err)
 	}
@@ -66,7 +66,7 @@ func (fact *CancelProposeFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error 
 	)
 }
 
-func (op CancelPropose) MarshalBSON() ([]byte, error) {
+func (op CancelProposal) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
 			"_hint": op.Hint().String(),
@@ -76,8 +76,8 @@ func (op CancelPropose) MarshalBSON() ([]byte, error) {
 		})
 }
 
-func (op *CancelPropose) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringError("failed to decode bson of CancelPropose")
+func (op *CancelProposal) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
+	e := util.StringError("failed to decode bson of CancelProposal")
 
 	var ubo common.BaseOperation
 	if err := ubo.DecodeBSON(b, enc); err != nil {

@@ -17,36 +17,36 @@ import (
 	"github.com/pkg/errors"
 )
 
-var cancelProposeProcessorPool = sync.Pool{
+var cancelProposalProcessorPool = sync.Pool{
 	New: func() interface{} {
-		return new(CancelProposeProcessor)
+		return new(CancelProposalProcessor)
 	},
 }
 
-func (CancelPropose) Process(
+func (CancelProposal) Process(
 	_ context.Context, _ base.GetStateFunc,
 ) ([]base.StateMergeValue, base.OperationProcessReasonError, error) {
 	return nil, nil, nil
 }
 
-type CancelProposeProcessor struct {
+type CancelProposalProcessor struct {
 	*base.BaseOperationProcessor
 	getLastBlockFunc processor.GetLastBlockFunc
 }
 
-func NewCancelProposeProcessor(getLastBlockFunc processor.GetLastBlockFunc) currencytypes.GetNewProcessor {
+func NewCancelProposalProcessor(getLastBlockFunc processor.GetLastBlockFunc) currencytypes.GetNewProcessor {
 	return func(
 		height base.Height,
 		getStateFunc base.GetStateFunc,
 		newPreProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 		newProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 	) (base.OperationProcessor, error) {
-		e := util.StringError("failed to create new CancelProposeProcessor")
+		e := util.StringError("failed to create new CancelProposalProcessor")
 
-		nopp := cancelProposeProcessorPool.Get()
-		opp, ok := nopp.(*CancelProposeProcessor)
+		nopp := cancelProposalProcessorPool.Get()
+		opp, ok := nopp.(*CancelProposalProcessor)
 		if !ok {
-			return nil, errors.Errorf("expected CancelProposeProcessor, not %T", nopp)
+			return nil, errors.Errorf("expected CancelProposalProcessor, not %T", nopp)
 		}
 
 		b, err := base.NewBaseOperationProcessor(
@@ -62,14 +62,14 @@ func NewCancelProposeProcessor(getLastBlockFunc processor.GetLastBlockFunc) curr
 	}
 }
 
-func (opp *CancelProposeProcessor) PreProcess(
+func (opp *CancelProposalProcessor) PreProcess(
 	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc,
 ) (context.Context, base.OperationProcessReasonError, error) {
-	e := util.StringError("failed to preprocess CancelPropose")
+	e := util.StringError("failed to preprocess CancelProposal")
 
-	fact, ok := op.Fact().(CancelProposeFact)
+	fact, ok := op.Fact().(CancelProposalFact)
 	if !ok {
-		return ctx, nil, e.Errorf("not CancelProposeFact, %T", op.Fact())
+		return ctx, nil, e.Errorf("not CancelProposalFact, %T", op.Fact())
 	}
 
 	if err := fact.IsValid(nil); err != nil {
@@ -81,7 +81,7 @@ func (opp *CancelProposeProcessor) PreProcess(
 	}
 
 	if err := currencystate.CheckNotExistsState(extensioncurrency.StateKeyContractAccount(fact.Sender()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("contract account cannot cancel-propose, %q: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("contract account cannot cancel-proposal, %q: %w", fact.Sender(), err), nil
 	}
 
 	if err := currencystate.CheckExistsState(extensioncurrency.StateKeyContractAccount(fact.Contract()), getStateFunc); err != nil {
@@ -119,7 +119,7 @@ func (opp *CancelProposeProcessor) PreProcess(
 	if p.Status() == types.Canceled {
 		return nil, base.NewBaseOperationProcessReasonError("already canceled proposal, %s-%s-%s", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
 	} else if p.Status() != types.Proposed {
-		return nil, base.NewBaseOperationProcessReasonError("cancel-propose is unavailable, %s-%s-%s", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("cancel-proposal is unavailable, %s-%s-%s", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
 	}
 
 	blocMap, found, err := opp.getLastBlockFunc()
@@ -129,9 +129,9 @@ func (opp *CancelProposeProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
 	}
 
-	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blocMap)
-	if period != types.ProposalReview {
-		return nil, base.NewBaseOperationProcessReasonError("current time is not within the ProposalReview period, ProposalReview period start : %d, end %d", start, end), nil
+	period, _, _ := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blocMap)
+	if !(period == types.ProposalReview || period == types.Registration) {
+		return nil, base.NewBaseOperationProcessReasonError("current time is not within the ProposalReview or Registration period"), nil
 	}
 
 	if err := currencystate.CheckFactSignsByState(fact.Sender(), op.Signs(), getStateFunc); err != nil {
@@ -141,15 +141,15 @@ func (opp *CancelProposeProcessor) PreProcess(
 	return ctx, nil, nil
 }
 
-func (opp *CancelProposeProcessor) Process(
+func (opp *CancelProposalProcessor) Process(
 	_ context.Context, op base.Operation, getStateFunc base.GetStateFunc) (
 	[]base.StateMergeValue, base.OperationProcessReasonError, error,
 ) {
-	e := util.StringError("failed to process CancelPropose")
+	e := util.StringError("failed to process CancelProposal")
 
-	fact, ok := op.Fact().(CancelProposeFact)
+	fact, ok := op.Fact().(CancelProposalFact)
 	if !ok {
-		return nil, nil, e.Errorf("expected CancelProposeFact, not %T", op.Fact())
+		return nil, nil, e.Errorf("expected CancelProposalFact, not %T", op.Fact())
 	}
 
 	var sts []base.StateMergeValue
@@ -203,8 +203,8 @@ func (opp *CancelProposeProcessor) Process(
 	return sts, nil, nil
 }
 
-func (opp *CancelProposeProcessor) Close() error {
-	cancelProposeProcessorPool.Put(opp)
+func (opp *CancelProposalProcessor) Close() error {
+	cancelProposalProcessorPool.Put(opp)
 
 	return nil
 }
