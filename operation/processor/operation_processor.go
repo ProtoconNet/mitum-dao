@@ -240,6 +240,13 @@ func (opr *OperationProcessor) checkDuplication(op mitumbase.Operation) error {
 		}
 		did = fact.Sender().String()
 		didtype = DuplicationTypeSender
+	case dao.CancelProposal:
+		fact, ok := t.Fact().(dao.CancelProposalFact)
+		if !ok {
+			return errors.Errorf("expected CancelProposalFact, not %T", t.Fact())
+		}
+		did = fact.Sender().String()
+		didtype = DuplicationTypeSender
 	case dao.Register:
 		fact, ok := t.Fact().(dao.RegisterFact)
 		if !ok {
@@ -354,6 +361,7 @@ func (opr *OperationProcessor) getNewProcessor(op mitumbase.Operation) (mitumbas
 		currency.SuffrageInflation,
 		dao.CreateDAO,
 		dao.Propose,
+		dao.CancelProposal,
 		dao.Register,
 		dao.PreSnap,
 		dao.Vote,

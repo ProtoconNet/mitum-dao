@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 
+	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
 	"github.com/ProtoconNet/mitum2/util/hint"
@@ -10,13 +11,15 @@ import (
 
 type CryptoProposalJSONMarshaler struct {
 	hint.BaseHinter
-	StartTime uint64   `json:"start_time"`
-	CallData  CallData `json:"call_data"`
+	Proposer  base.Address `json:"proposer"`
+	StartTime uint64       `json:"start_time"`
+	CallData  CallData     `json:"call_data"`
 }
 
 func (p CryptoProposal) MarshalJSON() ([]byte, error) {
 	return util.MarshalJSON(CryptoProposalJSONMarshaler{
 		BaseHinter: p.BaseHinter,
+		Proposer:   p.proposer,
 		CallData:   p.callData,
 		StartTime:  p.startTime,
 	})
@@ -24,6 +27,7 @@ func (p CryptoProposal) MarshalJSON() ([]byte, error) {
 
 type CryptoProposalJSONUnmarshaler struct {
 	Hint      hint.Hint       `json:"_hint"`
+	Proposer  string          `json:"proposer"`
 	StartTime uint64          `json:"start_time"`
 	CallData  json.RawMessage `json:"call_data"`
 }
@@ -36,20 +40,22 @@ func (p *CryptoProposal) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		return e.Wrap(err)
 	}
 
-	return p.unpack(enc, up.Hint, up.StartTime, up.CallData)
+	return p.unpack(enc, up.Hint, up.Proposer, up.StartTime, up.CallData)
 }
 
 type BizProposalJSONMarshaler struct {
 	hint.BaseHinter
-	StartTime uint64 `json:"start_time"`
-	Url       URL    `json:"url"`
-	Hash      string `json:"hash"`
-	Options   uint8  `json:"options"`
+	Proposer  base.Address `json:"proposer"`
+	StartTime uint64       `json:"start_time"`
+	Url       URL          `json:"url"`
+	Hash      string       `json:"hash"`
+	Options   uint8        `json:"options"`
 }
 
 func (p BizProposal) MarshalJSON() ([]byte, error) {
 	return util.MarshalJSON(BizProposalJSONMarshaler{
 		BaseHinter: p.BaseHinter,
+		Proposer:   p.proposer,
 		StartTime:  p.startTime,
 		Url:        p.url,
 		Hash:       p.hash,
@@ -59,6 +65,7 @@ func (p BizProposal) MarshalJSON() ([]byte, error) {
 
 type BizProposalJSONUnmarshaler struct {
 	Hint      hint.Hint `json:"_hint"`
+	Proposer  string    `json:"proposer"`
 	StartTime uint64    `json:"start_time"`
 	Url       string    `json:"url"`
 	Hash      string    `json:"hash"`
@@ -73,5 +80,5 @@ func (p *BizProposal) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		return e.Wrap(err)
 	}
 
-	return p.unpack(enc, up.Hint, up.StartTime, up.Url, up.Hash, up.Options)
+	return p.unpack(enc, up.Hint, up.Proposer, up.StartTime, up.Url, up.Hash, up.Options)
 }

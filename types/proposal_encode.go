@@ -1,17 +1,25 @@
 package types
 
 import (
+	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/encoder"
 	"github.com/ProtoconNet/mitum2/util/hint"
 	"github.com/pkg/errors"
 )
 
-func (p *CryptoProposal) unpack(enc encoder.Encoder, ht hint.Hint, st uint64, bcd []byte) error {
+func (p *CryptoProposal) unpack(enc encoder.Encoder, ht hint.Hint, pr string, st uint64, bcd []byte) error {
 	e := util.StringError("failed to decode bson of CryptoProposal")
 
 	p.BaseHinter = hint.NewBaseHinter(ht)
 	p.startTime = st
+
+	switch a, err := base.DecodeAddress(pr, enc); {
+	case err != nil:
+		return e.Wrap(err)
+	default:
+		p.proposer = a
+	}
 
 	if hinter, err := enc.Decode(bcd); err != nil {
 		return e.Wrap(err)
@@ -24,13 +32,22 @@ func (p *CryptoProposal) unpack(enc encoder.Encoder, ht hint.Hint, st uint64, bc
 	return nil
 }
 
-func (p *BizProposal) unpack(_ encoder.Encoder, ht hint.Hint, st uint64, url, hash string, opt uint8) error {
+func (p *BizProposal) unpack(enc encoder.Encoder, ht hint.Hint, pr string, st uint64, url, hash string, opt uint8) error {
+	e := util.StringError("failed to decode bson of BizProposal")
+
 	p.BaseHinter = hint.NewBaseHinter(ht)
 
 	p.startTime = st
 	p.url = URL(url)
 	p.hash = hash
 	p.options = opt
+
+	switch a, err := base.DecodeAddress(pr, enc); {
+	case err != nil:
+		return e.Wrap(err)
+	default:
+		p.proposer = a
+	}
 
 	return nil
 }

@@ -11,6 +11,7 @@ func (p CryptoProposal) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
 			"_hint":      p.Hint().String(),
+			"proposer":   p.proposer,
 			"start_time": p.startTime,
 			"call_data":  p.callData,
 		},
@@ -19,6 +20,7 @@ func (p CryptoProposal) MarshalBSON() ([]byte, error) {
 
 type CryptoProposalBSONUnmarshaler struct {
 	Hint      string   `bson:"_hint"`
+	Proposer  string   `bson:"proposer"`
 	StartTime uint64   `bson:"start_time"`
 	CallData  bson.Raw `bson:"call_data"`
 }
@@ -36,13 +38,14 @@ func (p *CryptoProposal) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		return e.Wrap(err)
 	}
 
-	return p.unpack(enc, ht, up.StartTime, up.CallData)
+	return p.unpack(enc, ht, up.Proposer, up.StartTime, up.CallData)
 }
 
 func (p BizProposal) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
 			"_hint":      p.Hint().String(),
+			"proposer":   p.proposer,
 			"start_time": p.startTime,
 			"url":        p.url,
 			"hash":       p.hash,
@@ -53,6 +56,7 @@ func (p BizProposal) MarshalBSON() ([]byte, error) {
 
 type BizProposalBSONUnmarshaler struct {
 	Hint      string `bson:"_hint"`
+	Proposer  string `bson:"proposer"`
 	StartTime uint64 `bson:"start_time"`
 	Url       string `bson:"url"`
 	Hash      string `bson:"hash"`
@@ -72,5 +76,5 @@ func (p *BizProposal) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		return e.Wrap(err)
 	}
 
-	return p.unpack(enc, ht, up.StartTime, up.Url, up.Hash, up.Options)
+	return p.unpack(enc, ht, up.Proposer, up.StartTime, up.Url, up.Hash, up.Options)
 }
