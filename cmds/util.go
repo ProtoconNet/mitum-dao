@@ -91,6 +91,11 @@ func POperationProcessorsMap(pctx context.Context) (context.Context, error) {
 	); err != nil {
 		return pctx, err
 	} else if err := opr.SetProcessor(
+		dao.CancelProposalHint,
+		dao.NewCancelProposalProcessor(db.LastBlockMap),
+	); err != nil {
+		return pctx, err
+	} else if err := opr.SetProcessor(
 		dao.RegisterHint,
 		dao.NewRegisterProcessor(db.LastBlockMap),
 	); err != nil {
