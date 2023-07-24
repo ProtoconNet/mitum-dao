@@ -13,7 +13,7 @@ func (de DesignStateValue) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
 			"_hint":  de.Hint().String(),
-			"design": de.Design,
+			"design": de.design,
 		},
 	)
 }

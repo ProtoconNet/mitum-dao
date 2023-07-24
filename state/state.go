@@ -38,10 +38,6 @@ func (de DesignStateValue) Hint() hint.Hint {
 	return de.BaseHinter.Hint()
 }
 
-func (de DesignStateValue) Design() types.Design {
-	return de.design
-}
-
 func (de DesignStateValue) IsValid([]byte) error {
 	e := util.ErrInvalid.Errorf("invalid DesignStateValue")
 
@@ -71,7 +67,7 @@ func StateDesignValue(st base.State) (types.Design, error) {
 		return types.Design{}, errors.Errorf("invalid dao design value found, %T", v)
 	}
 
-	return d.Design(), nil
+	return d.design, nil
 }
 
 func IsStateDesignKey(key string) bool {
@@ -133,12 +129,12 @@ func StateProposalValue(st base.State) (ProposalStateValue, error) {
 		return ProposalStateValue{}, util.ErrNotFound.Errorf("proposal not found in State")
 	}
 
-	d, ok := v.(ProposalStateValue)
+	p, ok := v.(ProposalStateValue)
 	if !ok {
 		return ProposalStateValue{}, errors.Errorf("invalid proposal value found, %T", v)
 	}
 
-	return d, nil
+	return p, nil
 }
 
 func IsStateProposalKey(key string) bool {
@@ -146,7 +142,7 @@ func IsStateProposalKey(key string) bool {
 }
 
 func StateKeyProposal(ca base.Address, daoID currencytypes.ContractID, pid string) string {
-	return fmt.Sprintf("%s-%s%s", StateKeyDAOPrefix(ca, daoID), pid, ProposalSuffix)
+	return fmt.Sprintf("%s:%s%s", StateKeyDAOPrefix(ca, daoID), pid, ProposalSuffix)
 }
 
 var (
@@ -215,7 +211,7 @@ func IsStateDelegatorsKey(key string) bool {
 }
 
 func StateKeyDelegators(ca base.Address, daoID currencytypes.ContractID, pid string) string {
-	return fmt.Sprintf("%s-%s%s", StateKeyDAOPrefix(ca, daoID), pid, DelegatorsSuffix)
+	return fmt.Sprintf("%s:%s%s", StateKeyDAOPrefix(ca, daoID), pid, DelegatorsSuffix)
 }
 
 var (
@@ -293,7 +289,7 @@ func IsStateVotersKey(key string) bool {
 }
 
 func StateKeyVoters(ca base.Address, daoID currencytypes.ContractID, pid string) string {
-	return fmt.Sprintf("%s-%s%s", StateKeyDAOPrefix(ca, daoID), pid, VotersSuffix)
+	return fmt.Sprintf("%s:%s%s", StateKeyDAOPrefix(ca, daoID), pid, VotersSuffix)
 }
 
 //var (
@@ -410,10 +406,22 @@ func StateVotingPowerBoxValue(st base.State) (types.VotingPowerBox, error) {
 	return r.votingPowerBox, nil
 }
 
-func IsVotingPowerBoxKey(key string) bool {
+func IsStateVotingPowerBoxKey(key string) bool {
 	return strings.HasPrefix(key, DAOPrefix) && strings.HasSuffix(key, VotingPowerBoxSuffix)
 }
 
 func StateKeyVotingPowerBox(ca base.Address, daoID currencytypes.ContractID, pid string) string {
-	return fmt.Sprintf("%s-%s%s", StateKeyDAOPrefix(ca, daoID), pid, VotingPowerBoxSuffix)
+	return fmt.Sprintf("%s:%s%s", StateKeyDAOPrefix(ca, daoID), pid, VotingPowerBoxSuffix)
+}
+
+func ParseStateKey(key string, Prefix string) ([]string, error) {
+	parsedKey := strings.Split(key, ":")
+	if parsedKey[0] != Prefix[:len(Prefix)-1] {
+		return nil, errors.Errorf("State Key not include Prefix, %s", parsedKey)
+	}
+	if len(parsedKey) < 3 {
+		return nil, errors.Errorf("parsing State Key string failed, %s", parsedKey)
+	} else {
+		return parsedKey, nil
+	}
 }

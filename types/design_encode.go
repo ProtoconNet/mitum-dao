@@ -12,7 +12,7 @@ func (de *Design) unpack(enc encoder.Encoder, ht hint.Hint, op, dao string, bpo 
 	e := util.StringError("failed to decode bson of Design")
 
 	de.BaseHinter = hint.NewBaseHinter(ht)
-	de.option = DAOOption(dao)
+	de.option = DAOOption(op)
 	de.daoID = types.ContractID(dao)
 
 	if hinter, err := enc.Decode(bpo); err != nil {

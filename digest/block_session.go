@@ -23,20 +23,25 @@ var bulkWriteLimit = 500
 
 type BlockSession struct {
 	sync.RWMutex
-	block                 mitumbase.BlockMap
-	ops                   []mitumbase.Operation
-	opstree               fixedtree.Tree
-	sts                   []mitumbase.State
-	st                    *currencydigest.Database
-	opsTreeNodes          map[string]mitumbase.OperationFixedtreeNode
-	blockModels           []mongo.WriteModel
-	operationModels       []mongo.WriteModel
-	accountModels         []mongo.WriteModel
-	balanceModels         []mongo.WriteModel
-	currencyModels        []mongo.WriteModel
-	contractAccountModels []mongo.WriteModel
-	statesValue           *sync.Map
-	balanceAddressList    []string
+	block                   mitumbase.BlockMap
+	ops                     []mitumbase.Operation
+	opstree                 fixedtree.Tree
+	sts                     []mitumbase.State
+	st                      *currencydigest.Database
+	opsTreeNodes            map[string]mitumbase.OperationFixedtreeNode
+	blockModels             []mongo.WriteModel
+	operationModels         []mongo.WriteModel
+	accountModels           []mongo.WriteModel
+	balanceModels           []mongo.WriteModel
+	currencyModels          []mongo.WriteModel
+	contractAccountModels   []mongo.WriteModel
+	daoDesignModels         []mongo.WriteModel
+	daoProposalModels       []mongo.WriteModel
+	daoDelegatorsModels     []mongo.WriteModel
+	daoVotersModels         []mongo.WriteModel
+	daoVotingPowerBoxModels []mongo.WriteModel
+	statesValue             *sync.Map
+	balanceAddressList      []string
 }
 
 func NewBlockSession(
@@ -80,6 +85,9 @@ func (bs *BlockSession) Prepare() error {
 	if err := bs.prepareCurrencies(); err != nil {
 		return err
 	}
+	if err := bs.prepareDAO(); err != nil {
+		return err
+	}
 
 	return bs.prepareAccounts()
 }
@@ -119,6 +127,36 @@ func (bs *BlockSession) Commit(ctx context.Context) error {
 
 	if len(bs.balanceModels) > 0 {
 		if err := bs.writeModels(ctx, defaultColNameBalance, bs.balanceModels); err != nil {
+			return err
+		}
+	}
+
+	if len(bs.daoDesignModels) > 0 {
+		if err := bs.writeModels(ctx, defaultColNameDAO, bs.daoDesignModels); err != nil {
+			return err
+		}
+	}
+
+	if len(bs.daoProposalModels) > 0 {
+		if err := bs.writeModels(ctx, defaultColNameProposal, bs.daoProposalModels); err != nil {
+			return err
+		}
+	}
+
+	if len(bs.daoDelegatorsModels) > 0 {
+		if err := bs.writeModels(ctx, defaultColNameDelegators, bs.daoDelegatorsModels); err != nil {
+			return err
+		}
+	}
+
+	if len(bs.daoVotersModels) > 0 {
+		if err := bs.writeModels(ctx, defaultColNameVoters, bs.daoVotersModels); err != nil {
+			return err
+		}
+	}
+
+	if len(bs.daoVotingPowerBoxModels) > 0 {
+		if err := bs.writeModels(ctx, defaultColNameVotingPowerBox, bs.daoVotingPowerBoxModels); err != nil {
 			return err
 		}
 	}
@@ -276,32 +314,6 @@ func (bs *BlockSession) prepareCurrencies() error {
 	bs.currencyModels = currencyModels
 
 	return nil
-}
-
-func (bs *BlockSession) handleAccountState(st mitumbase.State) ([]mongo.WriteModel, error) {
-	if rs, err := currencydigest.NewAccountValue(st); err != nil {
-		return nil, err
-	} else if doc, err := currencydigest.NewAccountDoc(rs, bs.st.DatabaseEncoder()); err != nil {
-		return nil, err
-	} else {
-		return []mongo.WriteModel{mongo.NewInsertOneModel().SetDocument(doc)}, nil
-	}
-}
-
-func (bs *BlockSession) handleBalanceState(st mitumbase.State) ([]mongo.WriteModel, string, error) {
-	doc, address, err := currencydigest.NewBalanceDoc(st, bs.st.DatabaseEncoder())
-	if err != nil {
-		return nil, "", err
-	}
-	return []mongo.WriteModel{mongo.NewInsertOneModel().SetDocument(doc)}, address, nil
-}
-
-func (bs *BlockSession) handleCurrencyState(st mitumbase.State) ([]mongo.WriteModel, error) {
-	doc, err := currencydigest.NewCurrencyDoc(st, bs.st.DatabaseEncoder())
-	if err != nil {
-		return nil, err
-	}
-	return []mongo.WriteModel{mongo.NewInsertOneModel().SetDocument(doc)}, nil
 }
 
 func (bs *BlockSession) writeModels(ctx context.Context, col string, models []mongo.WriteModel) error {
