@@ -15,8 +15,7 @@ func (de Design) MarshalBSON() ([]byte, error) {
 			"option": de.option,
 			"dao_id": de.daoID,
 			"policy": de.policy,
-		},
-	)
+		})
 }
 
 type DesignBSONUnmarshaler struct {

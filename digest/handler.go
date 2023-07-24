@@ -18,6 +18,14 @@ import (
 	"golang.org/x/sync/singleflight"
 )
 
+var (
+	HandlerPathDAOService     = `/dao/{contract:\w+}/service/{dao_id:\w+}`
+	HandlerPathProposal       = `/dao/{contract:\w+}/service/{dao_id:\w+}/proposal/{proposal_id:\w+}`
+	HandlerPathDelegators     = `/dao/{contract:\w+}/service/{dao_id:\w+}/proposal/{proposal_id:\w+/delegator}`
+	HandlerPathVoters         = `/dao/{contract:\w+}/service/{dao_id:\w+}/proposal/{proposal_id:\w+/voter`
+	HandlerPathVotingPowerBox = `/dao/{contract:\w+}/service/{dao_id:\w+}/proposal/{proposal_id:\w+/votingpower` // revive:disable-line:line-length-limit
+)
+
 func init() {
 	if b, err := currencydigest.JSON.Marshal(currencydigest.UnknownProblem); err != nil {
 		panic(err)
@@ -29,8 +37,8 @@ func init() {
 type Handlers struct {
 	*zerolog.Logger
 	networkID       base.NetworkID
-	encs            *encoder.Encoders
-	enc             encoder.Encoder
+	encoders        *encoder.Encoders
+	encoder         encoder.Encoder
 	database        *currencydigest.Database
 	cache           currencydigest.Cache
 	nodeInfoHandler currencydigest.NodeInfoHandler
@@ -59,8 +67,8 @@ func NewHandlers(
 	return &Handlers{
 		Logger:          log.Log(),
 		networkID:       networkID,
-		encs:            encs,
-		enc:             enc,
+		encoders:        encs,
+		encoder:         enc,
 		database:        st,
 		cache:           cache,
 		router:          router,
@@ -104,6 +112,16 @@ func (hd *Handlers) Handler() http.Handler {
 }
 
 func (hd *Handlers) setHandlers() {
+	_ = hd.setHandler(HandlerPathDAOService, hd.handleDAOService, true).
+		Methods(http.MethodOptions, "GET")
+	_ = hd.setHandler(HandlerPathProposal, hd.handleProposal, true).
+		Methods(http.MethodOptions, "GET")
+	_ = hd.setHandler(HandlerPathDelegators, hd.handleDelegators, true).
+		Methods(http.MethodOptions, "GET")
+	_ = hd.setHandler(HandlerPathVoters, hd.handleVoters, true).
+		Methods(http.MethodOptions, "GET")
+	_ = hd.setHandler(HandlerPathVotingPowerBox, hd.handleVotingPowerBox, true).
+		Methods(http.MethodOptions, "GET")
 }
 
 func (hd *Handlers) setHandler(prefix string, h network.HTTPHandlerFunc, useCache bool) *mux.Route {
