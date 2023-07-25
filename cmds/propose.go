@@ -191,7 +191,6 @@ func (cmd *ProposeCommand) createOperation() (base.Operation, error) { // nolint
 		cmd.contract,
 		cmd.DAO.ID,
 		cmd.ProposalID,
-		cmd.StartTime,
 		cmd.proposal,
 		cmd.Currency.CID,
 	)

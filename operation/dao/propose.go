@@ -21,7 +21,6 @@ type ProposeFact struct {
 	contract   base.Address
 	daoID      currencytypes.ContractID
 	proposalID string
-	startTime  uint64
 	proposal   types.Proposal
 	currency   currencytypes.CurrencyID
 }
@@ -32,7 +31,6 @@ func NewProposeFact(
 	contract base.Address,
 	daoID currencytypes.ContractID,
 	proposalID string,
-	startTime uint64,
 	proposal types.Proposal,
 	currency currencytypes.CurrencyID,
 ) ProposeFact {
@@ -43,7 +41,6 @@ func NewProposeFact(
 		contract:   contract,
 		daoID:      daoID,
 		proposalID: proposalID,
-		startTime:  startTime,
 		proposal:   proposal,
 		currency:   currency,
 	}
@@ -67,7 +64,6 @@ func (fact ProposeFact) Bytes() []byte {
 		fact.contract.Bytes(),
 		fact.daoID.Bytes(),
 		[]byte(fact.proposalID),
-		util.Uint64ToBytes(fact.startTime),
 		fact.proposal.Bytes(),
 		fact.currency.Bytes(),
 	)
@@ -121,10 +117,6 @@ func (fact ProposeFact) DAOID() currencytypes.ContractID {
 
 func (fact ProposeFact) ProposalID() string {
 	return fact.proposalID
-}
-
-func (fact ProposeFact) StartTime() uint64 {
-	return fact.startTime
 }
 
 func (fact ProposeFact) Proposal() types.Proposal {

@@ -11,7 +11,6 @@ import (
 
 func (fact *ProposeFact) unpack(enc encoder.Encoder,
 	sa, ca, did, pid string,
-	st uint64,
 	bp []byte,
 	cid string,
 ) error {
@@ -19,7 +18,6 @@ func (fact *ProposeFact) unpack(enc encoder.Encoder,
 
 	fact.daoID = currencytypes.ContractID(did)
 	fact.proposalID = pid
-	fact.startTime = st
 	fact.currency = currencytypes.CurrencyID(cid)
 
 	switch a, err := base.DecodeAddress(sa, enc); {
