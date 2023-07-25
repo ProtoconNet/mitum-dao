@@ -42,8 +42,9 @@ type CryptoProposalCommand struct {
 }
 
 type BizProposalCommand struct {
-	URL  types.URL `name:"url" help:"proposal url"`
-	Hash string    `name:"hash" help:"proposal hash"`
+	URL     types.URL `name:"url" help:"proposal url"`
+	Hash    string    `name:"hash" help:"proposal hash"`
+	Options uint8     `name:"options" help:"number of vote options"`
 }
 
 type ProposeCommand struct {
@@ -55,7 +56,6 @@ type ProposeCommand struct {
 	Option     string                      `arg:"" name:"option" help:"propose option; crypto | biz" required:"true"`
 	ProposalID string                      `arg:"" name:"proposal-id" help:"proposal id" required:"true"`
 	StartTime  uint64                      `arg:"" name:"start-time" help:"start time to proposal lifecycle" required:"true"`
-	Options    uint8                       `arg:"" name:"options" help:"number of vote options" required:"true"`
 	CryptoProposalCommand
 	BizProposalCommand
 	Currency currencycmds.CurrencyIDFlag `arg:"" name:"currency-id" help:"currency id" required:"true"`

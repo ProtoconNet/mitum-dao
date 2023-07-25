@@ -2,6 +2,7 @@ package cmds
 
 import (
 	"context"
+
 	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
 
 	"github.com/pkg/errors"
@@ -18,8 +19,8 @@ type RegisterCommand struct {
 	Contract   currencycmds.AddressFlag    `arg:"" name:"contract" help:"contract address of credential" required:"true"`
 	DAO        currencycmds.ContractIDFlag `arg:"" name:"dao-id" help:"dao id" required:"true"`
 	ProposalID string                      `arg:"" name:"proposal-id" help:"proposal id" required:"true"`
-	Currency   currencycmds.CurrencyIDFlag `arg:"" name:"currency-id" help:"currency id" required:"true"`
 	Delegated  currencycmds.AddressFlag    `arg:"" name:"delegated" help:"target address to be delegated" required:"true"`
+	Currency   currencycmds.CurrencyIDFlag `arg:"" name:"currency-id" help:"currency id" required:"true"`
 	sender     base.Address
 	contract   base.Address
 	delegated  base.Address
