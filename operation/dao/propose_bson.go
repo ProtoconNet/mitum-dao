@@ -18,7 +18,6 @@ func (fact ProposeFact) MarshalBSON() ([]byte, error) {
 			"contract":    fact.contract,
 			"dao_id":      fact.daoID,
 			"proposal_id": fact.proposalID,
-			"start_time":  fact.startTime,
 			"proposal":    fact.proposal,
 			"currency":    fact.currency,
 			"hash":        fact.BaseFact.Hash().String(),
@@ -33,7 +32,6 @@ type ProposeFactBSONUnmarshaler struct {
 	Contract   string   `bson:"contract"`
 	DAOID      string   `bson:"dao_id"`
 	ProposalID string   `bson:"proposal_id"`
-	StartTime  uint64   `bson:"start_time"`
 	Proposal   bson.Raw `bson:"proposal"`
 	Currency   string   `bson:"currency"`
 }
@@ -66,7 +64,6 @@ func (fact *ProposeFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		uf.Contract,
 		uf.DAOID,
 		uf.ProposalID,
-		uf.StartTime,
 		uf.Proposal,
 		uf.Currency,
 	)

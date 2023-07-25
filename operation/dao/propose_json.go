@@ -17,7 +17,6 @@ type ProposeFactJSONMarshaler struct {
 	Contract   base.Address             `json:"contract"`
 	DAOID      currencytypes.ContractID `json:"dao_id"`
 	ProposalID string                   `json:"proposal_id"`
-	StartTime  uint64                   `json:"start_time"`
 	Proposal   types.Proposal           `json:"proposal"`
 	Currency   currencytypes.CurrencyID `json:"currency"`
 }
@@ -29,7 +28,6 @@ func (fact ProposeFact) MarshalJSON() ([]byte, error) {
 		Contract:              fact.contract,
 		DAOID:                 fact.daoID,
 		ProposalID:            fact.proposalID,
-		StartTime:             fact.startTime,
 		Proposal:              fact.proposal,
 		Currency:              fact.currency,
 	})
@@ -41,7 +39,6 @@ type ProposeFactJSONUnMarshaler struct {
 	Contract   string          `json:"contract"`
 	DAOID      string          `json:"dao_id"`
 	ProposalID string          `json:"proposal_id"`
-	StartTime  uint64          `json:"start_time"`
 	Proposal   json.RawMessage `json:"proposal"`
 	Currency   string          `json:"currency"`
 }
@@ -61,7 +58,6 @@ func (fact *ProposeFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		uf.Contract,
 		uf.DAOID,
 		uf.ProposalID,
-		uf.StartTime,
 		uf.Proposal,
 		uf.Currency,
 	)
