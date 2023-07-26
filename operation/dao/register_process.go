@@ -170,10 +170,10 @@ func (opp *RegisterProcessor) PreProcess(
 			return nil, base.NewBaseOperationProcessReasonError("failed to find delegators value from state, %s-%s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), fact.Sender(), err), nil
 		}
 
-		if found, err := utils.HasFieldValue(delegators, "account", fact.Sender()); err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to check account value %s in delegators", fact.Sender()), nil
-		} else if found {
-			return nil, base.NewBaseOperationProcessReasonError("sender %s already delegates", fact.Sender()), nil
+		for _, delegator := range delegators {
+			if delegator.Account().Equal(fact.Sender()) {
+				return nil, base.NewBaseOperationProcessReasonError("sender %s already delegates", fact.Sender()), nil
+			}
 		}
 	}
 
@@ -246,12 +246,12 @@ func (opp *RegisterProcessor) Process(
 		delegators = append(delegators, types.NewDelegatorInfo(fact.Sender(), fact.Delegated()))
 
 		sts[1] = currencystate.NewStateMergeValue(
-			st.Key(),
+			state.StateKeyDelegators(fact.Contract(), fact.DAOID(), fact.ProposalID()),
 			state.NewDelegatorsStateValue(delegators),
 		)
 	default:
 		sts[1] = currencystate.NewStateMergeValue(
-			st.Key(),
+			state.StateKeyDelegators(fact.Contract(), fact.DAOID(), fact.ProposalID()),
 			state.NewDelegatorsStateValue([]types.DelegatorInfo{types.NewDelegatorInfo(fact.Sender(), fact.Delegated())}))
 	}
 

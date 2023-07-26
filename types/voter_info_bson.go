@@ -18,7 +18,7 @@ func (r VoterInfo) MarshalBSON() ([]byte, error) {
 	)
 }
 
-type RegisterInfoBSONUnmarshaler struct {
+type VoterInfoBSONUnmarshaler struct {
 	Hint       string   `bson:"_hint"`
 	Account    string   `bson:"account"`
 	Delegators []string `bson:"delegators"`
@@ -27,7 +27,7 @@ type RegisterInfoBSONUnmarshaler struct {
 func (r *VoterInfo) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 	e := util.StringError("failed to decode bson of VoterInfo")
 
-	var u RegisterInfoBSONUnmarshaler
+	var u VoterInfoBSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
 		return e.Wrap(err)
 	}

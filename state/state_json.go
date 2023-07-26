@@ -2,8 +2,8 @@ package state
 
 import (
 	"encoding/json"
+
 	"github.com/pkg/errors"
-	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/util"
@@ -99,7 +99,7 @@ func (dg DelegatorsStateValue) MarshalJSON() ([]byte, error) {
 }
 
 type DelegatorsStateValueJSONUnmarshaler struct {
-	Delegators bson.Raw `json:"delegators"`
+	Delegators json.RawMessage `json:"delegators"`
 }
 
 func (dg *DelegatorsStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
@@ -115,7 +115,7 @@ func (dg *DelegatorsStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error
 		return err
 	}
 
-	dgs := make([]types.DelegatorInfo, len(u.Delegators))
+	dgs := make([]types.DelegatorInfo, len(hr))
 	for i, hinter := range hr {
 		if v, ok := hinter.(types.DelegatorInfo); !ok {
 			return e.Wrap(errors.Errorf("expected types.DelegatorInfo, not %T", hinter))
@@ -170,50 +170,6 @@ func (vt *VotersStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 
 	return nil
 }
-
-//
-//type SnapHistoriesStateValueJSONMarshaler struct {
-//	hint.BaseHinter
-//	Histories []types.SnapHistory `json:"histories"`
-//}
-//
-//func (sh SnapHistoriesStateValue) MarshalJSON() ([]byte, error) {
-//	return util.MarshalJSON(SnapHistoriesStateValueJSONMarshaler{
-//		BaseHinter: sh.BaseHinter,
-//		Histories:  sh.Histories,
-//	})
-//}
-//
-//type SnapHistoriesStateValueJSONUnmarshaler struct {
-//	Histories json.RawMessage `json:"histories"`
-//}
-//
-//func (sh *SnapHistoriesStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-//	e := util.StringError("failed to decode json of SnapHistoriesStateValue")
-//
-//	var u SnapHistoriesStateValueJSONUnmarshaler
-//	if err := enc.Unmarshal(b, &u); err != nil {
-//		return e.Wrap(err)
-//	}
-//
-//	hs, err := enc.DecodeSlice(u.Histories)
-//	if err != nil {
-//		return e.Wrap(err)
-//	}
-//
-//	histories := make([]types.SnapHistory, len(hs))
-//	for i, hinter := range hs {
-//		h, ok := hinter.(types.SnapHistory)
-//		if !ok {
-//			return e.Wrap(errors.Errorf("expected types.SnapHistory, not %T", hinter))
-//		}
-//
-//		histories[i] = h
-//	}
-//	sh.Histories = histories
-//
-//	return nil
-//}
 
 type VotesStateValueJSONMarshaler struct {
 	hint.BaseHinter

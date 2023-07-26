@@ -119,19 +119,18 @@ func (dg *DelegatorsStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error
 
 	hr, err := enc.DecodeSlice(u.Delegators)
 	if err != nil {
-		return e.Wrap(err)
+		return err
 	}
 
-	infos := make([]types.DelegatorInfo, len(hr))
+	dgs := make([]types.DelegatorInfo, len(hr))
 	for i, hinter := range hr {
-		rg, ok := hinter.(types.DelegatorInfo)
-		if !ok {
+		if v, ok := hinter.(types.DelegatorInfo); !ok {
 			return e.Wrap(errors.Errorf("expected types.DelegatorInfo, not %T", hinter))
+		} else {
+			dgs[i] = v
 		}
-
-		infos[i] = rg
 	}
-	dg.delegators = infos
+	dg.delegators = dgs
 
 	return nil
 }
