@@ -1,17 +1,18 @@
 package types
 
 import (
+	"strconv"
+
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/encoder"
 	"github.com/ProtoconNet/mitum2/util/hint"
 	"github.com/pkg/errors"
-	"strconv"
 )
 
 func (vp *VotingPowerBox) unpack(enc encoder.Encoder, ht hint.Hint, st string, bvp []byte, bre []byte) error {
-	e := util.StringError("failed to decode bson of VotingPowerBox")
+	e := util.StringError("failed to unmarshal VotingPowerBox")
 
 	vp.BaseHinter = hint.NewBaseHinter(ht)
 

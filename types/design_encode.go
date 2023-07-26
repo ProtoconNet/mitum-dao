@@ -9,7 +9,7 @@ import (
 )
 
 func (de *Design) unpack(enc encoder.Encoder, ht hint.Hint, op, dao string, bpo []byte) error {
-	e := util.StringError("failed to decode bson of Design")
+	e := util.StringError("failed to ummarshal of Design")
 
 	de.BaseHinter = hint.NewBaseHinter(ht)
 	de.option = DAOOption(op)

@@ -21,7 +21,7 @@ func (wl Whitelist) MarshalBSON() ([]byte, error) {
 type WhitelistBSONUnmarshaler struct {
 	Hint     string   `bson:"_hint"`
 	Active   bool     `bson:"active"`
-	Accounts bson.Raw `bson:"accounts"`
+	Accounts []string `bson:"accounts"`
 }
 
 func (wl *Whitelist) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {

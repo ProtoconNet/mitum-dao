@@ -9,28 +9,23 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (wl *Whitelist) unpack(enc encoder.Encoder, ht hint.Hint, at bool, bacs []byte) error {
-	e := util.StringError("failed to decode bson of Whitelist")
+func (wl *Whitelist) unpack(enc encoder.Encoder, ht hint.Hint, at bool, acs []string) error {
+	e := util.StringError("failed to unmarshal Whitelist")
 
 	wl.active = at
 
 	wl.BaseHinter = hint.NewBaseHinter(ht)
 
-	hacs, err := enc.DecodeSlice(bacs)
-	if err != nil {
-		return e.Wrap(err)
-	}
-
-	accounts := make([]base.Address, len(hacs))
-	for i := range hacs {
-		j, ok := hacs[i].(base.Address)
-		if !ok {
-			return e.Wrap(errors.Errorf("expected base.Address, not %T", hacs[i]))
+	accs := make([]base.Address, len(acs))
+	for i, ac := range acs {
+		switch a, err := base.DecodeAddress(ac, enc); {
+		case err != nil:
+			return e.Wrap(err)
+		default:
+			accs[i] = a
 		}
-
-		accounts[i] = j
 	}
-	wl.accounts = accounts
+	wl.accounts = accs
 
 	return nil
 }
@@ -41,7 +36,7 @@ func (po *Policy) unpack(enc encoder.Encoder, ht hint.Hint,
 	rvp, rgp, prsp, vp, psp, edp uint64,
 	to, qou uint,
 ) error {
-	e := util.StringError("failed to decode bson of Policy")
+	e := util.StringError("failed to unmarshal Policy")
 
 	po.BaseHinter = hint.NewBaseHinter(ht)
 	po.token = currencytypes.CurrencyID(cr)
