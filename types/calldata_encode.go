@@ -10,7 +10,7 @@ import (
 )
 
 func (cd *TransferCallData) unpack(enc encoder.Encoder, ht hint.Hint, sd, rc string, bam []byte) error {
-	e := util.StringError("failed to decode bson of TransferCallData")
+	e := util.StringError("failed to unmarshal TransferCallData")
 
 	cd.BaseHinter = hint.NewBaseHinter(ht)
 
@@ -40,7 +40,7 @@ func (cd *TransferCallData) unpack(enc encoder.Encoder, ht hint.Hint, sd, rc str
 }
 
 func (cd *GovernanceCallData) unpack(enc encoder.Encoder, ht hint.Hint, bpo []byte) error {
-	e := util.StringError("failed to decode bson of GovernanceCallData")
+	e := util.StringError("failed to unmarshal GovernanceCallData")
 
 	cd.BaseHinter = hint.NewBaseHinter(ht)
 

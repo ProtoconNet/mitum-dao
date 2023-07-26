@@ -25,9 +25,9 @@ func (wl Whitelist) MarshalJSON() ([]byte, error) {
 }
 
 type WhitelistJSONUnmarshaler struct {
-	Hint     hint.Hint       `json:"_hint"`
-	Active   bool            `json:"active"`
-	Accounts json.RawMessage `json:"accounts"`
+	Hint     hint.Hint `json:"_hint"`
+	Active   bool      `json:"active"`
+	Accounts []string  `json:"accounts"`
 }
 
 func (wl *Whitelist) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {

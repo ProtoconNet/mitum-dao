@@ -9,7 +9,7 @@ import (
 )
 
 func (p *CryptoProposal) unpack(enc encoder.Encoder, ht hint.Hint, pr string, st uint64, bcd []byte) error {
-	e := util.StringError("failed to decode bson of CryptoProposal")
+	e := util.StringError("failed to unmarshal CryptoProposal")
 
 	p.BaseHinter = hint.NewBaseHinter(ht)
 	p.startTime = st
@@ -33,7 +33,7 @@ func (p *CryptoProposal) unpack(enc encoder.Encoder, ht hint.Hint, pr string, st
 }
 
 func (p *BizProposal) unpack(enc encoder.Encoder, ht hint.Hint, pr string, st uint64, url, hash string, opt uint8) error {
-	e := util.StringError("failed to decode bson of BizProposal")
+	e := util.StringError("failed to unmarshal BizProposal")
 
 	p.BaseHinter = hint.NewBaseHinter(ht)
 
