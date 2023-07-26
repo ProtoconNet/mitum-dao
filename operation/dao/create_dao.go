@@ -94,6 +94,7 @@ func (fact CreateDAOFact) Bytes() []byte {
 		fact.sender.Bytes(),
 		fact.contract.Bytes(),
 		fact.daoID.Bytes(),
+		fact.option.Bytes(),
 		fact.votingPowerToken.Bytes(),
 		fact.fee.Bytes(),
 		fact.threshold.Bytes(),
@@ -155,6 +156,10 @@ func (fact CreateDAOFact) Contract() base.Address {
 
 func (fact CreateDAOFact) DAOID() currencytypes.ContractID {
 	return fact.daoID
+}
+
+func (fact CreateDAOFact) Option() types.DAOOption {
+	return fact.option
 }
 
 func (fact CreateDAOFact) VotingPowerToken() currencytypes.CurrencyID {

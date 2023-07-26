@@ -2,8 +2,9 @@ package dao
 
 import (
 	"context"
-	"github.com/ProtoconNet/mitum-dao/types"
 	"sync"
+
+	"github.com/ProtoconNet/mitum-dao/types"
 
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	currencystate "github.com/ProtoconNet/mitum-currency/v3/state"
