@@ -3,6 +3,7 @@ package dao
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	"github.com/ProtoconNet/mitum-currency/v3/operation/processor"
@@ -77,15 +78,15 @@ func (opp *PostSnapProcessor) PreProcess(
 	}
 
 	if err := currencystate.CheckExistsState(currency.StateKeyAccount(fact.Sender()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("sender not found, %q: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("sender not found, %s: %w", fact.Sender(), err), nil
 	}
 
 	if err := currencystate.CheckNotExistsState(extensioncurrency.StateKeyContractAccount(fact.Sender()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("contract account cannot post-snap, %q: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("contract account cannot post-snap, %s: %w", fact.Sender(), err), nil
 	}
 
 	if err := currencystate.CheckExistsState(extensioncurrency.StateKeyContractAccount(fact.Contract()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao contract account not found, %q: %w", fact.Contract(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("dao contract account not found, %s: %w", fact.Contract(), err), nil
 	}
 
 	if err := currencystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.Currency()), getStateFunc); err != nil {
@@ -94,28 +95,28 @@ func (opp *PostSnapProcessor) PreProcess(
 
 	st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), "key of design", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao design state not found, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("dao design state not found, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
 	design, err := state.StateDesignValue(st)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao design value not found from state, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("dao design value not found from state, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
 	st, err = currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
 	p, err := state.StateProposalValue(st)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
 	if p.Status() == types.Canceled {
-		return nil, base.NewBaseOperationProcessReasonError("already canceled proposal, %s-%s-%s", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("already canceled proposal, %s, %q, %q", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
 	} else if p.Status() == types.PostSnapped {
-		return nil, base.NewBaseOperationProcessReasonError("already post snapped, %s-%s-%s", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("already post snapped, %s, %q, %q", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
 	}
 
 	blocMap, found, err := opp.getLastBlockFunc()
@@ -127,15 +128,15 @@ func (opp *PostSnapProcessor) PreProcess(
 
 	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blocMap)
 	if period != types.PostSnapshot {
-		return nil, base.NewBaseOperationProcessReasonError("current time is not within the PostSnapshotPeriod, PostSnapshotPeriod start : %d, end %d", start, end), nil
+		return nil, base.NewBaseOperationProcessReasonError("current time is not within the PostSnapshotPeriod, PostSnapshotPeriod; start(%d), end(%d), but now(%d)", start, end, time.Now().Unix()), nil
 	}
 
 	if err := currencystate.CheckExistsState(state.StateKeyVoters(fact.Contract(), fact.DAOID(), fact.ProposalID()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("voters state not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("voters state not found, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
 	if err := currencystate.CheckExistsState(state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("voting power box state not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("voting power box state not found, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
 	if err := currencystate.CheckFactSignsByState(fact.Sender(), op.Signs(), getStateFunc); err != nil {
@@ -161,7 +162,7 @@ func (opp *PostSnapProcessor) Process(
 	{ // caculate operation fee
 		policy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find currency policy, %s: %w", fact.Currency(), err), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find currency policy, %q: %w", fact.Currency(), err), nil
 		}
 
 		fee, err := policy.Feeer().Fee(common.ZeroBig)
@@ -171,15 +172,15 @@ func (opp *PostSnapProcessor) Process(
 
 		st, err := currencystate.ExistsState(currency.StateKeyBalance(fact.Sender(), fact.Currency()), "key of sender balance", getStateFunc)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("sender balance not found, %q: %w", fact.Sender(), err), nil
+			return nil, base.NewBaseOperationProcessReasonError("sender balance not found, %s, %q: %w", fact.Sender(), fact.Currency(), err), nil
 		}
 		sb := currencystate.NewStateMergeValue(st.Key(), st.Value())
 
 		switch b, err := currency.StateBalanceValue(st); {
 		case err != nil:
-			return nil, base.NewBaseOperationProcessReasonError("failed to get balance value, %q: %w", currency.StateKeyBalance(fact.Sender(), fact.Currency()), err), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to get balance value, %s, %q: %w", fact.Sender(), fact.Currency(), err), nil
 		case b.Big().Compare(fee) < 0:
-			return nil, base.NewBaseOperationProcessReasonError("not enough balance of sender, %q", fact.Sender()), nil
+			return nil, base.NewBaseOperationProcessReasonError("not enough balance of sender, %s, %q", fact.Sender(), fact.Currency()), nil
 		}
 
 		v, ok := sb.Value().(currency.BalanceStateValue)
@@ -191,22 +192,22 @@ func (opp *PostSnapProcessor) Process(
 
 	st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), "key of design", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao not found, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("dao not found, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
 	design, err := state.StateDesignValue(st)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao design value not found from state, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("dao design value not found from state, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
 	st, err = currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
 	p, err := state.StateProposalValue(st)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
 	if p.Status() != types.PreSnapped {
@@ -223,15 +224,15 @@ func (opp *PostSnapProcessor) Process(
 	var ovpb types.VotingPowerBox
 	switch st, found, err := getStateFunc(state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	case found:
 		if vb, err := state.StateVotingPowerBoxValue(st); err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box value from state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box value from state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 		} else {
 			ovpb = vb
 		}
 	default:
-		return nil, base.NewBaseOperationProcessReasonError("voting power box state not found, %s-%s-%s", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("voting power box state not found, %s, %q, %q", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
 	}
 
 	votingPowerToken := design.Policy().Token()
@@ -246,11 +247,11 @@ func (opp *PostSnapProcessor) Process(
 
 	switch st, found, err := getStateFunc(state.StateKeyVoters(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find voters state, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find voters state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	case found:
 		voters, err := state.StateVotersValue(st)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find voters value, %s-%s-%s: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find voters value, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 		}
 
 		for _, info := range voters {
@@ -268,7 +269,7 @@ func (opp *PostSnapProcessor) Process(
 
 				b, err := currency.StateBalanceValue(st)
 				if err != nil {
-					return nil, base.NewBaseOperationProcessReasonError("failed to find balance value of the delegator from state, %q, %q: %w", delegator, votingPowerToken, err), nil
+					return nil, base.NewBaseOperationProcessReasonError("failed to find balance value of the delegator from state, %s, %q: %w", delegator, votingPowerToken, err), nil
 				}
 
 				vp = vp.Add(b.Big())
@@ -310,12 +311,12 @@ func (opp *PostSnapProcessor) Process(
 
 	st, err = currencystate.ExistsState(currency.StateKeyCurrencyDesign(votingPowerToken), "key of currency design", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power token currency state, %s: %w", votingPowerToken, err), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power token currency state, %q: %w", votingPowerToken, err), nil
 	}
 
 	currencyDesign, err := currency.StateCurrencyDesignValue(st)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power token currency design value from state, %s: %w", votingPowerToken, err), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power token currency design value from state, %q: %w", votingPowerToken, err), nil
 	}
 
 	actualTurnoutCount := design.Policy().Turnout().Quorum(currencyDesign.Aggregate())

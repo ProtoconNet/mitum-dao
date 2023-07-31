@@ -75,29 +75,29 @@ func (opp *CreateDAOProcessor) PreProcess(
 	}
 
 	if err := currencystate.CheckExistsState(currency.StateKeyAccount(fact.Sender()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("sender not found, %q: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("sender not found, %s: %w", fact.Sender(), err), nil
 	}
 
 	if err := currencystate.CheckNotExistsState(stateextension.StateKeyContractAccount(fact.Sender()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("contract account cannot create dao, %q: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("contract account cannot create dao, %s: %w", fact.Sender(), err), nil
 	}
 
 	st, err := currencystate.ExistsState(stateextension.StateKeyContractAccount(fact.Contract()), "key of contract account", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("contract account not found, %q: %w", fact.Contract(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("contract account not found, %s: %w", fact.Contract(), err), nil
 	}
 
 	ca, err := stateextension.StateContractAccountValue(st)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("contract account value not found, %q: %w", fact.Contract(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("contract account value not found, %s: %w", fact.Contract(), err), nil
 	}
 
-	if !ca.Owner().Equal(fact.sender) {
-		return nil, base.NewBaseOperationProcessReasonError("not contract account owner, %q", fact.sender), nil
+	if !ca.Owner().Equal(fact.Sender()) {
+		return nil, base.NewBaseOperationProcessReasonError("not contract account owner, %s", fact.Sender()), nil
 	}
 
 	if err := currencystate.CheckNotExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao already exists, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("dao already exists, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
 	if err := currencystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.Currency()), getStateFunc); err != nil {
@@ -132,12 +132,12 @@ func (opp *CreateDAOProcessor) Process(
 		fact.postSnapshotPeriod, fact.executionDelayPeriod, fact.turnout, fact.quorum,
 	)
 	if err := policy.IsValid(nil); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("invalid dao policy, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("invalid dao policy, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
 	design := types.NewDesign(fact.option, fact.DAOID(), policy)
 	if err := design.IsValid(nil); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("invalid dao design, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("invalid dao design, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
 	sts := make([]base.StateMergeValue, 2)
@@ -159,15 +159,15 @@ func (opp *CreateDAOProcessor) Process(
 
 	st, err := currencystate.ExistsState(currency.StateKeyBalance(fact.Sender(), fact.Currency()), "key of sender balance", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("sender balance not found, %q: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("sender balance not found, %s, %q: %w", fact.Sender(), fact.Currency(), err), nil
 	}
 	sb := currencystate.NewStateMergeValue(st.Key(), st.Value())
 
 	switch b, err := currency.StateBalanceValue(st); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to get balance value, %q: %w", currency.StateKeyBalance(fact.Sender(), fact.Currency()), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to get balance value, %s, %q: %w", fact.Sender(), fact.Currency(), err), nil
 	case b.Big().Compare(fee) < 0:
-		return nil, base.NewBaseOperationProcessReasonError("not enough balance of sender, %q", fact.Sender()), nil
+		return nil, base.NewBaseOperationProcessReasonError("not enough balance of sender, %s, %q", fact.Sender(), fact.Currency()), nil
 	}
 
 	v, ok := sb.Value().(currency.BalanceStateValue)
