@@ -115,8 +115,8 @@ func (opp *ProposeProcessor) PreProcess(
 	proposeFee := design.Policy().Fee()
 	whitelist := design.Policy().Whitelist()
 
-	if _, found := required[threshold.String()]; !found {
-		required[threshold.String()] = common.ZeroBig
+	if _, found := required[votingPowerToken.String()]; !found {
+		required[votingPowerToken.String()] = common.ZeroBig
 	}
 
 	if _, found := required[proposeFee.Currency().String()]; !found {
@@ -195,11 +195,11 @@ func (opp *ProposeProcessor) Process(
 
 	st, err = currencystate.ExistsState(currency.StateKeyBalance(fact.Sender(), fact.Currency()), "key of sender balance", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("sender balance not found, %q: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("sender balance not found, %s-%s: %w", fact.Sender(), fact.Currency(), err), nil
 	}
 	balance, err := currency.StateBalanceValue(st)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("sender balance value not found, %q: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("sender balance value not found, %s-%s: %w", fact.Sender(), fact.Currency(), err), nil
 	}
 	sb := currency.NewBalanceStateValue(balance)
 
@@ -209,11 +209,11 @@ func (opp *ProposeProcessor) Process(
 
 	st, err = currencystate.ExistsState(currency.StateKeyBalance(fact.Sender(), proposeFee.Currency()), "key of sender balance", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("sender balance not found, %q: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("sender balance for propose fee not found, %s-%s: %w", fact.Sender(), proposeFee.Currency(), err), nil
 	}
 	balance, err = currency.StateBalanceValue(st)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("sender balance value not found, %q: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("sender balance value for propose fee not found, %s-%s: %w", fact.Sender(), proposeFee.Currency(), err), nil
 	}
 	fb := currency.NewBalanceStateValue(balance)
 
