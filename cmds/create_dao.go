@@ -4,7 +4,6 @@ import (
 	"context"
 
 	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
-	"github.com/ProtoconNet/mitum-currency/v3/common"
 
 	"github.com/pkg/errors"
 
@@ -38,7 +37,6 @@ type CreateDAOCommand struct {
 	sender               base.Address
 	contract             base.Address
 	whitelist            types.Whitelist
-	threshold            common.Big
 	fee                  currencytypes.Amount
 }
 
@@ -113,7 +111,7 @@ func (cmd *CreateDAOCommand) createOperation() (base.Operation, error) { // noli
 		cmd.DAO.ID,
 		types.DAOOption(cmd.Option),
 		cmd.VotingPowerToken.CID,
-		cmd.threshold,
+		cmd.Threshold.Big,
 		cmd.fee,
 		cmd.whitelist,
 		cmd.ProposalReviewPeriod,
