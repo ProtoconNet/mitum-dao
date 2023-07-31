@@ -47,6 +47,11 @@ func POperationProcessorsMap(pctx context.Context) (context.Context, error) {
 	); err != nil {
 		return pctx, err
 	} else if err := opr.SetProcessor(
+		dao.UpdatePolicyHint,
+		dao.NewUpdatePolicyProcessor(),
+	); err != nil {
+		return pctx, err
+	} else if err := opr.SetProcessor(
 		dao.ProposeHint,
 		dao.NewProposeProcessor(),
 	); err != nil {
@@ -84,6 +89,15 @@ func POperationProcessorsMap(pctx context.Context) (context.Context, error) {
 	}
 
 	_ = set.Add(dao.CreateDAOHint, func(height base.Height) (base.OperationProcessor, error) {
+		return opr.New(
+			height,
+			db.State,
+			nil,
+			nil,
+		)
+	})
+
+	_ = set.Add(dao.UpdatePolicyHint, func(height base.Height) (base.OperationProcessor, error) {
 		return opr.New(
 			height,
 			db.State,

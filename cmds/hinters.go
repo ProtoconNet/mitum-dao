@@ -40,6 +40,7 @@ var AddedHinters = []encoder.DecodeDetail{
 	{Hint: dao.PreSnapHint, Instance: dao.PreSnap{}},
 	{Hint: dao.ProposeHint, Instance: dao.Propose{}},
 	{Hint: dao.RegisterHint, Instance: dao.Register{}},
+	{Hint: dao.UpdatePolicyHint, Instance: dao.UpdatePolicy{}},
 	{Hint: dao.VoteHint, Instance: dao.Vote{}},
 }
 
@@ -51,6 +52,7 @@ var AddedSupportedHinters = []encoder.DecodeDetail{
 	{Hint: dao.PreSnapFactHint, Instance: dao.PreSnapFact{}},
 	{Hint: dao.ProposeFactHint, Instance: dao.ProposeFact{}},
 	{Hint: dao.RegisterFactHint, Instance: dao.RegisterFact{}},
+	{Hint: dao.UpdatePolicyFactHint, Instance: dao.UpdatePolicyFact{}},
 	{Hint: dao.VoteFactHint, Instance: dao.VoteFact{}},
 }
 
