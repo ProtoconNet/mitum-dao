@@ -127,7 +127,7 @@ func (opp *CreateDAOProcessor) Process(
 	}
 
 	policy := types.NewPolicy(
-		fact.votingPowerToken, fact.fee, fact.threshold, fact.whitelist,
+		fact.votingPowerToken, fact.threshold, fact.fee, fact.whitelist,
 		fact.proposalReviewPeriod, fact.registrationPeriod, fact.preSnapshotPeriod, fact.votingPeriod,
 		fact.postSnapshotPeriod, fact.executionDelayPeriod, fact.turnout, fact.quorum,
 	)

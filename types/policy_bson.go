@@ -63,7 +63,7 @@ func (po Policy) MarshalBSON() ([]byte, error) {
 type PolicyBSONUnmarshaler struct {
 	Hint                 string   `bson:"_hint"`
 	Token                string   `bson:"token"`
-	Threshold            bson.Raw `bson:"threshold"`
+	Threshold            string   `bson:"threshold"`
 	Fee                  bson.Raw `bson:"fee"`
 	Whitelist            bson.Raw `bson:"whitelist"`
 	ProposalReviewPeriod uint64   `bson:"proposal_review_period"`

@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"github.com/ProtoconNet/mitum-currency/v3/common"
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/base"
@@ -10,8 +11,8 @@ import (
 )
 
 func (fact *CreateDAOFact) unpack(enc encoder.Encoder,
-	sa, ca, did, op, tk string,
-	bth, bf, bw []byte,
+	sa, ca, did, op, tk, th string,
+	bf, bw []byte,
 	prp, rp, prsp, vp, psp, edp uint64,
 	to, qou uint,
 	cid string,
@@ -31,6 +32,12 @@ func (fact *CreateDAOFact) unpack(enc encoder.Encoder,
 	fact.turnout = types.PercentRatio(to)
 	fact.quorum = types.PercentRatio(qou)
 
+	if big, err := common.NewBigFromString(th); err != nil {
+		return e.Wrap(err)
+	} else {
+		fact.threshold = big
+	}
+
 	switch a, err := base.DecodeAddress(sa, enc); {
 	case err != nil:
 		return e.Wrap(err)
@@ -43,14 +50,6 @@ func (fact *CreateDAOFact) unpack(enc encoder.Encoder,
 		return e.Wrap(err)
 	default:
 		fact.contract = a
-	}
-
-	if hinter, err := enc.Decode(bth); err != nil {
-		return e.Wrap(err)
-	} else if am, ok := hinter.(currencytypes.Amount); !ok {
-		return e.Wrap(errors.Errorf("expected Amount, not %T", hinter))
-	} else {
-		fact.threshold = am
 	}
 
 	if hinter, err := enc.Decode(bf); err != nil {

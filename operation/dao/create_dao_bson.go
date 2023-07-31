@@ -44,7 +44,7 @@ type CreateDAOFactBSONUnmarshaler struct {
 	DAOID                string   `bson:"dao_id"`
 	Option               string   `bson:"option"`
 	VotingPowerToken     string   `bson:"voting_power_token"`
-	Threshold            bson.Raw `bson:"threshold"`
+	Threshold            string   `bson:"threshold"`
 	Fee                  bson.Raw `bson:"fee"`
 	Whitelist            bson.Raw `bson:"whitelist"`
 	ProposalReviewPeriod uint64   `bson:"proposal_review_period"`

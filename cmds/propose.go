@@ -22,7 +22,7 @@ type TransferCallDataCommand struct {
 
 type GovernanceCallDataCommand struct {
 	VotingPowerToken     currencycmds.CurrencyIDFlag     `name:"voting-power-token" help:"voting power token"`
-	Threshold            currencycmds.CurrencyAmountFlag `name:"threshold" help:"threshold to propose"`
+	Threshold            currencycmds.BigFlag            `name:"threshold" help:"threshold to propose"`
 	Fee                  currencycmds.CurrencyAmountFlag `name:"fee" help:"fee to propose"`
 	ProposalReviewPeriod uint64                          `name:"proposal-review-period" help:"proposal review period"`
 	RegistrationPeriod   uint64                          `name:"registration-period" help:"registration period"`
@@ -138,12 +138,11 @@ func (cmd *ProposeCommand) parseFlags() error {
 				whitelist = types.NewWhitelist(true, []base.Address{a})
 			}
 
-			threshold := currencytypes.NewAmount(cmd.Threshold.Big, cmd.Threshold.CID)
 			fee := currencytypes.NewAmount(cmd.Fee.Big, cmd.Fee.CID)
 
 			policy := types.NewPolicy(
-				cmd.VotingPowerToken.CID,
-				fee, threshold, whitelist,
+				cmd.VotingPowerToken.CID, cmd.Threshold.Big,
+				fee, whitelist,
 				cmd.ProposalReviewPeriod,
 				cmd.RegistrationPeriod,
 				cmd.PreSnapshotPeriod,

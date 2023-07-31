@@ -18,7 +18,7 @@ type CreateDAOFactJSONMarshaler struct {
 	DAOID                currencytypes.ContractID `json:"dao_id"`
 	Option               types.DAOOption          `json:"option"`
 	VotingPowerToken     currencytypes.CurrencyID `json:"voting_power_token"`
-	Threshold            currencytypes.Amount     `json:"threshold"`
+	Threshold            common.Big               `json:"threshold"`
 	Fee                  currencytypes.Amount     `json:"fee"`
 	Whitelist            types.Whitelist          `json:"whitelist"`
 	ProposalReviewPeriod uint64                   `json:"proposal_review_period"`
@@ -29,8 +29,7 @@ type CreateDAOFactJSONMarshaler struct {
 	ExecutionDelayPeriod uint64                   `json:"execution_delay_period"`
 	Turnout              types.PercentRatio       `json:"turnout"`
 	Quorum               types.PercentRatio       `json:"quorum"`
-
-	Currency currencytypes.CurrencyID `json:"currency"`
+	Currency             currencytypes.CurrencyID `json:"currency"`
 }
 
 func (fact CreateDAOFact) MarshalJSON() ([]byte, error) {
@@ -63,7 +62,7 @@ type CreateDAOFactJSONUnMarshaler struct {
 	DAOID                string          `json:"dao_id"`
 	Option               string          `json:"option"`
 	VotingPowerToken     string          `json:"voting_power_token"`
-	Threshold            json.RawMessage `json:"threshold"`
+	Threshold            string          `json:"threshold"`
 	Fee                  json.RawMessage `json:"fee"`
 	Whitelist            json.RawMessage `json:"whitelist"`
 	ProposalReviewPeriod uint64          `json:"proposal_review_period"`

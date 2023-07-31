@@ -22,7 +22,7 @@ type CreateDAOFact struct {
 	daoID                currencytypes.ContractID
 	option               types.DAOOption
 	votingPowerToken     currencytypes.CurrencyID
-	threshold            currencytypes.Amount
+	threshold            common.Big
 	fee                  currencytypes.Amount
 	whitelist            types.Whitelist
 	proposalReviewPeriod uint64
@@ -43,7 +43,8 @@ func NewCreateDAOFact(
 	daoID currencytypes.ContractID,
 	option types.DAOOption,
 	votingPowerToken currencytypes.CurrencyID,
-	threshold, fee currencytypes.Amount,
+	threshold common.Big,
+	fee currencytypes.Amount,
 	whitelist types.Whitelist,
 	proposalReviewPeriod,
 	registrationPeriod,
@@ -96,8 +97,8 @@ func (fact CreateDAOFact) Bytes() []byte {
 		fact.daoID.Bytes(),
 		fact.option.Bytes(),
 		fact.votingPowerToken.Bytes(),
-		fact.fee.Bytes(),
 		fact.threshold.Bytes(),
+		fact.fee.Bytes(),
 		fact.whitelist.Bytes(),
 		util.Uint64ToBytes(fact.proposalReviewPeriod),
 		util.Uint64ToBytes(fact.registrationPeriod),
@@ -170,7 +171,7 @@ func (fact CreateDAOFact) Fee() currencytypes.Amount {
 	return fact.fee
 }
 
-func (fact CreateDAOFact) Threshold() currencytypes.Amount {
+func (fact CreateDAOFact) Threshold() common.Big {
 	return fact.threshold
 }
 

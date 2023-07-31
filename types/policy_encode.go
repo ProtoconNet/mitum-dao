@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/ProtoconNet/mitum-currency/v3/common"
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
@@ -31,8 +32,8 @@ func (wl *Whitelist) unpack(enc encoder.Encoder, ht hint.Hint, at bool, acs []st
 }
 
 func (po *Policy) unpack(enc encoder.Encoder, ht hint.Hint,
-	cr string,
-	bth, bf, bw []byte,
+	cr, th string,
+	bf, bw []byte,
 	rvp, rgp, prsp, vp, psp, edp uint64,
 	to, qou uint,
 ) error {
@@ -49,12 +50,10 @@ func (po *Policy) unpack(enc encoder.Encoder, ht hint.Hint,
 	po.turnout = PercentRatio(to)
 	po.quorum = PercentRatio(qou)
 
-	if hinter, err := enc.Decode(bth); err != nil {
+	if big, err := common.NewBigFromString(th); err != nil {
 		return e.Wrap(err)
-	} else if am, ok := hinter.(currencytypes.Amount); !ok {
-		return e.Wrap(errors.Errorf("expected Amount, not %T", hinter))
 	} else {
-		po.threshold = am
+		po.threshold = big
 	}
 
 	if hinter, err := enc.Decode(bf); err != nil {
