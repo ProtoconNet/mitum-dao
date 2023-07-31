@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 
+	"github.com/ProtoconNet/mitum-currency/v3/common"
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
@@ -44,7 +45,7 @@ func (wl *Whitelist) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 type PolicyJSONMarshaler struct {
 	hint.BaseHinter
 	Token                currencytypes.CurrencyID `json:"token"`
-	Threshold            currencytypes.Amount     `json:"threshold"`
+	Threshold            common.Big               `json:"threshold"`
 	Fee                  currencytypes.Amount     `json:"fee"`
 	Whitelist            Whitelist                `json:"whitelist"`
 	ProposalReviewPeriod uint64                   `json:"proposal_review_period"`
@@ -77,7 +78,7 @@ func (po Policy) MarshalJSON() ([]byte, error) {
 type PolicyJSONUnmarshaler struct {
 	Hint                 hint.Hint       `json:"_hint"`
 	Token                string          `json:"token"`
-	Threshold            json.RawMessage `json:"threshold"`
+	Threshold            string          `json:"threshold"`
 	Fee                  json.RawMessage `json:"fee"`
 	Whitelist            json.RawMessage `json:"whitelist"`
 	ProposalReviewPeriod uint64          `json:"proposal_review_period"`

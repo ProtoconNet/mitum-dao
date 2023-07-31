@@ -2,7 +2,9 @@ package cmds
 
 import (
 	"context"
+
 	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
+	"github.com/ProtoconNet/mitum-currency/v3/common"
 
 	"github.com/pkg/errors"
 
@@ -21,7 +23,7 @@ type CreateDAOCommand struct {
 	DAO                  currencycmds.ContractIDFlag     `arg:"" name:"dao-id" help:"dao id" required:"true"`
 	Option               string                          `arg:"" name:"dao-option" help:"dao option" required:"true"`
 	VotingPowerToken     currencycmds.CurrencyIDFlag     `arg:"" name:"voting-power-token" help:"voting power token" required:"true"`
-	Threshold            currencycmds.CurrencyAmountFlag `arg:"" name:"threshold" help:"threshold to propose" required:"true"`
+	Threshold            currencycmds.BigFlag            `arg:"" name:"threshold" help:"threshold to propose" required:"true"`
 	Fee                  currencycmds.CurrencyAmountFlag `arg:"" name:"fee" help:"fee to propose" required:"true"`
 	ProposalReviewPeriod uint64                          `arg:"" name:"proposal-review-period" help:"proposal review period" required:"true"`
 	RegistrationPeriod   uint64                          `arg:"" name:"registration-period" help:"registration period" required:"true"`
@@ -36,7 +38,7 @@ type CreateDAOCommand struct {
 	sender               base.Address
 	contract             base.Address
 	whitelist            types.Whitelist
-	threshold            currencytypes.Amount
+	threshold            common.Big
 	fee                  currencytypes.Amount
 }
 
@@ -96,7 +98,6 @@ func (cmd *CreateDAOCommand) parseFlags() error {
 		cmd.whitelist = types.NewWhitelist(false, []base.Address{})
 	}
 
-	cmd.threshold = currencytypes.NewAmount(cmd.Threshold.Big, cmd.Threshold.CID)
 	cmd.fee = currencytypes.NewAmount(cmd.Fee.Big, cmd.Fee.CID)
 
 	return nil

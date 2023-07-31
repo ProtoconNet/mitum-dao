@@ -110,19 +110,20 @@ func (opp *ProposeProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("dao value not found, %s-%s: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
+	votingPowerToken := design.Policy().Token()
 	threshold := design.Policy().Threshold()
 	proposeFee := design.Policy().Fee()
 	whitelist := design.Policy().Whitelist()
 
-	if _, found := required[threshold.Currency().String()]; !found {
-		required[threshold.Currency().String()] = common.ZeroBig
+	if _, found := required[threshold.String()]; !found {
+		required[threshold.String()] = common.ZeroBig
 	}
 
 	if _, found := required[proposeFee.Currency().String()]; !found {
 		required[proposeFee.Currency().String()] = common.ZeroBig
 	}
 
-	required[threshold.Currency().String()] = required[threshold.Currency().String()].Add(threshold.Big())
+	required[votingPowerToken.String()] = required[votingPowerToken.String()].Add(threshold)
 	required[proposeFee.Currency().String()] = required[proposeFee.Currency().String()].Add(proposeFee.Big())
 
 	for k, v := range required {
