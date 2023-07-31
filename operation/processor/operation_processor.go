@@ -89,6 +89,13 @@ func CheckDuplication(opr *currencyprocessor.OperationProcessor, op mitumbase.Op
 		}
 		did = fact.Sender().String()
 		didtype = DuplicationTypeSender
+	case dao.UpdatePolicy:
+		fact, ok := t.Fact().(dao.UpdatePolicyFact)
+		if !ok {
+			return errors.Errorf("expected UpdatePolicyFact, not %T", t.Fact())
+		}
+		did = fact.Sender().String()
+		didtype = DuplicationTypeSender
 	case dao.Propose:
 		fact, ok := t.Fact().(dao.ProposeFact)
 		if !ok {
@@ -184,6 +191,7 @@ func GetNewProcessor(opr *currencyprocessor.OperationProcessor, op mitumbase.Ope
 		currency.CurrencyPolicyUpdater,
 		currency.SuffrageInflation,
 		dao.CreateDAO,
+		dao.UpdatePolicy,
 		dao.Propose,
 		dao.CancelProposal,
 		dao.Register,

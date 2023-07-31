@@ -17,35 +17,35 @@ import (
 	"github.com/pkg/errors"
 )
 
-var createDAOProcessorPool = sync.Pool{
+var updatePolicyProcessorPool = sync.Pool{
 	New: func() interface{} {
-		return new(CreateDAOProcessor)
+		return new(UpdatePolicyProcessor)
 	},
 }
 
-func (CreateDAO) Process(
+func (UpdatePolicy) Process(
 	_ context.Context, _ base.GetStateFunc,
 ) ([]base.StateMergeValue, base.OperationProcessReasonError, error) {
 	return nil, nil, nil
 }
 
-type CreateDAOProcessor struct {
+type UpdatePolicyProcessor struct {
 	*base.BaseOperationProcessor
 }
 
-func NewCreateDAOProcessor() currencytypes.GetNewProcessor {
+func NewUpdatePolicyProcessor() currencytypes.GetNewProcessor {
 	return func(
 		height base.Height,
 		getStateFunc base.GetStateFunc,
 		newPreProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 		newProcessConstraintFunc base.NewOperationProcessorProcessFunc,
 	) (base.OperationProcessor, error) {
-		e := util.StringError("failed to create new CreateDAOProcessor")
+		e := util.StringError("failed to create new UpdatePolicyProcessor")
 
-		nopp := createDAOProcessorPool.Get()
-		opp, ok := nopp.(*CreateDAOProcessor)
+		nopp := updatePolicyProcessorPool.Get()
+		opp, ok := nopp.(*UpdatePolicyProcessor)
 		if !ok {
-			return nil, errors.Errorf("expected CreateDAOProcessor, not %T", nopp)
+			return nil, errors.Errorf("expected UpdatePolicyProcessor, not %T", nopp)
 		}
 
 		b, err := base.NewBaseOperationProcessor(
@@ -60,14 +60,14 @@ func NewCreateDAOProcessor() currencytypes.GetNewProcessor {
 	}
 }
 
-func (opp *CreateDAOProcessor) PreProcess(
+func (opp *UpdatePolicyProcessor) PreProcess(
 	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc,
 ) (context.Context, base.OperationProcessReasonError, error) {
-	e := util.StringError("failed to preprocess CreateDAO")
+	e := util.StringError("failed to preprocess UpdatePolicy")
 
-	fact, ok := op.Fact().(CreateDAOFact)
+	fact, ok := op.Fact().(UpdatePolicyFact)
 	if !ok {
-		return ctx, nil, e.Errorf("not CreateDAOFact, %T", op.Fact())
+		return ctx, nil, e.Errorf("not UpdatePolicyFact, %T", op.Fact())
 	}
 
 	if err := fact.IsValid(nil); err != nil {
@@ -79,7 +79,7 @@ func (opp *CreateDAOProcessor) PreProcess(
 	}
 
 	if err := currencystate.CheckNotExistsState(stateextension.StateKeyContractAccount(fact.Sender()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("contract account cannot create dao, %s: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("contract account cannot update dao policy, %s: %w", fact.Sender(), err), nil
 	}
 
 	st, err := currencystate.ExistsState(stateextension.StateKeyContractAccount(fact.Contract()), "key of contract account", getStateFunc)
@@ -96,8 +96,8 @@ func (opp *CreateDAOProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("not contract account owner, %s", fact.Sender()), nil
 	}
 
-	if err := currencystate.CheckNotExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao already exists, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
+	if err := currencystate.CheckExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), getStateFunc); err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("dao doesn't exist, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
 	if err := currencystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.Currency()), getStateFunc); err != nil {
@@ -115,15 +115,15 @@ func (opp *CreateDAOProcessor) PreProcess(
 	return ctx, nil, nil
 }
 
-func (opp *CreateDAOProcessor) Process(
+func (opp *UpdatePolicyProcessor) Process(
 	_ context.Context, op base.Operation, getStateFunc base.GetStateFunc) (
 	[]base.StateMergeValue, base.OperationProcessReasonError, error,
 ) {
-	e := util.StringError("failed to process CreateDAO")
+	e := util.StringError("failed to process UpdatePolicy")
 
-	fact, ok := op.Fact().(CreateDAOFact)
+	fact, ok := op.Fact().(UpdatePolicyFact)
 	if !ok {
-		return nil, nil, e.Errorf("expected CreateDAOFact, not %T", op.Fact())
+		return nil, nil, e.Errorf("expected UpdatePolicyFact, not %T", op.Fact())
 	}
 
 	policy := types.NewPolicy(
@@ -179,8 +179,8 @@ func (opp *CreateDAOProcessor) Process(
 	return sts, nil, nil
 }
 
-func (opp *CreateDAOProcessor) Close() error {
-	createDAOProcessorPool.Put(opp)
+func (opp *UpdatePolicyProcessor) Close() error {
+	updatePolicyProcessorPool.Put(opp)
 
 	return nil
 }
