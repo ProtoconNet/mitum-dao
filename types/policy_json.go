@@ -69,6 +69,7 @@ func (po Policy) MarshalJSON() ([]byte, error) {
 		RegistrationPeriod:   po.registrationPeriod,
 		PreSnapshotPeriod:    po.preSnapshotPeriod,
 		VotingPeriod:         po.votingPeriod,
+		PostSnapshotPeriod:   po.postSnapshotPeriod,
 		ExecutionDelayPeriod: po.executionDelayPeriod,
 		Turnout:              po.turnout,
 		Quorum:               po.quorum,
