@@ -189,6 +189,7 @@ func (p BizProposal) Addresses() []base.Address {
 func GetPeriodOfCurrentTime(
 	policy Policy,
 	proposal Proposal,
+	preferredPeriod Period,
 	blockmap base.BlockMap,
 ) (Period, int64 /*period start time*/, int64 /*period end time*/) {
 	blockTime := uint64(blockmap.Manifest().ProposedAt().Unix())
@@ -200,59 +201,46 @@ func GetPeriodOfCurrentTime(
 	executionDelayTime := postSnapTime + policy.PostSnapshotPeriod()
 	executeTime := executionDelayTime + policy.ExecutionDelayPeriod()
 
+	currentPeriod := NilPeriod
+	preferredStart, preferredEnd := int64(0), int64(0)
+
 	switch {
 	case blockTime < startTime:
-		return PreLifeCycle, 0, int64(startTime)
+		currentPeriod = PreLifeCycle
 	case blockTime < registrationTime:
-		return ProposalReview, int64(startTime), int64(registrationTime)
+		currentPeriod = ProposalReview
 	case blockTime < preSnapTime:
-		return Registration, int64(registrationTime), int64(preSnapTime)
+		currentPeriod = Registration
 	case blockTime < votingTime:
-		return PreSnapshot, int64(preSnapTime), int64(votingTime)
+		currentPeriod = PreSnapshot
 	case blockTime < postSnapTime:
-		return Voting, int64(votingTime), int64(postSnapTime)
+		currentPeriod = Voting
 	case blockTime < executionDelayTime:
-		return PostSnapshot, int64(postSnapTime), int64(executionDelayTime)
+		currentPeriod = PostSnapshot
 	case blockTime < executeTime:
-		return ExecutionDelay, int64(executionDelayTime), int64(executeTime)
+		currentPeriod = ExecutionDelay
 	case blockTime >= executeTime:
-		return Execute, int64(executeTime), 0
+		currentPeriod = Execute
 	}
 
-	return NilPeriod, 0, 0
-}
-
-func GetPeriodTime(
-	period Period,
-	policy Policy,
-	proposal Proposal,
-) (int64, int64) {
-	startTime := proposal.StartTime()
-	registrationTime := startTime + policy.ProposalReviewPeriod()
-	preSnapTime := registrationTime + policy.RegistrationPeriod()
-	votingTime := preSnapTime + policy.PreSnapshotPeriod()
-	postSnapTime := votingTime + policy.VotingPeriod()
-	executionDelayTime := postSnapTime + policy.PostSnapshotPeriod()
-	executeTime := executionDelayTime + policy.ExecutionDelayPeriod()
-
-	switch period {
+	switch preferredPeriod {
 	case PreLifeCycle:
-		return 0, int64(startTime)
+		preferredStart, preferredEnd = 0, int64(startTime)
 	case ProposalReview:
-		return int64(startTime), int64(registrationTime)
+		preferredStart, preferredEnd = int64(startTime), int64(registrationTime)
 	case Registration:
-		return int64(registrationTime), int64(preSnapTime)
+		preferredStart, preferredEnd = int64(registrationTime), int64(preSnapTime)
 	case PreSnapshot:
-		return int64(preSnapTime), int64(votingTime)
+		preferredStart, preferredEnd = int64(preSnapTime), int64(votingTime)
 	case Voting:
-		return int64(votingTime), int64(postSnapTime)
+		preferredStart, preferredEnd = int64(votingTime), int64(postSnapTime)
 	case PostSnapshot:
-		return int64(postSnapTime), int64(executionDelayTime)
+		preferredStart, preferredEnd = int64(postSnapTime), int64(executionDelayTime)
 	case ExecutionDelay:
-		return int64(executionDelayTime), int64(executeTime)
+		preferredStart, preferredEnd = int64(executionDelayTime), int64(executeTime)
 	case Execute:
-		return int64(executeTime), 0
+		preferredStart, preferredEnd = int64(executeTime), 0
 	}
 
-	return 0, 0
+	return currentPeriod, preferredStart, preferredEnd
 }

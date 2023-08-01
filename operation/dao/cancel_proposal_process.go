@@ -129,9 +129,8 @@ func (opp *CancelProposalProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
 	}
 
-	period, _, _ := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blockMap)
+	period, start, _ := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), types.Voting, blockMap)
 	if !(period == types.PreLifeCycle || period == types.ProposalReview || period == types.Registration) {
-		start, _ := types.GetPeriodTime(types.Voting, design.Policy(), p.Proposal())
 		return nil, base.NewBaseOperationProcessReasonError("cancellable period has passed; voting-started(%d), now(%d)", start, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
 
