@@ -131,7 +131,7 @@ func (opp *CancelProposalProcessor) PreProcess(
 
 	period, _, _ := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blockMap)
 	if !(period == types.PreLifeCycle || period == types.ProposalReview || period == types.Registration) {
-		start, _ := types.GetPeriod(types.Voting, design.Policy(), p.Proposal())
+		start, _ := types.GetPeriodTime(types.Voting, design.Policy(), p.Proposal())
 		return nil, base.NewBaseOperationProcessReasonError("cancellable period has passed; voting-started(%d), now(%d)", start, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
 

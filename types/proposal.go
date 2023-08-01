@@ -222,7 +222,7 @@ func GetPeriodOfCurrentTime(
 	return NilPeriod, 0, 0
 }
 
-func GetPeriod(
+func GetPeriodTime(
 	period Period,
 	policy Policy,
 	proposal Proposal,

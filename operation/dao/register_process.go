@@ -126,7 +126,7 @@ func (opp *RegisterProcessor) PreProcess(
 
 	period, _, _ := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blockMap)
 	if period != types.Registration {
-		start, end := types.GetPeriod(types.Registration, design.Policy(), p.Proposal())
+		start, end := types.GetPeriodTime(types.Registration, design.Policy(), p.Proposal())
 		return nil, base.NewBaseOperationProcessReasonError("current time is not within the Registration period, Registration period; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
 
