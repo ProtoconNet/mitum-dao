@@ -3,7 +3,6 @@ package dao
 import (
 	"context"
 	"sync"
-	"time"
 
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	"github.com/ProtoconNet/mitum-currency/v3/operation/processor"
@@ -119,16 +118,16 @@ func (opp *PostSnapProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("already post snapped, %s, %q, %q", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
 	}
 
-	blocMap, found, err := opp.getLastBlockFunc()
+	blockMap, found, err := opp.getLastBlockFunc()
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("get LastBlock failed: %w", err), nil
 	} else if !found {
 		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
 	}
 
-	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blocMap)
+	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blockMap)
 	if period != types.PostSnapshot {
-		return nil, base.NewBaseOperationProcessReasonError("current time is not within the PostSnapshotPeriod, PostSnapshotPeriod; start(%d), end(%d), but now(%d)", start, end, time.Now().Unix()), nil
+		return nil, base.NewBaseOperationProcessReasonError("current time is not within the PostSnapshotPeriod, PostSnapshotPeriod; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
 
 	if err := currencystate.CheckExistsState(state.StateKeyVoters(fact.Contract(), fact.DAOID(), fact.ProposalID()), getStateFunc); err != nil {

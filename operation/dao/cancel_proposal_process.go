@@ -3,7 +3,6 @@ package dao
 import (
 	"context"
 	"sync"
-	"time"
 
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	"github.com/ProtoconNet/mitum-currency/v3/operation/processor"
@@ -123,16 +122,16 @@ func (opp *CancelProposalProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("cancel-proposal is unavailable, %s, %q, %q", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
 	}
 
-	blocMap, found, err := opp.getLastBlockFunc()
+	blockMap, found, err := opp.getLastBlockFunc()
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("get LastBlock failed: %w", err), nil
 	} else if !found {
 		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
 	}
 
-	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blocMap)
+	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blockMap)
 	if !(period == types.ProposalReview || period == types.Registration) {
-		return nil, base.NewBaseOperationProcessReasonError("current time is not within the ProposalReview or Registration period; start(%d), end(%d), but now(%d)", start, end, time.Now().Unix()), nil
+		return nil, base.NewBaseOperationProcessReasonError("current time is not within the ProposalReview or Registration period; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
 
 	if err := currencystate.CheckFactSignsByState(fact.Sender(), op.Signs(), getStateFunc); err != nil {
@@ -186,9 +185,9 @@ func (opp *CancelProposalProcessor) Process(
 		sts = append(sts, currencystate.NewStateMergeValue(sb.Key(), currency.NewBalanceStateValue(v.Amount.WithBig(v.Amount.Big().Sub(fee)))))
 	}
 
-	st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), "key of design", getStateFunc)
+	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao not found, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
 
 	p, err := state.StateProposalValue(st)
