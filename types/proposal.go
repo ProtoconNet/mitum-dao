@@ -189,6 +189,7 @@ func (p BizProposal) Addresses() []base.Address {
 func GetPeriodOfCurrentTime(
 	policy Policy,
 	proposal Proposal,
+	preferredPeriod Period,
 	blockmap base.BlockMap,
 ) (Period, int64 /*period start time*/, int64 /*period end time*/) {
 	blockTime := uint64(blockmap.Manifest().ProposedAt().Unix())
@@ -200,24 +201,46 @@ func GetPeriodOfCurrentTime(
 	executionDelayTime := postSnapTime + policy.PostSnapshotPeriod()
 	executeTime := executionDelayTime + policy.ExecutionDelayPeriod()
 
+	currentPeriod := NilPeriod
+	preferredStart, preferredEnd := int64(0), int64(0)
+
 	switch {
 	case blockTime < startTime:
-		return PreLifeCycle, 0, int64(startTime)
+		currentPeriod = PreLifeCycle
 	case blockTime < registrationTime:
-		return ProposalReview, int64(startTime), int64(registrationTime)
+		currentPeriod = ProposalReview
 	case blockTime < preSnapTime:
-		return Registration, int64(registrationTime), int64(preSnapTime)
+		currentPeriod = Registration
 	case blockTime < votingTime:
-		return PreSnapshot, int64(preSnapTime), int64(votingTime)
+		currentPeriod = PreSnapshot
 	case blockTime < postSnapTime:
-		return Voting, int64(votingTime), int64(postSnapTime)
+		currentPeriod = Voting
 	case blockTime < executionDelayTime:
-		return PostSnapshot, int64(postSnapTime), int64(executionDelayTime)
+		currentPeriod = PostSnapshot
 	case blockTime < executeTime:
-		return ExecutionDelay, int64(executionDelayTime), int64(executeTime)
+		currentPeriod = ExecutionDelay
 	case blockTime >= executeTime:
-		return Execute, int64(executeTime), 0
+		currentPeriod = Execute
 	}
 
-	return NilPeriod, 0, 0
+	switch preferredPeriod {
+	case PreLifeCycle:
+		preferredStart, preferredEnd = 0, int64(startTime)
+	case ProposalReview:
+		preferredStart, preferredEnd = int64(startTime), int64(registrationTime)
+	case Registration:
+		preferredStart, preferredEnd = int64(registrationTime), int64(preSnapTime)
+	case PreSnapshot:
+		preferredStart, preferredEnd = int64(preSnapTime), int64(votingTime)
+	case Voting:
+		preferredStart, preferredEnd = int64(votingTime), int64(postSnapTime)
+	case PostSnapshot:
+		preferredStart, preferredEnd = int64(postSnapTime), int64(executionDelayTime)
+	case ExecutionDelay:
+		preferredStart, preferredEnd = int64(executionDelayTime), int64(executeTime)
+	case Execute:
+		preferredStart, preferredEnd = int64(executeTime), 0
+	}
+
+	return currentPeriod, preferredStart, preferredEnd
 }

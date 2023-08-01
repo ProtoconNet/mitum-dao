@@ -125,7 +125,7 @@ func (opp *PostSnapProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
 	}
 
-	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blockMap)
+	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), types.PostSnapshot, blockMap)
 	if period != types.PostSnapshot {
 		return nil, base.NewBaseOperationProcessReasonError("current time is not within the PostSnapshotPeriod, PostSnapshotPeriod; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
 	}

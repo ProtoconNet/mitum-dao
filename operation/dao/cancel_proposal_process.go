@@ -129,9 +129,9 @@ func (opp *CancelProposalProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
 	}
 
-	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blockMap)
-	if !(period == types.ProposalReview || period == types.Registration) {
-		return nil, base.NewBaseOperationProcessReasonError("current time is not within the ProposalReview or Registration period; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
+	period, start, _ := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), types.Voting, blockMap)
+	if !(period == types.PreLifeCycle || period == types.ProposalReview || period == types.Registration) {
+		return nil, base.NewBaseOperationProcessReasonError("cancellable period has passed; voting-started(%d), now(%d)", start, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
 
 	if err := currencystate.CheckFactSignsByState(fact.Sender(), op.Signs(), getStateFunc); err != nil {

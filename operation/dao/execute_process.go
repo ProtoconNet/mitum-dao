@@ -127,7 +127,7 @@ func (opp *ExecuteProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
 	}
 
-	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blockMap)
+	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), types.Execute, blockMap)
 	if period != types.Execute {
 		return nil, base.NewBaseOperationProcessReasonError("current time is not within the Execution, Execution period; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
