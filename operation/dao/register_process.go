@@ -3,7 +3,6 @@ package dao
 import (
 	"context"
 	"sync"
-	"time"
 
 	"github.com/ProtoconNet/mitum-currency/v3/operation/processor"
 	"github.com/ProtoconNet/mitum-dao/utils"
@@ -129,7 +128,7 @@ func (opp *RegisterProcessor) PreProcess(
 	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), blockMap)
 
 	if period != types.Registration {
-		return nil, base.NewBaseOperationProcessReasonError("current time is not within the Registration period, Registration period; start(%d), end(%d), but now(%d)", start, end, time.Now().Unix()), nil
+		return nil, base.NewBaseOperationProcessReasonError("current time is not within the Registration period, Registration period; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
 
 	switch st, found, err := getStateFunc(state.StateKeyVoters(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
