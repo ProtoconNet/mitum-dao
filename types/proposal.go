@@ -221,3 +221,38 @@ func GetPeriodOfCurrentTime(
 
 	return NilPeriod, 0, 0
 }
+
+func GetPeriod(
+	period Period,
+	policy Policy,
+	proposal Proposal,
+) (int64, int64) {
+	startTime := proposal.StartTime()
+	registrationTime := startTime + policy.ProposalReviewPeriod()
+	preSnapTime := registrationTime + policy.RegistrationPeriod()
+	votingTime := preSnapTime + policy.PreSnapshotPeriod()
+	postSnapTime := votingTime + policy.VotingPeriod()
+	executionDelayTime := postSnapTime + policy.PostSnapshotPeriod()
+	executeTime := executionDelayTime + policy.ExecutionDelayPeriod()
+
+	switch period {
+	case PreLifeCycle:
+		return 0, int64(startTime)
+	case ProposalReview:
+		return int64(startTime), int64(registrationTime)
+	case Registration:
+		return int64(registrationTime), int64(preSnapTime)
+	case PreSnapshot:
+		return int64(preSnapTime), int64(votingTime)
+	case Voting:
+		return int64(votingTime), int64(postSnapTime)
+	case PostSnapshot:
+		return int64(postSnapTime), int64(executionDelayTime)
+	case ExecutionDelay:
+		return int64(executionDelayTime), int64(executeTime)
+	case Execute:
+		return int64(executeTime), 0
+	}
+
+	return 0, 0
+}
