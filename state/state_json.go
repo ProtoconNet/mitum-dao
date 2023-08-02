@@ -50,6 +50,7 @@ type ProposalStateValueJSONMarshaler struct {
 	hint.BaseHinter
 	Status   types.ProposalStatus `json:"status"`
 	Proposal types.Proposal       `json:"proposal"`
+	Policy   types.Policy         `json:"policy"`
 }
 
 func (p ProposalStateValue) MarshalJSON() ([]byte, error) {
@@ -57,12 +58,14 @@ func (p ProposalStateValue) MarshalJSON() ([]byte, error) {
 		BaseHinter: p.BaseHinter,
 		Status:     p.Status(),
 		Proposal:   p.proposal,
+		Policy:     p.policy,
 	})
 }
 
 type ProposalStateValueJSONUnmarshaler struct {
 	Status   uint8           `json:"status"`
 	Proposal json.RawMessage `json:"proposal"`
+	Policy   json.RawMessage `json:"policy"`
 }
 
 func (p *ProposalStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
@@ -81,6 +84,14 @@ func (p *ProposalStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		return e.Wrap(errors.Errorf("expected Proposal, not %T", hinter))
 	} else {
 		p.proposal = pr
+	}
+
+	if hinter, err := enc.Decode(u.Policy); err != nil {
+		return e.Wrap(err)
+	} else if po, ok := hinter.(types.Policy); !ok {
+		return e.Wrap(errors.Errorf("expected Policy, not %T", hinter))
+	} else {
+		p.policy = po
 	}
 
 	return nil

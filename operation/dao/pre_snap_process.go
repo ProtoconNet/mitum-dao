@@ -276,13 +276,13 @@ func (opp *PreSnapProcessor) Process(
 	if votingPowerBox.Total().Compare(actualTurnoutCount) < 0 {
 		sts = append(sts, currencystate.NewStateMergeValue(
 			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-			state.NewProposalStateValue(types.Canceled, p.Proposal()),
+			state.NewProposalStateValue(types.Canceled, p.Proposal(), p.Policy()),
 		))
 	} else {
 		sts = append(sts,
 			currencystate.NewStateMergeValue(
 				state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-				state.NewProposalStateValue(types.PreSnapped, p.Proposal()),
+				state.NewProposalStateValue(types.PreSnapped, p.Proposal(), p.Policy()),
 			),
 			currencystate.NewStateMergeValue(
 				state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID()),

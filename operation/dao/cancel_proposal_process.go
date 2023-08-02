@@ -197,7 +197,7 @@ func (opp *CancelProposalProcessor) Process(
 
 	sts = append(sts, currencystate.NewStateMergeValue(
 		state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-		state.NewProposalStateValue(types.Canceled, p.Proposal()),
+		state.NewProposalStateValue(types.Canceled, p.Proposal(), p.Policy()),
 	))
 
 	return sts, nil, nil

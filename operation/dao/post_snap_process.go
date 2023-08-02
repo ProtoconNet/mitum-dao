@@ -213,7 +213,7 @@ func (opp *PostSnapProcessor) Process(
 		sts = append(sts,
 			currencystate.NewStateMergeValue(
 				st.Key(),
-				state.NewProposalStateValue(types.Canceled, p.Proposal()),
+				state.NewProposalStateValue(types.Canceled, p.Proposal(), p.Policy()),
 			),
 		)
 
@@ -324,23 +324,23 @@ func (opp *PostSnapProcessor) Process(
 	if nvpb.Total().Compare(actualTurnoutCount) < 0 {
 		sts = append(sts, currencystate.NewStateMergeValue(
 			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-			state.NewProposalStateValue(types.Canceled, p.Proposal()),
+			state.NewProposalStateValue(types.Canceled, p.Proposal(), p.Policy()),
 		))
 	} else if votedTotal.Compare(actualQuorumCount) < 0 {
 		sts = append(sts, currencystate.NewStateMergeValue(
 			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-			state.NewProposalStateValue(types.Rejected, p.Proposal()),
+			state.NewProposalStateValue(types.Rejected, p.Proposal(), p.Policy()),
 		))
 	} else if p.Proposal().Type() == types.ProposalCrypto {
 		if votingResult[0].Compare(actualQuorumCount) >= 0 && votingResult[0].Compare(votingResult[1]) > 0 {
 			sts = append(sts, currencystate.NewStateMergeValue(
 				state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-				state.NewProposalStateValue(types.Completed, p.Proposal()),
+				state.NewProposalStateValue(types.Completed, p.Proposal(), p.Policy()),
 			))
 		} else {
 			sts = append(sts, currencystate.NewStateMergeValue(
 				state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-				state.NewProposalStateValue(types.Rejected, p.Proposal()),
+				state.NewProposalStateValue(types.Rejected, p.Proposal(), p.Policy()),
 			))
 		}
 	} else if p.Proposal().Type() == types.ProposalBiz {
@@ -364,12 +364,12 @@ func (opp *PostSnapProcessor) Process(
 		if count != 1 {
 			sts = append(sts, currencystate.NewStateMergeValue(
 				state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-				state.NewProposalStateValue(types.Rejected, p.Proposal()),
+				state.NewProposalStateValue(types.Rejected, p.Proposal(), p.Policy()),
 			))
 		} else {
 			sts = append(sts, currencystate.NewStateMergeValue(
 				state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-				state.NewProposalStateValue(types.Completed, p.Proposal()),
+				state.NewProposalStateValue(types.Completed, p.Proposal(), p.Policy()),
 			))
 		}
 	}

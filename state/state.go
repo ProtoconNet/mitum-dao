@@ -87,13 +87,15 @@ type ProposalStateValue struct {
 	hint.BaseHinter
 	status   types.ProposalStatus
 	proposal types.Proposal
+	policy   types.Policy
 }
 
-func NewProposalStateValue(status types.ProposalStatus, proposal types.Proposal) ProposalStateValue {
+func NewProposalStateValue(status types.ProposalStatus, proposal types.Proposal, policy types.Policy) ProposalStateValue {
 	return ProposalStateValue{
 		BaseHinter: hint.NewBaseHinter(ProposalStateValueHint),
 		status:     status,
 		proposal:   proposal,
+		policy:     policy,
 	}
 }
 
@@ -109,10 +111,22 @@ func (p ProposalStateValue) Proposal() types.Proposal {
 	return p.proposal
 }
 
+func (p ProposalStateValue) Policy() types.Policy {
+	return p.policy
+}
+
 func (p ProposalStateValue) IsValid([]byte) error {
 	e := util.ErrInvalid.Errorf("invalid ProposalStateValue")
 
 	if err := p.BaseHinter.IsValid(ProposalStateValueHint.Type().Bytes()); err != nil {
+		return e.Wrap(err)
+	}
+
+	if err := util.CheckIsValiders(
+		nil, false,
+		p.proposal,
+		p.policy,
+	); err != nil {
 		return e.Wrap(err)
 	}
 
