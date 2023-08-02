@@ -86,6 +86,10 @@ func (opp *ProposeProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("contract account not found, %s: %w", fact.Contract(), err), nil
 	}
 
+	if err := currencystate.CheckNotExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), getStateFunc); err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("proposal already exists, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+	}
+
 	required := map[string]common.Big{}
 
 	currencyPolicy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)
