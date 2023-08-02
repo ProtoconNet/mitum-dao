@@ -130,7 +130,7 @@ func (hd *Handlers) buildProposalHal(contract, daoID, proposalID string, proposa
 	return hal, nil
 }
 
-func (hd *Handlers) handleDelegators(w http.ResponseWriter, r *http.Request) {
+func (hd *Handlers) handleDelegator(w http.ResponseWriter, r *http.Request) {
 	cacheKey := currencydigest.CacheKeyPath(r)
 	if err := currencydigest.LoadFromCache(hd.cache, cacheKey, w); err == nil {
 		return
@@ -154,8 +154,14 @@ func (hd *Handlers) handleDelegators(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	delegator, err, status := parseRequest(w, r, "address")
+	if err != nil {
+		currencydigest.HTTP2ProblemWithError(w, err, status)
+		return
+	}
+
 	if v, err, shared := hd.rg.Do(cacheKey, func() (interface{}, error) {
-		return hd.handleDelegatorsInGroup(contract, serviceID, proposalID)
+		return hd.handleDelegatorInGroup(contract, serviceID, proposalID, delegator)
 	}); err != nil {
 		currencydigest.HTTP2HandleError(w, err)
 	} else {
@@ -166,12 +172,12 @@ func (hd *Handlers) handleDelegators(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (hd *Handlers) handleDelegatorsInGroup(contract, serviceID, proposalID string) (interface{}, error) {
-	switch delegators, err := Delegators(hd.database, contract, serviceID, proposalID); {
+func (hd *Handlers) handleDelegatorInGroup(contract, serviceID, proposalID, delegator string) (interface{}, error) {
+	switch delegatorInfo, err := DelegatorInfo(hd.database, contract, serviceID, proposalID, delegator); {
 	case err != nil:
 		return nil, err
 	default:
-		hal, err := hd.buildDelegatorsHal(contract, serviceID, proposalID, delegators)
+		hal, err := hd.buildDelegatorHal(contract, serviceID, proposalID, delegator, delegatorInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -179,21 +185,22 @@ func (hd *Handlers) handleDelegatorsInGroup(contract, serviceID, proposalID stri
 	}
 }
 
-func (hd *Handlers) buildDelegatorsHal(
-	contract, serviceID, proposalID string,
-	delegators []types.DelegatorInfo,
+func (hd *Handlers) buildDelegatorHal(
+	contract, serviceID, proposalID, delegator string,
+	delegatorInfo types.DelegatorInfo,
 ) (currencydigest.Hal, error) {
 	h, err := hd.combineURL(
-		HandlerPathDelegators,
+		HandlerPathDelegator,
 		"contract", contract,
 		"dao_id", serviceID,
 		"proposal_id", proposalID,
+		"address", delegator,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	hal := currencydigest.NewBaseHal(delegators, currencydigest.NewHalLink(h, nil))
+	hal := currencydigest.NewBaseHal(delegatorInfo, currencydigest.NewHalLink(h, nil))
 
 	return hal, nil
 }

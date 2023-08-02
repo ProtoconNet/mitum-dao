@@ -6,6 +6,7 @@ import (
 	"github.com/ProtoconNet/mitum-dao/state"
 	"github.com/ProtoconNet/mitum-dao/types"
 	mitumbase "github.com/ProtoconNet/mitum2/base"
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -22,8 +23,6 @@ var (
 	defaultColNameVoters         = "digest_dao_voters"
 	defaultColNameVotingPowerBox = "digest_dao_voting_power_box"
 )
-
-var maxLimit int64 = 50
 
 func DAOService(st *currencydigest.Database, contract, daoID string) (types.Design, error) {
 	filter := util.NewBSONFilter("contract", contract)
@@ -56,14 +55,18 @@ func DAOService(st *currencydigest.Database, contract, daoID string) (types.Desi
 	return design, nil
 }
 
-func Delegators(st *currencydigest.Database, contract, daoID, proposalID string) ([]types.DelegatorInfo, error) {
+func DelegatorInfo(st *currencydigest.Database, contract, daoID, proposalID, delegator string) (types.DelegatorInfo, error) {
+	var (
+		delegators    []types.DelegatorInfo
+		sta           mitumbase.State
+		delegatorInfo *types.DelegatorInfo
+		err           error
+	)
+
 	filter := util.NewBSONFilter("contract", contract)
 	filter = filter.Add("dao_id", daoID)
 	filter = filter.Add("proposal_id", proposalID)
 
-	var delegators []types.DelegatorInfo
-	var sta mitumbase.State
-	var err error
 	if err = st.DatabaseClient().GetByFilter(
 		defaultColNameDelegators,
 		filter.D(),
@@ -81,10 +84,20 @@ func Delegators(st *currencydigest.Database, contract, daoID, proposalID string)
 		},
 		options.FindOne().SetSort(util.NewBSONFilter("height", -1).D()),
 	); err != nil {
-		return nil, err
+		return types.DelegatorInfo{}, err
 	}
 
-	return delegators, nil
+	for i := range delegators {
+		if delegator == delegators[i].Account().String() {
+			delegatorInfo = &delegators[i]
+			break
+		}
+	}
+	if delegatorInfo == nil {
+		return types.DelegatorInfo{}, errors.Errorf("delegator not found, %s", delegator)
+	}
+
+	return *delegatorInfo, nil
 }
 
 func Voters(st *currencydigest.Database, contract, daoID, proposalID string) ([]types.VoterInfo, error) {

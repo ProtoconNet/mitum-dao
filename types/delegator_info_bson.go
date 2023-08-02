@@ -8,13 +8,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-
 func (r DelegatorInfo) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
 			"_hint":     r.Hint().String(),
-			"account":   r.Account,
-			"delegatee": r.Delegatee,
+			"account":   r.account,
+			"delegatee": r.delegatee,
 		},
 	)
 }

@@ -85,11 +85,11 @@ func (bs *BlockSession) handleProposalState(st mitumbase.State) ([]mongo.WriteMo
 }
 
 func (bs *BlockSession) handleDelegatorsState(st mitumbase.State) ([]mongo.WriteModel, error) {
-	if nftDoc, err := NewDelegatorsDoc(st, bs.st.DatabaseEncoder()); err != nil {
+	if delegatorsDoc, err := NewDelegatorsDoc(st, bs.st.DatabaseEncoder()); err != nil {
 		return nil, err
 	} else {
 		return []mongo.WriteModel{
-			mongo.NewInsertOneModel().SetDocument(nftDoc),
+			mongo.NewInsertOneModel().SetDocument(delegatorsDoc),
 		}, nil
 	}
 }
