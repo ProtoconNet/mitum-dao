@@ -211,7 +211,7 @@ func (opp *ExecuteProcessor) Process(
 		sts = append(sts,
 			currencystate.NewStateMergeValue(
 				st.Key(),
-				state.NewProposalStateValue(types.Canceled, p.Proposal()),
+				state.NewProposalStateValue(types.Canceled, p.Proposal(), p.Policy()),
 			),
 		)
 
@@ -220,7 +220,7 @@ func (opp *ExecuteProcessor) Process(
 
 	sts = append(sts, currencystate.NewStateMergeValue(
 		state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-		state.NewProposalStateValue(types.Executed, p.Proposal()),
+		state.NewProposalStateValue(types.Executed, p.Proposal(), p.Policy()),
 	))
 
 	if p.Proposal().Type() == types.ProposalCrypto {
