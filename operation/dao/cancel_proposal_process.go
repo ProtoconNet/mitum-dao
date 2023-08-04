@@ -92,17 +92,11 @@ func (opp *CancelProposalProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("fee currency doesn't exist, %q: %w", fact.Currency(), err), nil
 	}
 
-	st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), "key of design", getStateFunc)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao design state not found, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
+	if err := currencystate.CheckExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), getStateFunc); err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("dao design not found, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
-	design, err := state.StateDesignValue(st)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao design value not found from state, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
-	}
-
-	st, err = currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
+	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
@@ -129,7 +123,7 @@ func (opp *CancelProposalProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
 	}
 
-	period, start, _ := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), types.Voting, blockMap)
+	period, start, _ := types.GetPeriodOfCurrentTime(p.Policy(), p.Proposal(), types.Voting, blockMap)
 	if !(period == types.PreLifeCycle || period == types.ProposalReview || period == types.Registration) {
 		return nil, base.NewBaseOperationProcessReasonError("cancellable period has passed; voting-started(%d), now(%d)", start, blockMap.Manifest().ProposedAt().Unix()), nil
 	}

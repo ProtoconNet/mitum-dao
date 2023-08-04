@@ -92,17 +92,11 @@ func (opp *PreSnapProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("fee currency doesn't exist, %q: %w", fact.Currency(), err), nil
 	}
 
-	st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), "key of design", getStateFunc)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao design state not found, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
+	if err := currencystate.CheckExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), getStateFunc); err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("dao design not found, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
-	design, err := state.StateDesignValue(st)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao design value not found from state, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
-	}
-
-	st, err = currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
+	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
@@ -125,7 +119,7 @@ func (opp *PreSnapProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
 	}
 
-	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), types.PreSnapshot, blockMap)
+	period, start, end := types.GetPeriodOfCurrentTime(p.Policy(), p.Proposal(), types.PreSnapshot, blockMap)
 	if period != types.PreSnapshot {
 		return nil, base.NewBaseOperationProcessReasonError("current time is not within the PreSnapshotPeriod, PreSnapshotPeriod; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
@@ -193,17 +187,7 @@ func (opp *PreSnapProcessor) Process(
 		sts = append(sts, currencystate.NewStateMergeValue(sb.Key(), currency.NewBalanceStateValue(v.Amount.WithBig(v.Amount.Big().Sub(fee)))))
 	}
 
-	st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), "key of design", getStateFunc)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao not found, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
-	}
-
-	design, err := state.StateDesignValue(st)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao design value not found from state, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
-	}
-
-	st, err = currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
+	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
@@ -227,7 +211,7 @@ func (opp *PreSnapProcessor) Process(
 		votingPowerBox = types.NewVotingPowerBox(common.ZeroBig, map[base.Address]types.VotingPower{})
 	}
 
-	votingPowerToken := design.Policy().Token()
+	votingPowerToken := p.Policy().Token()
 
 	switch st, found, err := getStateFunc(state.StateKeyVoters(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
 	case err != nil:
@@ -272,7 +256,7 @@ func (opp *PreSnapProcessor) Process(
 		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power token currency design value from state, %q: %w", votingPowerToken, err), nil
 	}
 
-	actualTurnoutCount := design.Policy().Turnout().Quorum(currencyDesign.Aggregate())
+	actualTurnoutCount := p.Policy().Turnout().Quorum(currencyDesign.Aggregate())
 	if votingPowerBox.Total().Compare(actualTurnoutCount) < 0 {
 		sts = append(sts, currencystate.NewStateMergeValue(
 			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),

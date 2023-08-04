@@ -92,17 +92,11 @@ func (opp *PostSnapProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("fee currency doesn't exist, %q: %w", fact.Currency(), err), nil
 	}
 
-	st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), "key of design", getStateFunc)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao design state not found, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
+	if err := currencystate.CheckExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), getStateFunc); err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("dao design not found, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
-	design, err := state.StateDesignValue(st)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao design value not found from state, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
-	}
-
-	st, err = currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
+	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
@@ -125,7 +119,7 @@ func (opp *PostSnapProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
 	}
 
-	period, start, end := types.GetPeriodOfCurrentTime(design.Policy(), p.Proposal(), types.PostSnapshot, blockMap)
+	period, start, end := types.GetPeriodOfCurrentTime(p.Policy(), p.Proposal(), types.PostSnapshot, blockMap)
 	if period != types.PostSnapshot {
 		return nil, base.NewBaseOperationProcessReasonError("current time is not within the PostSnapshotPeriod, PostSnapshotPeriod; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
@@ -189,17 +183,7 @@ func (opp *PostSnapProcessor) Process(
 		sts = append(sts, currencystate.NewStateMergeValue(sb.Key(), currency.NewBalanceStateValue(v.Amount.WithBig(v.Amount.Big().Sub(fee)))))
 	}
 
-	st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), "key of design", getStateFunc)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao not found, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
-	}
-
-	design, err := state.StateDesignValue(st)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao design value not found from state, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
-	}
-
-	st, err = currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
+	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	}
@@ -234,7 +218,7 @@ func (opp *PostSnapProcessor) Process(
 		return nil, base.NewBaseOperationProcessReasonError("voting power box state not found, %s, %q, %q", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
 	}
 
-	votingPowerToken := design.Policy().Token()
+	votingPowerToken := p.Policy().Token()
 
 	var nvpb = types.NewVotingPowerBox(common.ZeroBig, map[base.Address]types.VotingPower{})
 
@@ -318,8 +302,8 @@ func (opp *PostSnapProcessor) Process(
 		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power token currency design value from state, %q: %w", votingPowerToken, err), nil
 	}
 
-	actualTurnoutCount := design.Policy().Turnout().Quorum(currencyDesign.Aggregate())
-	actualQuorumCount := design.Policy().Quorum().Quorum(votedTotal)
+	actualTurnoutCount := p.Policy().Turnout().Quorum(currencyDesign.Aggregate())
+	actualQuorumCount := p.Policy().Quorum().Quorum(votedTotal)
 
 	if nvpb.Total().Compare(actualTurnoutCount) < 0 {
 		sts = append(sts, currencystate.NewStateMergeValue(
