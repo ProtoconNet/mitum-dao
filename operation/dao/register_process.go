@@ -220,13 +220,11 @@ func (opp *RegisterProcessor) Process(
 	}
 
 	var voters []types.VoterInfo
-	var key string
 	switch st, found, err := getStateFunc(state.StateKeyVoters(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
 	case err != nil:
 		return nil, base.NewBaseOperationProcessReasonError("failed to find voters state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 	case found:
 		vs, err := state.StateVotersValue(st)
-		key = st.Key()
 		if err != nil {
 			return nil, base.NewBaseOperationProcessReasonError("failed to find voters value from state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 		}
@@ -253,7 +251,7 @@ func (opp *RegisterProcessor) Process(
 
 	sts = append(sts,
 		currencystate.NewStateMergeValue(
-			key,
+			state.StateKeyVoters(fact.Contract(), fact.DAOID(), fact.ProposalID()),
 			state.NewVotersStateValue(voters),
 		),
 	)
