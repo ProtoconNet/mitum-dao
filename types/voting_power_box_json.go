@@ -62,9 +62,9 @@ func (vp *VotingPower) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 
 type VotingPowerBoxJSONMarshaler struct {
 	hint.BaseHinter
-	Total        string                       `json:"total"`
-	VotingPowers map[base.Address]VotingPower `json:"voting_powers"`
-	Result       map[uint8]common.Big         `json:"result"`
+	Total        string                 `json:"total"`
+	VotingPowers map[string]VotingPower `json:"voting_powers"`
+	Result       map[uint8]common.Big   `json:"result"`
 }
 
 func (vp VotingPowerBox) MarshalJSON() ([]byte, error) {

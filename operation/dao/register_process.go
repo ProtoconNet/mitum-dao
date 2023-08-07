@@ -12,7 +12,6 @@ import (
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum-dao/state"
 	"github.com/ProtoconNet/mitum-dao/types"
-	"github.com/ProtoconNet/mitum-dao/utils"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/pkg/errors"
@@ -132,23 +131,21 @@ func (opp *RegisterProcessor) PreProcess(
 			return nil, base.NewBaseOperationProcessReasonError("failed to find voters value from state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 		}
 
-		accFound, delegatorFound, err := utils.HasFieldAndSliceValue(
-			voters,
-			"account",
-			"delegators",
-			fact.Delegated(),
-			fact.Sender(),
-		)
-		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to check if delegator exists, %s: %w", fact.Delegated(), err), nil
-		}
+		var voter types.VoterInfo = types.VoterInfo{}
 
-		if accFound && delegatorFound {
-			return nil, base.NewBaseOperationProcessReasonError(
-				"sender already delegates the account, %s delegated by %s",
-				fact.Delegated(),
-				fact.Sender(),
-			), nil
+		for _, v := range voters {
+			if !fact.Delegated().Equal(v.Account()) {
+				continue
+			}
+			for _, d := range voter.Delegators() {
+				if fact.Sender().Equal(d) {
+					return nil, base.NewBaseOperationProcessReasonError(
+						"sender already delegates the account, %s delegated by %s",
+						fact.Delegated(),
+						fact.Sender(),
+					), nil
+				}
+			}
 		}
 	}
 
