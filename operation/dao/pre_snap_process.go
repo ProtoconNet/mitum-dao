@@ -208,7 +208,7 @@ func (opp *PreSnapProcessor) Process(
 			votingPowerBox = vb
 		}
 	default:
-		votingPowerBox = types.NewVotingPowerBox(common.ZeroBig, map[base.Address]types.VotingPower{})
+		votingPowerBox = types.NewVotingPowerBox(common.ZeroBig, map[string]types.VotingPower{})
 	}
 
 	votingPowerToken := p.Policy().Token()
@@ -223,7 +223,7 @@ func (opp *PreSnapProcessor) Process(
 		}
 
 		total := common.ZeroBig
-		votingPowers := map[base.Address]types.VotingPower{}
+		votingPowers := map[string]types.VotingPower{}
 		for _, info := range voters {
 			votingPower := common.ZeroBig
 			for _, delegator := range info.Delegators() {
@@ -239,7 +239,7 @@ func (opp *PreSnapProcessor) Process(
 
 				votingPower = votingPower.Add(b.Big())
 			}
-			votingPowers[info.Account()] = types.NewVotingPower(info.Account(), votingPower)
+			votingPowers[info.Account().String()] = types.NewVotingPower(info.Account(), votingPower)
 			total = total.Add(votingPower)
 		}
 		votingPowerBox.SetVotingPowers(votingPowers)

@@ -100,11 +100,11 @@ var (
 type VotingPowerBox struct {
 	hint.BaseHinter
 	total        common.Big
-	votingPowers map[base.Address]VotingPower
+	votingPowers map[string]VotingPower
 	result       map[uint8]common.Big
 }
 
-func NewVotingPowerBox(total common.Big, votingPowers map[base.Address]VotingPower) VotingPowerBox {
+func NewVotingPowerBox(total common.Big, votingPowers map[string]VotingPower) VotingPowerBox {
 	return VotingPowerBox{
 		BaseHinter:   hint.NewBaseHinter(VotingPowerBoxHint),
 		total:        total,
@@ -160,7 +160,7 @@ func (vp VotingPowerBox) Total() common.Big {
 	return vp.total
 }
 
-func (vp VotingPowerBox) VotingPowers() map[base.Address]VotingPower {
+func (vp VotingPowerBox) VotingPowers() map[string]VotingPower {
 	return vp.votingPowers
 }
 
@@ -172,7 +172,7 @@ func (vp *VotingPowerBox) SetTotal(total common.Big) {
 	vp.total = total
 }
 
-func (vp *VotingPowerBox) SetVotingPowers(votingPowers map[base.Address]VotingPower) {
+func (vp *VotingPowerBox) SetVotingPowers(votingPowers map[string]VotingPower) {
 	vp.votingPowers = votingPowers
 }
 

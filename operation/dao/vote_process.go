@@ -155,7 +155,7 @@ func (opp *VoteProcessor) PreProcess(
 			return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box value from state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 		}
 
-		vp, found := vpb.VotingPowers()[fact.Sender()]
+		vp, found := vpb.VotingPowers()[fact.Sender().String()]
 		if !found {
 			return nil, base.NewBaseOperationProcessReasonError("sender voting power not found, sender(%s), %s, %q, %q", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
 		}
@@ -230,7 +230,7 @@ func (opp *VoteProcessor) Process(
 		votingPowerBox = vpb
 	}
 
-	vp, found := votingPowerBox.VotingPowers()[fact.Sender()]
+	vp, found := votingPowerBox.VotingPowers()[fact.Sender().String()]
 	if !found {
 		return nil, base.NewBaseOperationProcessReasonError("sender voting power not found, sender(%s), %s, %q, %q", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
 	}
@@ -238,7 +238,7 @@ func (opp *VoteProcessor) Process(
 	vp.SetVoteFor(fact.Vote())
 
 	vpb := votingPowerBox.VotingPowers()
-	vpb[fact.Sender()] = vp
+	vpb[fact.Sender().String()] = vp
 	votingPowerBox.SetVotingPowers(vpb)
 
 	result := votingPowerBox.Result()

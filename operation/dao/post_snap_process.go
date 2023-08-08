@@ -220,9 +220,9 @@ func (opp *PostSnapProcessor) Process(
 
 	votingPowerToken := p.Policy().Token()
 
-	var nvpb = types.NewVotingPowerBox(common.ZeroBig, map[base.Address]types.VotingPower{})
+	var nvpb = types.NewVotingPowerBox(common.ZeroBig, map[string]types.VotingPower{})
 
-	nvps := map[base.Address]types.VotingPower{}
+	nvps := map[string]types.VotingPower{}
 	nvt := common.ZeroBig
 
 	votedTotal := common.ZeroBig
@@ -238,8 +238,10 @@ func (opp *PostSnapProcessor) Process(
 		}
 
 		for _, info := range voters {
-			if !ovpb.VotingPowers()[info.Account()].Voted() {
-				nvps[info.Account()] = ovpb.VotingPowers()[info.Account()]
+			a := info.Account().String()
+
+			if !ovpb.VotingPowers()[a].Voted() {
+				nvps[a] = ovpb.VotingPowers()[a]
 				continue
 			}
 
@@ -258,27 +260,27 @@ func (opp *PostSnapProcessor) Process(
 				vp = vp.Add(b.Big())
 			}
 
-			ovp := ovpb.VotingPowers()[info.Account()]
+			ovp := ovpb.VotingPowers()[a]
 			if ovp.Amount().Compare(vp) < 0 {
-				nvps[info.Account()] = ovp
+				nvps[a] = ovp
 			} else {
 				nvp := types.NewVotingPower(info.Account(), vp)
 				nvp.SetVoted(ovp.Voted())
 				nvp.SetVoteFor(ovp.VoteFor())
 
-				nvps[info.Account()] = nvp
+				nvps[a] = nvp
 			}
 
-			nvt = nvt.Add(nvps[info.Account()].Amount())
+			nvt = nvt.Add(nvps[a].Amount())
 
-			if nvps[info.Account()].Voted() {
-				votedTotal = votedTotal.Add(nvps[info.Account()].Amount())
+			if nvps[a].Voted() {
+				votedTotal = votedTotal.Add(nvps[a].Amount())
 
-				if _, found := votingResult[nvps[info.Account()].VoteFor()]; !found {
-					votingResult[nvps[info.Account()].VoteFor()] = common.ZeroBig
+				if _, found := votingResult[nvps[a].VoteFor()]; !found {
+					votingResult[nvps[a].VoteFor()] = common.ZeroBig
 				}
 
-				votingResult[nvps[info.Account()].VoteFor()] = votingResult[nvps[info.Account()].VoteFor()].Add(vp)
+				votingResult[nvps[a].VoteFor()] = votingResult[nvps[a].VoteFor()].Add(vp)
 			}
 		}
 

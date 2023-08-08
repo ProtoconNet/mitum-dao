@@ -22,7 +22,7 @@ func (vp *VotingPowerBox) unpack(enc encoder.Encoder, ht hint.Hint, st string, b
 	}
 	vp.total = big
 
-	votingPowers := make(map[base.Address]VotingPower)
+	votingPowers := make(map[string]VotingPower)
 	m, err := enc.DecodeMap(bvp)
 	if err != nil {
 		return err
@@ -32,12 +32,12 @@ func (vp *VotingPowerBox) unpack(enc encoder.Encoder, ht hint.Hint, st string, b
 		if !ok {
 			return errors.Errorf("expected VotingPower, not %T", m[k])
 		}
-		switch ad, err := base.DecodeAddress(k, enc); {
-		case err != nil:
+
+		if _, err := base.DecodeAddress(k, enc); err != nil {
 			return e.Wrap(err)
-		default:
-			votingPowers[ad] = v
 		}
+
+		votingPowers[k] = v
 	}
 	vp.votingPowers = votingPowers
 
