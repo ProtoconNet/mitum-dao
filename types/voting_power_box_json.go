@@ -35,7 +35,7 @@ type VotingPowerJSONUnmarshaler struct {
 }
 
 func (vp *VotingPower) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
-	e := util.StringError("failed to decode json of Amount")
+	e := util.StringError("failed to decode json of VotingPower")
 
 	var u VotingPowerJSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {

@@ -248,8 +248,8 @@ func (vt *VotersStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 func (vb VotingPowerBoxStateValue) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
-			"_hint": vb.Hint().String(),
-			"votes": vb.votingPowerBox,
+			"_hint":            vb.Hint().String(),
+			"voting_power_box": vb.votingPowerBox,
 		},
 	)
 }

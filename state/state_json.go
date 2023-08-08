@@ -182,31 +182,31 @@ func (vt *VotersStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 	return nil
 }
 
-type VotesStateValueJSONMarshaler struct {
+type VotingPowerBoxStateValueJSONMarshaler struct {
 	hint.BaseHinter
 	VotingPowerBox types.VotingPowerBox `json:"voting_power_box"`
 }
 
 func (vb VotingPowerBoxStateValue) MarshalJSON() ([]byte, error) {
-	return util.MarshalJSON(VotesStateValueJSONMarshaler{
+	return util.MarshalJSON(VotingPowerBoxStateValueJSONMarshaler{
 		BaseHinter:     vb.BaseHinter,
 		VotingPowerBox: vb.votingPowerBox,
 	})
 }
 
-type VotesStateValueJSONUnmarshaler struct {
-	VotingPowrBox json.RawMessage `json:"voting_power_box"`
+type VotingPowerBoxStateValueJSONUnmarshaler struct {
+	VotingPowerBox json.RawMessage `json:"voting_power_box"`
 }
 
 func (vb *VotingPowerBoxStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 	e := util.StringError("failed to decode json of VotingPowerBoxStateValue")
 
-	var u VotesStateValueJSONUnmarshaler
+	var u VotingPowerBoxStateValueJSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
 		return e.Wrap(err)
 	}
 
-	if hinter, err := enc.Decode(u.VotingPowrBox); err != nil {
+	if hinter, err := enc.Decode(u.VotingPowerBox); err != nil {
 		return e.Wrap(err)
 	} else if v, ok := hinter.(types.VotingPowerBox); !ok {
 		return e.Wrap(errors.Errorf("expected VotingPowerBox, not %T", hinter))

@@ -27,17 +27,17 @@ func (vp *VotingPowerBox) unpack(enc encoder.Encoder, ht hint.Hint, st string, b
 	if err != nil {
 		return err
 	}
-	for k := range m {
-		v, ok := m[k].(VotingPower)
+	for k, v := range m {
+		vp, ok := v.(VotingPower)
 		if !ok {
-			return errors.Errorf("expected VotingPower, not %T", m[k])
+			return errors.Errorf("expected VotingPower, not %T", v)
 		}
 
 		if _, err := base.DecodeAddress(k, enc); err != nil {
 			return e.Wrap(err)
 		}
 
-		votingPowers[k] = v
+		votingPowers[k] = vp
 	}
 	vp.votingPowers = votingPowers
 
@@ -46,16 +46,16 @@ func (vp *VotingPowerBox) unpack(enc encoder.Encoder, ht hint.Hint, st string, b
 	if err != nil {
 		return err
 	}
-	for k := range m {
-		v, ok := m[k].(common.Big)
+	for k, v := range m {
+		big, ok := v.(common.Big)
 		if !ok {
-			return errors.Errorf("expected common.Big, not %T", m[k])
+			return errors.Errorf("expected common.Big, not %T", v)
 		}
-		val, err := strconv.ParseUint(k, 10, 8)
+		u, err := strconv.ParseUint(k, 10, 8)
 		if err != nil {
 			return err
 		}
-		result[uint8(val)] = v
+		result[uint8(u)] = big
 	}
 	vp.result = result
 
