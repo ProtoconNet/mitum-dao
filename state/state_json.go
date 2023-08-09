@@ -206,13 +206,12 @@ func (vb *VotingPowerBoxStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) e
 		return e.Wrap(err)
 	}
 
-	if hinter, err := enc.Decode(u.VotingPowerBox); err != nil {
+	var vpb types.VotingPowerBox
+	if err := vpb.DecodeJSON(u.VotingPowerBox, enc); err != nil {
 		return e.Wrap(err)
-	} else if v, ok := hinter.(types.VotingPowerBox); !ok {
-		return e.Wrap(errors.Errorf("expected VotingPowerBox, not %T", hinter))
-	} else {
-		vb.votingPowerBox = v
 	}
+
+	vb.votingPowerBox = vpb
 
 	return nil
 }

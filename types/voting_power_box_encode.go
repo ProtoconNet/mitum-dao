@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/ProtoconNet/mitum-currency/v3/common"
+	"github.com/ProtoconNet/mitum-dao/utils"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/encoder"
@@ -25,12 +26,12 @@ func (vp *VotingPowerBox) unpack(enc encoder.Encoder, ht hint.Hint, st string, b
 	votingPowers := make(map[string]VotingPower)
 	m, err := enc.DecodeMap(bvp)
 	if err != nil {
-		return err
+		return e.Wrap(err)
 	}
 	for k, v := range m {
 		vp, ok := v.(VotingPower)
 		if !ok {
-			return errors.Errorf("expected VotingPower, not %T", v)
+			return e.Wrap(errors.Errorf("expected VotingPower, not %T", v))
 		}
 
 		if _, err := base.DecodeAddress(k, enc); err != nil {
@@ -41,20 +42,23 @@ func (vp *VotingPowerBox) unpack(enc encoder.Encoder, ht hint.Hint, st string, b
 	}
 	vp.votingPowers = votingPowers
 
-	result := make(map[uint8]common.Big)
-	m, err = enc.DecodeMap(bre)
+	m, err = utils.DecodeMap(bre)
 	if err != nil {
-		return err
+		return e.Wrap(err)
 	}
+
+	result := make(map[uint8]common.Big)
 	for k, v := range m {
-		big, ok := v.(common.Big)
-		if !ok {
-			return errors.Errorf("expected common.Big, not %T", v)
-		}
 		u, err := strconv.ParseUint(k, 10, 8)
 		if err != nil {
-			return err
+			return e.Wrap(err)
 		}
+
+		big, err := common.NewBigFromInterface(v)
+		if err != nil {
+			return e.Wrap(err)
+		}
+
 		result[uint8(u)] = big
 	}
 	vp.result = result
