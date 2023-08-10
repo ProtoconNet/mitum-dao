@@ -12,7 +12,6 @@ import (
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum-dao/state"
 	"github.com/ProtoconNet/mitum-dao/types"
-	daoutil "github.com/ProtoconNet/mitum-dao/utils"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/pkg/errors"
@@ -138,11 +137,14 @@ func (opp *VoteProcessor) PreProcess(
 			return nil, base.NewBaseOperationProcessReasonError("failed to find voters value from state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
 		}
 
-		switch has, err := daoutil.HasFieldValue(voters, "account", fact.Sender()); {
-		case err != nil:
-			return nil, base.NewBaseOperationProcessReasonError("failed to check if sender is registered as voter, sender(%s), %s, %q, %q: %w", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
-		case !has:
-			return nil, base.NewBaseOperationProcessReasonError("sender is not registered as voter, sender(%s), %s, %q, %q", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+		for i, v := range voters {
+			if v.Account().Equal(fact.Sender()) {
+				break
+			}
+
+			if i == len(voters)-1 {
+				return nil, base.NewBaseOperationProcessReasonError("sender is not registered as voter, sender(%s), %s, %q, %q", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+			}
 		}
 	}
 

@@ -197,59 +197,11 @@ func (vt *VotersStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 	return nil
 }
 
-//func (sh SnapHistoriesStateValue) MarshalBSON() ([]byte, error) {
-//	return bsonenc.Marshal(
-//		bson.M{
-//			"_hint":     sh.Hint().String(),
-//			"histories": sh.Histories,
-//		},
-//	)
-//}
-//
-//type SnapHistoriesStateValueBSONUnmarshaler struct {
-//	Hint      string   `bson:"_hint"`
-//	Histories bson.Raw `bson:"histories"`
-//}
-//
-//func (sh *SnapHistoriesStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-//	e := util.StringError("failed to decode bson of SnapHistoriesStateValue")
-//
-//	var u SnapHistoriesStateValueBSONUnmarshaler
-//	if err := enc.Unmarshal(b, &u); err != nil {
-//		return e.Wrap(err)
-//	}
-//
-//	ht, err := hint.ParseHint(u.Hint)
-//	if err != nil {
-//		return e.Wrap(err)
-//	}
-//
-//	sh.BaseHinter = hint.NewBaseHinter(ht)
-//
-//	hs, err := enc.DecodeSlice(u.Histories)
-//	if err != nil {
-//		return e.Wrap(err)
-//	}
-//
-//	histories := make([]types.SnapHistory, len(hs))
-//	for i, hinter := range hs {
-//		h, ok := hinter.(types.SnapHistory)
-//		if !ok {
-//			return e.Wrap(errors.Errorf("expected types.SnapHistory, not %T", hinter))
-//		}
-//
-//		histories[i] = h
-//	}
-//	sh.Histories = histories
-//
-//	return nil
-//}
-
 func (vb VotingPowerBoxStateValue) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
-			"_hint": vb.Hint().String(),
-			"votes": vb.votingPowerBox,
+			"_hint":            vb.Hint().String(),
+			"voting_power_box": vb.votingPowerBox,
 		},
 	)
 }
@@ -274,13 +226,12 @@ func (vb *VotingPowerBoxStateValue) DecodeBSON(b []byte, enc *bsonenc.Encoder) e
 
 	vb.BaseHinter = hint.NewBaseHinter(ht)
 
-	if hinter, err := enc.Decode(u.VotingPowerBox); err != nil {
+	var vpb types.VotingPowerBox
+	if err := vpb.DecodeBSON(u.VotingPowerBox, enc); err != nil {
 		return e.Wrap(err)
-	} else if v, ok := hinter.(types.VotingPowerBox); !ok {
-		return e.Wrap(errors.Errorf("expected VotingPowerBox, not %T", hinter))
-	} else {
-		vb.votingPowerBox = v
 	}
+
+	vb.votingPowerBox = vpb
 
 	return nil
 }

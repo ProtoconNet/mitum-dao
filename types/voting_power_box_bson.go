@@ -30,7 +30,7 @@ type VotingPowerBSONUnmarshaler struct {
 }
 
 func (vp *VotingPower) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringError("failed to decode bson of Amount")
+	e := util.StringError("failed to decode bson of VotingPower")
 
 	var u VotingPowerBSONUnmarshaler
 	if err := enc.Unmarshal(b, &u); err != nil {
