@@ -83,7 +83,7 @@ func POperationProcessorsMap(pctx context.Context) (context.Context, error) {
 		return pctx, err
 	} else if err := opr.SetProcessor(
 		dao.ExecuteHint,
-		dao.NewPostSnapProcessor(db.LastBlockMap),
+		dao.NewExecuteProcessor(db.LastBlockMap),
 	); err != nil {
 		return pctx, err
 	}

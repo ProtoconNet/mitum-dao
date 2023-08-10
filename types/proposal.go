@@ -179,6 +179,10 @@ func (p BizProposal) IsValid([]byte) error {
 		return util.ErrInvalid.Errorf("biz - empty hash")
 	}
 
+	if p.options == 0 {
+		return util.ErrInvalid.Errorf("biz - zero options")
+	}
+
 	return nil
 }
 
