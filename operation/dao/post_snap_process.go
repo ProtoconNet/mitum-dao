@@ -311,15 +311,15 @@ func (opp *PostSnapProcessor) Process(
 		r = types.Canceled
 	} else if votedTotal.Compare(actualQuorumCount) < 0 {
 		r = types.Rejected
-	} else if p.Proposal().Type() == types.ProposalCrypto {
+	} else if p.Proposal().Option() == types.ProposalCrypto {
 		vr0, found0 := votingResult[0]
 		vr1, found1 := votingResult[1]
 
 		if !(found0 && 0 < vr0.Compare(actualQuorumCount) && (!found1 || (found1 && 0 < vr0.Compare(vr1)))) {
 			r = types.Rejected
 		}
-	} else if p.Proposal().Type() == types.ProposalBiz {
-		options := p.Proposal().Options() - 1
+	} else if p.Proposal().Option() == types.ProposalBiz {
+		options := p.Proposal().VoteOptionsCount() - 1
 
 		var count = 0
 		var mvp = common.ZeroBig

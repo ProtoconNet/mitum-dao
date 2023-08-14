@@ -53,7 +53,7 @@ type ProposeCommand struct {
 	Sender     currencycmds.AddressFlag    `arg:"" name:"sender" help:"sender address" required:"true"`
 	Contract   currencycmds.AddressFlag    `arg:"" name:"contract" help:"contract address of credential" required:"true"`
 	DAO        currencycmds.ContractIDFlag `arg:"" name:"dao-id" help:"dao id" required:"true"`
-	Option     string                      `arg:"" name:"option" help:"propose option; crypto | biz" required:"true"`
+	Option     types.DAOOption             `arg:"" name:"option" help:"propose option; crypto | biz" required:"true"`
 	ProposalID string                      `arg:"" name:"proposal-id" help:"proposal id" required:"true"`
 	StartTime  uint64                      `arg:"" name:"start-time" help:"start time to proposal lifecycle" required:"true"`
 	CryptoProposalCommand

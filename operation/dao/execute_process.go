@@ -207,7 +207,7 @@ func (opp *ExecuteProcessor) Process(
 		state.NewProposalStateValue(types.Executed, p.Proposal(), p.Policy()),
 	))
 
-	if p.Proposal().Type() == types.ProposalCrypto {
+	if p.Proposal().Option() == types.ProposalCrypto {
 		cp, _ := p.Proposal().(types.CryptoProposal)
 
 		switch cp.CallData().Type() {
