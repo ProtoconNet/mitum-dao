@@ -1,6 +1,7 @@
 package types
 
 import (
+	"math"
 	"net/url"
 	"strings"
 
@@ -243,7 +244,7 @@ func GetPeriodOfCurrentTime(
 	case ExecutionDelay:
 		preferredStart, preferredEnd = int64(executionDelayTime), int64(executeTime)
 	case Execute:
-		preferredStart, preferredEnd = int64(executeTime), 0
+		preferredStart, preferredEnd = int64(executeTime), math.MaxInt64
 	}
 
 	return currentPeriod, preferredStart, preferredEnd
