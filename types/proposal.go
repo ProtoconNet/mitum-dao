@@ -1,6 +1,7 @@
 package types
 
 import (
+	"math"
 	"net/url"
 	"strings"
 
@@ -32,8 +33,8 @@ func (u URL) String() string {
 }
 
 const (
-	ProposalCrypto = "crypto"
-	ProposalBiz    = "biz"
+	ProposalCrypto = DAOOption("crypto")
+	ProposalBiz    = DAOOption("biz")
 )
 
 var (
@@ -44,11 +45,11 @@ var (
 type Proposal interface {
 	util.IsValider
 	hint.Hinter
-	Type() string
+	Option() DAOOption
+	VoteOptionsCount() uint8
 	Bytes() []byte
 	Proposer() base.Address
 	StartTime() uint64
-	Options() uint8
 	Addresses() []base.Address
 }
 
@@ -68,11 +69,11 @@ func NewCryptoProposal(proposer base.Address, startTime uint64, callData CallDat
 	}
 }
 
-func (CryptoProposal) Type() string {
+func (CryptoProposal) Option() DAOOption {
 	return ProposalCrypto
 }
 
-func (CryptoProposal) Options() uint8 {
+func (CryptoProposal) VoteOptionsCount() uint8 {
 	return 3
 }
 
@@ -132,11 +133,11 @@ func NewBizProposal(proposer base.Address, startTime uint64, url URL, hash strin
 	}
 }
 
-func (BizProposal) Type() string {
+func (BizProposal) Option() DAOOption {
 	return ProposalBiz
 }
 
-func (p BizProposal) Options() uint8 {
+func (p BizProposal) VoteOptionsCount() uint8 {
 	return p.options
 }
 
@@ -177,6 +178,10 @@ func (p BizProposal) IsValid([]byte) error {
 
 	if len(p.hash) == 0 {
 		return util.ErrInvalid.Errorf("biz - empty hash")
+	}
+
+	if p.options == 0 {
+		return util.ErrInvalid.Errorf("biz - zero options")
 	}
 
 	return nil
@@ -239,7 +244,7 @@ func GetPeriodOfCurrentTime(
 	case ExecutionDelay:
 		preferredStart, preferredEnd = int64(executionDelayTime), int64(executeTime)
 	case Execute:
-		preferredStart, preferredEnd = int64(executeTime), 0
+		preferredStart, preferredEnd = int64(executeTime), math.MaxInt64
 	}
 
 	return currentPeriod, preferredStart, preferredEnd

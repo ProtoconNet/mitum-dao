@@ -114,6 +114,10 @@ func (opp *ProposeProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("dao value not found, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
+	if design.Option() != fact.Proposal().Option() {
+		return nil, base.NewBaseOperationProcessReasonError("dao option != proposal option, dao(%s) != proposal(%s)", design.Option(), fact.Proposal().Option()), nil
+	}
+
 	votingPowerToken := design.Policy().Token()
 	threshold := design.Policy().Threshold()
 	proposeFee := design.Policy().Fee()

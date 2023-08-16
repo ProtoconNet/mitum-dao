@@ -274,13 +274,11 @@ func (opp *PostSnapProcessor) Process(
 			nvt = nvt.Add(nvps[a].Amount())
 
 			if nvps[a].Voted() {
-				votedTotal = votedTotal.Add(nvps[a].Amount())
-
 				if _, found := votingResult[nvps[a].VoteFor()]; !found {
 					votingResult[nvps[a].VoteFor()] = common.ZeroBig
 				}
-
 				votingResult[nvps[a].VoteFor()] = votingResult[nvps[a].VoteFor()].Add(vp)
+				votedTotal = votedTotal.Add(nvps[a].Amount())
 			}
 		}
 
@@ -307,30 +305,21 @@ func (opp *PostSnapProcessor) Process(
 	actualTurnoutCount := p.Policy().Turnout().Quorum(currencyDesign.Aggregate())
 	actualQuorumCount := p.Policy().Quorum().Quorum(votedTotal)
 
+	r := types.Completed
+
 	if nvpb.Total().Compare(actualTurnoutCount) < 0 {
-		sts = append(sts, currencystate.NewStateMergeValue(
-			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-			state.NewProposalStateValue(types.Canceled, p.Proposal(), p.Policy()),
-		))
+		r = types.Canceled
 	} else if votedTotal.Compare(actualQuorumCount) < 0 {
-		sts = append(sts, currencystate.NewStateMergeValue(
-			state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-			state.NewProposalStateValue(types.Rejected, p.Proposal(), p.Policy()),
-		))
-	} else if p.Proposal().Type() == types.ProposalCrypto {
-		if votingResult[0].Compare(actualQuorumCount) >= 0 && votingResult[0].Compare(votingResult[1]) > 0 {
-			sts = append(sts, currencystate.NewStateMergeValue(
-				state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-				state.NewProposalStateValue(types.Completed, p.Proposal(), p.Policy()),
-			))
-		} else {
-			sts = append(sts, currencystate.NewStateMergeValue(
-				state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-				state.NewProposalStateValue(types.Rejected, p.Proposal(), p.Policy()),
-			))
+		r = types.Rejected
+	} else if p.Proposal().Option() == types.ProposalCrypto {
+		vr0, found0 := votingResult[0]
+		vr1, found1 := votingResult[1]
+
+		if !(found0 && 0 < vr0.Compare(actualQuorumCount) && (!found1 || (found1 && 0 < vr0.Compare(vr1)))) {
+			r = types.Rejected
 		}
-	} else if p.Proposal().Type() == types.ProposalBiz {
-		options := p.Proposal().Options() - 1
+	} else if p.Proposal().Option() == types.ProposalBiz {
+		options := p.Proposal().VoteOptionsCount() - 1
 
 		var count = 0
 		var mvp = common.ZeroBig
@@ -348,17 +337,14 @@ func (opp *PostSnapProcessor) Process(
 		}
 
 		if count != 1 {
-			sts = append(sts, currencystate.NewStateMergeValue(
-				state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-				state.NewProposalStateValue(types.Rejected, p.Proposal(), p.Policy()),
-			))
-		} else {
-			sts = append(sts, currencystate.NewStateMergeValue(
-				state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
-				state.NewProposalStateValue(types.Completed, p.Proposal(), p.Policy()),
-			))
+			r = types.Rejected
 		}
 	}
+
+	sts = append(sts, currencystate.NewStateMergeValue(
+		state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
+		state.NewProposalStateValue(r, p.Proposal(), p.Policy()),
+	))
 
 	return sts, nil, nil
 }
