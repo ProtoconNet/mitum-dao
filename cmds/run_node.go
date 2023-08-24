@@ -62,12 +62,12 @@ func (cmd *RunCommand) Run(pctx context.Context) error {
 		}
 	}
 
-	//revive:disable:modifies-parameter
-	pctx = context.WithValue(pctx, launch.DesignFlagContextKey, cmd.DesignFlag)
-	pctx = context.WithValue(pctx, launch.DevFlagsContextKey, cmd.DevFlags)
-	pctx = context.WithValue(pctx, launch.DiscoveryFlagContextKey, cmd.Discovery)
-	pctx = context.WithValue(pctx, launch.VaultContextKey, cmd.Vault)
-	//revive:enable:modifies-parameter
+	nctx := util.ContextWithValues(pctx, map[util.ContextKey]interface{}{
+		launch.DesignFlagContextKey:    cmd.DesignFlag,
+		launch.DevFlagsContextKey:      cmd.DevFlags,
+		launch.DiscoveryFlagContextKey: cmd.Discovery,
+		launch.VaultContextKey:         cmd.Vault,
+	})
 
 	pps := currencycmds.DefaultRunPS()
 
@@ -92,7 +92,7 @@ func (cmd *RunCommand) Run(pctx context.Context) error {
 
 	log.Log().Debug().Interface("process", pps.Verbose()).Msg("process ready")
 
-	pctx, err := pps.Run(pctx) //revive:disable-line:modifies-parameter
+	nctx, err := pps.Run(nctx) //revive:disable-line:modifies-parameter
 	defer func() {
 		log.Log().Debug().Interface("process", pps.Verbose()).Msg("process will be closed")
 
@@ -110,7 +110,7 @@ func (cmd *RunCommand) Run(pctx context.Context) error {
 		Interface("hold", cmd.Hold.Height()).
 		Msg("node started")
 
-	return cmd.run(pctx)
+	return cmd.run(nctx)
 }
 
 var errHoldStop = util.NewIDError("hold stop")
@@ -138,14 +138,14 @@ func (cmd *RunCommand) run(pctx context.Context) error {
 
 	select {
 	case <-ctx.Done(): // NOTE graceful stop
-		return ctx.Err()
+		return errors.WithStack(ctx.Err())
 	case err := <-exitch:
 		if errors.Is(err, errHoldStop) {
 			stopstates()
 
 			<-ctx.Done()
 
-			return ctx.Err()
+			return errors.WithStack(ctx.Err())
 		}
 
 		return err
@@ -153,7 +153,7 @@ func (cmd *RunCommand) run(pctx context.Context) error {
 }
 
 func (cmd *RunCommand) runStates(ctx, pctx context.Context) (func(), error) {
-	var discoveries *util.Locked[[]quicstream.UDPConnInfo]
+	var discoveries *util.Locked[[]quicstream.ConnInfo]
 	var states *isaacstates.States
 
 	if err := util.LoadFromContextOK(pctx,
@@ -323,12 +323,12 @@ func (cmd *RunCommand) runHTTPState(bind string) error {
 }
 
 func (cmd *RunCommand) pDigestAPIHandlers(ctx context.Context) (context.Context, error) {
-	var isaacparams *isaac.Params
+	var params *launch.LocalParams
 	var local base.LocalNode
 
 	if err := util.LoadFromContextOK(ctx,
 		launch.LocalContextKey, &local,
-		launch.ISAACParamsContextKey, &isaacparams,
+		launch.LocalParamsContextKey, &params,
 	); err != nil {
 		return nil, err
 	}
@@ -357,7 +357,7 @@ func (cmd *RunCommand) pDigestAPIHandlers(ctx context.Context) (context.Context,
 	}
 	router := dnt.Router()
 
-	defaultHandlers, err := cmd.setDigestDefaultHandlers(ctx, isaacparams, cache, router)
+	defaultHandlers, err := cmd.setDigestDefaultHandlers(ctx, params, cache, router)
 	if err != nil {
 		return ctx, err
 	}
@@ -366,7 +366,7 @@ func (cmd *RunCommand) pDigestAPIHandlers(ctx context.Context) (context.Context,
 		return ctx, err
 	}
 
-	handlers, err := cmd.setDigestHandlers(ctx, isaacparams, cache, router)
+	handlers, err := cmd.setDigestHandlers(ctx, params, cache, router)
 	if err != nil {
 		return ctx, err
 	}
@@ -391,7 +391,7 @@ func (cmd *RunCommand) loadCache(_ context.Context, design currencycmds.DigestDe
 
 func (cmd *RunCommand) setDigestDefaultHandlers(
 	ctx context.Context,
-	params *isaac.Params,
+	params *launch.LocalParams,
 	cache currencydigest.Cache,
 	router *mux.Router,
 ) (*currencydigest.Handlers, error) {
@@ -400,7 +400,7 @@ func (cmd *RunCommand) setDigestDefaultHandlers(
 		return nil, err
 	}
 
-	handlers := currencydigest.NewHandlers(ctx, params.NetworkID(), encs, enc, st, cache, router)
+	handlers := currencydigest.NewHandlers(ctx, params.ISAAC.NetworkID(), encs, enc, st, cache, router)
 
 	h, err := cmd.setDigestNetworkClient(ctx, params, handlers)
 	if err != nil {
@@ -413,7 +413,7 @@ func (cmd *RunCommand) setDigestDefaultHandlers(
 
 func (cmd *RunCommand) setDigestHandlers(
 	ctx context.Context,
-	params *isaac.Params,
+	params *launch.LocalParams,
 	cache currencydigest.Cache,
 	router *mux.Router,
 ) (*digest.Handlers, error) {
@@ -422,14 +422,14 @@ func (cmd *RunCommand) setDigestHandlers(
 		return nil, err
 	}
 
-	handlers := digest.NewHandlers(ctx, params.NetworkID(), encs, enc, st, cache, router)
+	handlers := digest.NewHandlers(ctx, params.ISAAC.NetworkID(), encs, enc, st, cache, router)
 
 	return handlers, nil
 }
 
 func (cmd *RunCommand) setDigestNetworkClient(
 	ctx context.Context,
-	params *isaac.Params,
+	params *launch.LocalParams,
 	handlers *currencydigest.Handlers,
 ) (*currencydigest.Handlers, error) {
 	var memberList *quicmemberlist.Memberlist
@@ -437,13 +437,23 @@ func (cmd *RunCommand) setDigestNetworkClient(
 		return nil, err
 	}
 
-	client := launch.NewNetworkClient( //nolint:gomnd //...
+	connectionPool, err := launch.NewConnectionPool(
+		1<<9,
+		params.ISAAC.NetworkID(),
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	client := isaacnetwork.NewBaseClient( //nolint:gomnd //...
 		encs, enc,
-		(*params).NetworkID(),
+		connectionPool.Dial,
+		connectionPool.CloseAll,
 	)
 
 	handlers = handlers.SetNetworkClientFunc(
-		func() (*isaacnetwork.QuicstreamClient, *quicmemberlist.Memberlist, error) { // nolint:contextcheck
+		func() (*isaacnetwork.BaseClient, *quicmemberlist.Memberlist, error) { // nolint:contextcheck
 			return client, memberList, nil
 		},
 	)

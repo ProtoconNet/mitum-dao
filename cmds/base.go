@@ -58,7 +58,7 @@ func (cmd *BaseCommand) prepare(pctx context.Context) (context.Context, error) {
 }
 
 func PAddHinters(ctx context.Context) (context.Context, error) {
-	e := util.StringError("failed to add hinters")
+	e := util.StringError("add hinters")
 
 	var enc encoder.Encoder
 	if err := util.LoadFromContextOK(ctx, launch.EncoderContextKey, &enc); err != nil {
@@ -72,7 +72,6 @@ func PAddHinters(ctx context.Context) (context.Context, error) {
 	if err := LoadHinters(enc); err != nil {
 		return ctx, e.Wrap(err)
 	}
-
 	if err := LoadHinters(benc); err != nil {
 		return ctx, e.Wrap(err)
 	}
