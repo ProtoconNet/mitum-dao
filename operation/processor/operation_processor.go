@@ -24,10 +24,10 @@ func CheckDuplication(opr *currencyprocessor.OperationProcessor, op mitumbase.Op
 	var newAddresses []mitumbase.Address
 
 	switch t := op.(type) {
-	case currency.CreateAccounts:
-		fact, ok := t.Fact().(currency.CreateAccountsFact)
+	case currency.CreateAccount:
+		fact, ok := t.Fact().(currency.CreateAccountFact)
 		if !ok {
-			return errors.Errorf("expected CreateAccountsFact, not %T", t.Fact())
+			return errors.Errorf("expected CreateAccountFact, not %T", t.Fact())
 		}
 		as, err := fact.Targets()
 		if err != nil {
@@ -36,52 +36,52 @@ func CheckDuplication(opr *currencyprocessor.OperationProcessor, op mitumbase.Op
 		newAddresses = as
 		did = fact.Sender().String()
 		didtype = DuplicationTypeSender
-	case currency.KeyUpdater:
-		fact, ok := t.Fact().(currency.KeyUpdaterFact)
+	case currency.UpdateKey:
+		fact, ok := t.Fact().(currency.UpdateKeyFact)
 		if !ok {
-			return errors.Errorf("expected KeyUpdaterFact, not %T", t.Fact())
+			return errors.Errorf("expected UpdateKeyFact, not %T", t.Fact())
 		}
 		did = fact.Target().String()
 		didtype = DuplicationTypeSender
-	case currency.Transfers:
-		fact, ok := t.Fact().(currency.TransfersFact)
+	case currency.Transfer:
+		fact, ok := t.Fact().(currency.TransferFact)
 		if !ok {
-			return errors.Errorf("expected TransfersFact, not %T", t.Fact())
+			return errors.Errorf("expected TransferFact, not %T", t.Fact())
 		}
 		did = fact.Sender().String()
 		didtype = DuplicationTypeSender
-	case extensioncurrency.CreateContractAccounts:
-		fact, ok := t.Fact().(extensioncurrency.CreateContractAccountsFact)
+	case extensioncurrency.CreateContractAccount:
+		fact, ok := t.Fact().(extensioncurrency.CreateContractAccountFact)
 		if !ok {
-			return errors.Errorf("expected CreateContractAccountsFact, not %T", t.Fact())
+			return errors.Errorf("expected CreateContractAccountFact, not %T", t.Fact())
 		}
 		as, err := fact.Targets()
 		if err != nil {
 			return errors.Errorf("failed to get Addresses")
 		}
 		newAddresses = as
-	case extensioncurrency.Withdraws:
-		fact, ok := t.Fact().(extensioncurrency.WithdrawsFact)
+	case extensioncurrency.Withdraw:
+		fact, ok := t.Fact().(extensioncurrency.WithdrawFact)
 		if !ok {
-			return errors.Errorf("expected WithdrawsFact, not %T", t.Fact())
+			return errors.Errorf("expected WithdrawFact, not %T", t.Fact())
 		}
 		did = fact.Sender().String()
 		didtype = DuplicationTypeSender
-	case currency.CurrencyRegister:
-		fact, ok := t.Fact().(currency.CurrencyRegisterFact)
+	case currency.RegisterCurrency:
+		fact, ok := t.Fact().(currency.RegisterCurrencyFact)
 		if !ok {
 			return errors.Errorf("expected CurrencyRegisterFact, not %T", t.Fact())
 		}
 		did = fact.Currency().Currency().String()
 		didtype = DuplicationTypeCurrency
-	case currency.CurrencyPolicyUpdater:
-		fact, ok := t.Fact().(currency.CurrencyPolicyUpdaterFact)
+	case currency.UpdateCurrency:
+		fact, ok := t.Fact().(currency.UpdateCurrencyFact)
 		if !ok {
-			return errors.Errorf("expected CurrencyPolicyUpdaterFact, not %T", t.Fact())
+			return errors.Errorf("expected UpdateCurrencyFact, not %T", t.Fact())
 		}
 		did = fact.Currency().String()
 		didtype = DuplicationTypeCurrency
-	case currency.SuffrageInflation:
+	case currency.Mint:
 	case dao.CreateDAO:
 		fact, ok := t.Fact().(dao.CreateDAOFact)
 		if !ok {
@@ -182,14 +182,14 @@ func GetNewProcessor(opr *currencyprocessor.OperationProcessor, op mitumbase.Ope
 	}
 
 	switch t := op.(type) {
-	case currency.CreateAccounts,
-		currency.KeyUpdater,
-		currency.Transfers,
-		extensioncurrency.CreateContractAccounts,
-		extensioncurrency.Withdraws,
-		currency.CurrencyRegister,
-		currency.CurrencyPolicyUpdater,
-		currency.SuffrageInflation,
+	case currency.CreateAccount,
+		currency.UpdateKey,
+		currency.Transfer,
+		extensioncurrency.CreateContractAccount,
+		extensioncurrency.Withdraw,
+		currency.RegisterCurrency,
+		currency.UpdateCurrency,
+		currency.Mint,
 		dao.CreateDAO,
 		dao.UpdatePolicy,
 		dao.Propose,
