@@ -96,6 +96,10 @@ func (opp *CreateDAOProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("not contract account owner, %s", fact.Sender()), nil
 	}
 
+	if ca.IsActive() {
+		return nil, base.NewBaseOperationProcessReasonError("a design is already registered, %q", fact.Contract().String()), nil
+	}
+
 	if err := currencystate.CheckNotExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("dao already exists, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
@@ -140,11 +144,27 @@ func (opp *CreateDAOProcessor) Process(
 		return nil, base.NewBaseOperationProcessReasonError("invalid dao design, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
 	}
 
-	sts := make([]base.StateMergeValue, 2)
+	sts := make([]base.StateMergeValue, 3)
 
 	sts[0] = currencystate.NewStateMergeValue(
 		state.StateKeyDesign(fact.Contract(), fact.DAOID()),
 		state.NewDesignStateValue(design),
+	)
+
+	st, err := currencystate.ExistsState(stateextension.StateKeyContractAccount(fact.Contract()), "key of contract account", getStateFunc)
+	if err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("target contract account not found, %q; %w", fact.Contract(), err), nil
+	}
+
+	ca, err := stateextension.StateContractAccountValue(st)
+	if err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("failed to get state value of contract account, %q; %w", fact.Contract(), err), nil
+	}
+	ca.SetIsActive(true)
+
+	sts[1] = currencystate.NewStateMergeValue(
+		stateextension.StateKeyContractAccount(fact.Contract()),
+		stateextension.NewContractAccountStateValue(ca),
 	)
 
 	currencyPolicy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)
@@ -157,7 +177,7 @@ func (opp *CreateDAOProcessor) Process(
 		return nil, base.NewBaseOperationProcessReasonError("failed to check fee of currency, %q: %w", fact.Currency(), err), nil
 	}
 
-	st, err := currencystate.ExistsState(currency.StateKeyBalance(fact.Sender(), fact.Currency()), "key of sender balance", getStateFunc)
+	st, err = currencystate.ExistsState(currency.StateKeyBalance(fact.Sender(), fact.Currency()), "key of sender balance", getStateFunc)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("sender balance not found, %s, %q: %w", fact.Sender(), fact.Currency(), err), nil
 	}
@@ -174,7 +194,7 @@ func (opp *CreateDAOProcessor) Process(
 	if !ok {
 		return nil, base.NewBaseOperationProcessReasonError("expected BalanceStateValue, not %T", sb.Value()), nil
 	}
-	sts[1] = currencystate.NewStateMergeValue(sb.Key(), currency.NewBalanceStateValue(v.Amount.WithBig(v.Amount.Big().Sub(fee))))
+	sts[2] = currencystate.NewStateMergeValue(sb.Key(), currency.NewBalanceStateValue(v.Amount.WithBig(v.Amount.Big().Sub(fee))))
 
 	return sts, nil, nil
 }
