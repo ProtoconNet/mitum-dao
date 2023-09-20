@@ -4,12 +4,10 @@ import (
 	"context"
 
 	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
-
-	"github.com/pkg/errors"
-
 	"github.com/ProtoconNet/mitum-dao/operation/dao"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
+	"github.com/pkg/errors"
 )
 
 type ExecuteCommand struct {
@@ -17,7 +15,6 @@ type ExecuteCommand struct {
 	currencycmds.OperationFlags
 	Sender     currencycmds.AddressFlag    `arg:"" name:"sender" help:"sender address" required:"true"`
 	Contract   currencycmds.AddressFlag    `arg:"" name:"contract" help:"contract address of credential" required:"true"`
-	DAO        currencycmds.ContractIDFlag `arg:"" name:"dao-id" help:"dao id" required:"true"`
 	ProposalID string                      `arg:"" name:"proposal-id" help:"proposal id" required:"true"`
 	Currency   currencycmds.CurrencyIDFlag `arg:"" name:"currency-id" help:"currency id" required:"true"`
 	sender     base.Address
@@ -73,7 +70,6 @@ func (cmd *ExecuteCommand) createOperation() (base.Operation, error) { // nolint
 		[]byte(cmd.Token),
 		cmd.sender,
 		cmd.contract,
-		cmd.DAO.ID,
 		cmd.ProposalID,
 		cmd.Currency.CID,
 	)

@@ -8,11 +8,10 @@ import (
 )
 
 func (fact *RegisterFact) unpack(enc encoder.Encoder,
-	sa, ca, did, pid, ta, cid string,
+	sa, ca, pid, ta, cid string,
 ) error {
 	e := util.StringError("failed to unmarshal RegisterFact")
 
-	fact.daoID = currencytypes.ContractID(did)
 	fact.proposalID = pid
 	fact.currency = currencytypes.CurrencyID(cid)
 

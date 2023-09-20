@@ -1,19 +1,17 @@
 package types
 
 import (
-	"github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/encoder"
 	"github.com/ProtoconNet/mitum2/util/hint"
 	"github.com/pkg/errors"
 )
 
-func (de *Design) unpack(enc encoder.Encoder, ht hint.Hint, op, dao string, bpo []byte) error {
+func (de *Design) unpack(enc encoder.Encoder, ht hint.Hint, op string, bpo []byte) error {
 	e := util.StringError("failed to ummarshal of Design")
 
 	de.BaseHinter = hint.NewBaseHinter(ht)
 	de.option = DAOOption(op)
-	de.daoID = types.ContractID(dao)
 
 	if hinter, err := enc.Decode(bpo); err != nil {
 		return e.Wrap(err)

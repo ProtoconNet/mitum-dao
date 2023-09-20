@@ -15,7 +15,6 @@ type UpdatePolicyFactJSONMarshaler struct {
 	base.BaseFactJSONMarshaler
 	Owner                base.Address             `json:"sender"`
 	Contract             base.Address             `json:"contract"`
-	DAOID                currencytypes.ContractID `json:"dao_id"`
 	Option               types.DAOOption          `json:"option"`
 	VotingPowerToken     currencytypes.CurrencyID `json:"voting_power_token"`
 	Threshold            common.Big               `json:"threshold"`
@@ -37,7 +36,6 @@ func (fact UpdatePolicyFact) MarshalJSON() ([]byte, error) {
 		BaseFactJSONMarshaler: fact.BaseFact.JSONMarshaler(),
 		Owner:                 fact.sender,
 		Contract:              fact.contract,
-		DAOID:                 fact.daoID,
 		Option:                fact.option,
 		VotingPowerToken:      fact.votingPowerToken,
 		Threshold:             fact.threshold,
@@ -59,7 +57,6 @@ type UpdatePolicyFactJSONUnMarshaler struct {
 	base.BaseFactJSONUnmarshaler
 	Owner                string          `json:"sender"`
 	Contract             string          `json:"contract"`
-	DAOID                string          `json:"dao_id"`
 	Option               string          `json:"option"`
 	VotingPowerToken     string          `json:"voting_power_token"`
 	Threshold            string          `json:"threshold"`
@@ -89,7 +86,6 @@ func (fact *UpdatePolicyFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 	return fact.unpack(enc,
 		uf.Owner,
 		uf.Contract,
-		uf.DAOID,
 		uf.Option,
 		uf.VotingPowerToken,
 		uf.Threshold,

@@ -92,26 +92,26 @@ func (opp *VoteProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("fee currency doesn't exist, %q: %w", fact.Currency(), err), nil
 	}
 
-	if err := currencystate.CheckExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao design not found, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
+	if err := currencystate.CheckExistsState(state.StateKeyDesign(fact.Contract()), getStateFunc); err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("dao design not found, %s: %w", fact.Contract(), err), nil
 	}
 
-	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
+	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "key of proposal", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal state not found, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal state not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	}
 
 	p, err := state.StateProposalValue(st)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	}
 
 	if p.Status() == types.Canceled {
-		return nil, base.NewBaseOperationProcessReasonError("already canceled proposal, %s, %q, %q", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("already canceled proposal, %s, %q", fact.Contract(), fact.ProposalID()), nil
 	}
 
 	if p.Status() != types.PreSnapped {
-		return nil, base.NewBaseOperationProcessReasonError("proposal not in pre-snapped status, %s, %q, %q, %q", fact.Contract(), fact.DAOID(), fact.ProposalID(), p.Status()), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal not in pre-snapped status, %s, %q, %q", fact.Contract(), fact.ProposalID(), p.Status()), nil
 	}
 
 	blockMap, found, err := opp.getLastBlockFunc()
@@ -126,15 +126,15 @@ func (opp *VoteProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("current time is not within Voting period, Voting period; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
 
-	switch st, found, err := getStateFunc(state.StateKeyVoters(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
+	switch st, found, err := getStateFunc(state.StateKeyVoters(fact.Contract(), fact.ProposalID())); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find voters state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find voters state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	case !found:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find voters state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find voters state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	default:
 		voters, err := state.StateVotersValue(st)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find voters value from state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find voters value from state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 		}
 
 		for i, v := range voters {
@@ -143,27 +143,27 @@ func (opp *VoteProcessor) PreProcess(
 			}
 
 			if i == len(voters)-1 {
-				return nil, base.NewBaseOperationProcessReasonError("sender is not registered as voter, sender(%s), %s, %q, %q", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+				return nil, base.NewBaseOperationProcessReasonError("sender is not registered as voter, sender(%s), %s, %q", fact.Sender(), fact.Contract(), fact.ProposalID()), nil
 			}
 		}
 	}
 
-	switch st, found, err := getStateFunc(state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
+	switch st, found, err := getStateFunc(state.StateKeyVotingPowerBox(fact.Contract(), fact.ProposalID())); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	case found:
 		vpb, err := state.StateVotingPowerBoxValue(st)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box value from state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box value from state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 		}
 
 		vp, found := vpb.VotingPowers()[fact.Sender().String()]
 		if !found {
-			return nil, base.NewBaseOperationProcessReasonError("sender voting power not found, sender(%s), %s, %q, %q", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+			return nil, base.NewBaseOperationProcessReasonError("sender voting power not found, sender(%s), %s, %q", fact.Sender(), fact.Contract(), fact.ProposalID()), nil
 		}
 
 		if vp.Voted() {
-			return nil, base.NewBaseOperationProcessReasonError("sender already voted, sender(%s), %s, %q, %q", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+			return nil, base.NewBaseOperationProcessReasonError("sender already voted, sender(%s), %s, %q", fact.Sender(), fact.Contract(), fact.ProposalID()), nil
 		}
 	}
 
@@ -219,22 +219,22 @@ func (opp *VoteProcessor) Process(
 	}
 
 	var votingPowerBox types.VotingPowerBox
-	switch st, found, err := getStateFunc(state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID())); {
+	switch st, found, err := getStateFunc(state.StateKeyVotingPowerBox(fact.Contract(), fact.ProposalID())); {
 	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	case !found:
-		return nil, base.NewBaseOperationProcessReasonError("voting power box state not found, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("voting power box state not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	default:
 		vpb, err := state.StateVotingPowerBoxValue(st)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box value from state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+			return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box value from state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 		}
 		votingPowerBox = vpb
 	}
 
 	vp, found := votingPowerBox.VotingPowers()[fact.Sender().String()]
 	if !found {
-		return nil, base.NewBaseOperationProcessReasonError("sender voting power not found, sender(%s), %s, %q, %q", fact.Sender(), fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("sender voting power not found, sender(%s), %s, %q", fact.Sender(), fact.Contract(), fact.ProposalID()), nil
 	}
 	vp.SetVoted(true)
 	vp.SetVoteFor(fact.Vote())
@@ -253,7 +253,7 @@ func (opp *VoteProcessor) Process(
 
 	sts = append(sts,
 		currencystate.NewStateMergeValue(
-			state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID()),
+			state.StateKeyVotingPowerBox(fact.Contract(), fact.ProposalID()),
 			state.NewVotingPowerBoxStateValue(votingPowerBox),
 		),
 	)

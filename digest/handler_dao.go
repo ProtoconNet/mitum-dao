@@ -25,15 +25,8 @@ func (hd *Handlers) handleDAOService(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	service, err, status := parseRequest(w, r, "dao_id")
-	if err != nil {
-		currencydigest.HTTP2ProblemWithError(w, err, status)
-
-		return
-	}
-
 	if v, err, shared := hd.rg.Do(cacheKey, func() (interface{}, error) {
-		return hd.handleDAODesignInGroup(contract, service)
+		return hd.handleDAODesignInGroup(contract)
 	}); err != nil {
 		currencydigest.HTTP2HandleError(w, err)
 	} else {
@@ -44,12 +37,12 @@ func (hd *Handlers) handleDAOService(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (hd *Handlers) handleDAODesignInGroup(contract, service string) (interface{}, error) {
-	switch design, err := DAOService(hd.database, contract, service); {
+func (hd *Handlers) handleDAODesignInGroup(contract string) (interface{}, error) {
+	switch design, err := DAOService(hd.database, contract); {
 	case err != nil:
 		return nil, err
 	default:
-		hal, err := hd.buildDAODesignHal(contract, service, design)
+		hal, err := hd.buildDAODesignHal(contract, design)
 		if err != nil {
 			return nil, err
 		}
@@ -57,8 +50,8 @@ func (hd *Handlers) handleDAODesignInGroup(contract, service string) (interface{
 	}
 }
 
-func (hd *Handlers) buildDAODesignHal(contract, service string, design types.Design) (currencydigest.Hal, error) {
-	h, err := hd.combineURL(HandlerPathDAOService, "contract", contract, "dao_id", service)
+func (hd *Handlers) buildDAODesignHal(contract string, design types.Design) (currencydigest.Hal, error) {
+	h, err := hd.combineURL(HandlerPathDAOService, "contract", contract)
 	if err != nil {
 		return nil, err
 	}
@@ -81,13 +74,6 @@ func (hd *Handlers) handleProposal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	daoID, err, status := parseRequest(w, r, "dao_id")
-	if err != nil {
-		currencydigest.HTTP2ProblemWithError(w, err, status)
-
-		return
-	}
-
 	proposalID, err, status := parseRequest(w, r, "proposal_id")
 	if err != nil {
 		currencydigest.HTTP2ProblemWithError(w, err, status)
@@ -95,7 +81,7 @@ func (hd *Handlers) handleProposal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if v, err, shared := hd.rg.Do(cacheKey, func() (interface{}, error) {
-		return hd.handleProposalInGroup(contract, daoID, proposalID)
+		return hd.handleProposalInGroup(contract, proposalID)
 	}); err != nil {
 		currencydigest.HTTP2HandleError(w, err)
 	} else {
@@ -106,12 +92,12 @@ func (hd *Handlers) handleProposal(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (hd *Handlers) handleProposalInGroup(contract, daoID, proposalID string) (interface{}, error) {
-	switch proposal, err := Proposal(hd.database, contract, daoID, proposalID); {
+func (hd *Handlers) handleProposalInGroup(contract, proposalID string) (interface{}, error) {
+	switch proposal, err := Proposal(hd.database, contract, proposalID); {
 	case err != nil:
 		return nil, err
 	default:
-		hal, err := hd.buildProposalHal(contract, daoID, proposalID, proposal)
+		hal, err := hd.buildProposalHal(contract, proposalID, proposal)
 		if err != nil {
 			return nil, err
 		}
@@ -119,8 +105,8 @@ func (hd *Handlers) handleProposalInGroup(contract, daoID, proposalID string) (i
 	}
 }
 
-func (hd *Handlers) buildProposalHal(contract, daoID, proposalID string, proposal state.ProposalStateValue) (currencydigest.Hal, error) {
-	h, err := hd.combineURL(HandlerPathDAOService, "contract", contract, "dao_id", daoID, "proposal_id", proposalID)
+func (hd *Handlers) buildProposalHal(contract, proposalID string, proposal state.ProposalStateValue) (currencydigest.Hal, error) {
+	h, err := hd.combineURL(HandlerPathDAOService, "contract", contract, "proposal_id", proposalID)
 	if err != nil {
 		return nil, err
 	}
@@ -142,12 +128,6 @@ func (hd *Handlers) handleDelegator(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceID, err, status := parseRequest(w, r, "dao_id")
-	if err != nil {
-		currencydigest.HTTP2ProblemWithError(w, err, status)
-		return
-	}
-
 	proposalID, err, status := parseRequest(w, r, "proposal_id")
 	if err != nil {
 		currencydigest.HTTP2ProblemWithError(w, err, status)
@@ -161,7 +141,7 @@ func (hd *Handlers) handleDelegator(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if v, err, shared := hd.rg.Do(cacheKey, func() (interface{}, error) {
-		return hd.handleDelegatorInGroup(contract, serviceID, proposalID, delegator)
+		return hd.handleDelegatorInGroup(contract, proposalID, delegator)
 	}); err != nil {
 		currencydigest.HTTP2HandleError(w, err)
 	} else {
@@ -172,12 +152,12 @@ func (hd *Handlers) handleDelegator(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (hd *Handlers) handleDelegatorInGroup(contract, serviceID, proposalID, delegator string) (interface{}, error) {
-	switch delegatorInfo, err := DelegatorInfo(hd.database, contract, serviceID, proposalID, delegator); {
+func (hd *Handlers) handleDelegatorInGroup(contract, proposalID, delegator string) (interface{}, error) {
+	switch delegatorInfo, err := DelegatorInfo(hd.database, contract, proposalID, delegator); {
 	case err != nil:
 		return nil, err
 	default:
-		hal, err := hd.buildDelegatorHal(contract, serviceID, proposalID, delegator, delegatorInfo)
+		hal, err := hd.buildDelegatorHal(contract, proposalID, delegator, delegatorInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -186,13 +166,12 @@ func (hd *Handlers) handleDelegatorInGroup(contract, serviceID, proposalID, dele
 }
 
 func (hd *Handlers) buildDelegatorHal(
-	contract, serviceID, proposalID, delegator string,
+	contract, proposalID, delegator string,
 	delegatorInfo types.DelegatorInfo,
 ) (currencydigest.Hal, error) {
 	h, err := hd.combineURL(
 		HandlerPathDelegator,
 		"contract", contract,
-		"dao_id", serviceID,
 		"proposal_id", proposalID,
 		"address", delegator,
 	)
@@ -217,12 +196,6 @@ func (hd *Handlers) handleVoters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	daoID, err, status := parseRequest(w, r, "dao_id")
-	if err != nil {
-		currencydigest.HTTP2ProblemWithError(w, err, status)
-		return
-	}
-
 	proposalID, err, status := parseRequest(w, r, "proposal_id")
 	if err != nil {
 		currencydigest.HTTP2ProblemWithError(w, err, status)
@@ -230,7 +203,7 @@ func (hd *Handlers) handleVoters(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if v, err, shared := hd.rg.Do(cacheKey, func() (interface{}, error) {
-		return hd.handleVotersInGroup(contract, daoID, proposalID)
+		return hd.handleVotersInGroup(contract, proposalID)
 	}); err != nil {
 		currencydigest.HTTP2HandleError(w, err)
 	} else {
@@ -241,12 +214,12 @@ func (hd *Handlers) handleVoters(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (hd *Handlers) handleVotersInGroup(contract, daoID, proposalID string) (interface{}, error) {
-	switch voters, err := Voters(hd.database, contract, daoID, proposalID); {
+func (hd *Handlers) handleVotersInGroup(contract, proposalID string) (interface{}, error) {
+	switch voters, err := Voters(hd.database, contract, proposalID); {
 	case err != nil:
 		return nil, err
 	default:
-		hal, err := hd.buildVotersHal(contract, daoID, proposalID, voters)
+		hal, err := hd.buildVotersHal(contract, proposalID, voters)
 		if err != nil {
 			return nil, err
 		}
@@ -255,9 +228,9 @@ func (hd *Handlers) handleVotersInGroup(contract, daoID, proposalID string) (int
 }
 
 func (hd *Handlers) buildVotersHal(
-	contract, daoID, proposalID string, voters []types.VoterInfo,
+	contract, proposalID string, voters []types.VoterInfo,
 ) (currencydigest.Hal, error) {
-	h, err := hd.combineURL(HandlerPathVoters, "contract", contract, "dao_id", daoID, "proposal_id", proposalID)
+	h, err := hd.combineURL(HandlerPathVoters, "contract", contract, "proposal_id", proposalID)
 	if err != nil {
 		return nil, err
 	}
@@ -279,12 +252,6 @@ func (hd *Handlers) handleVotingPowerBox(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	daoID, err, status := parseRequest(w, r, "dao_id")
-	if err != nil {
-		currencydigest.HTTP2ProblemWithError(w, err, status)
-		return
-	}
-
 	proposalID, err, status := parseRequest(w, r, "proposal_id")
 	if err != nil {
 		currencydigest.HTTP2ProblemWithError(w, err, status)
@@ -292,7 +259,7 @@ func (hd *Handlers) handleVotingPowerBox(w http.ResponseWriter, r *http.Request)
 	}
 
 	if v, err, shared := hd.rg.Do(cacheKey, func() (interface{}, error) {
-		return hd.handleVotingPowerBoxInGroup(contract, daoID, proposalID)
+		return hd.handleVotingPowerBoxInGroup(contract, proposalID)
 	}); err != nil {
 		currencydigest.HTTP2HandleError(w, err)
 	} else {
@@ -303,12 +270,12 @@ func (hd *Handlers) handleVotingPowerBox(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (hd *Handlers) handleVotingPowerBoxInGroup(contract, daoID, proposalID string) (interface{}, error) {
-	switch votingPowerBox, err := VotingPowerBox(hd.database, contract, daoID, proposalID); {
+func (hd *Handlers) handleVotingPowerBoxInGroup(contract, proposalID string) (interface{}, error) {
+	switch votingPowerBox, err := VotingPowerBox(hd.database, contract, proposalID); {
 	case err != nil:
 		return nil, err
 	default:
-		hal, err := hd.buildVotingPowerBoxHal(contract, daoID, proposalID, votingPowerBox)
+		hal, err := hd.buildVotingPowerBoxHal(contract, proposalID, votingPowerBox)
 		if err != nil {
 			return nil, err
 		}
@@ -317,13 +284,12 @@ func (hd *Handlers) handleVotingPowerBoxInGroup(contract, daoID, proposalID stri
 }
 
 func (hd *Handlers) buildVotingPowerBoxHal(
-	contract, daoID, proposalID string,
+	contract, proposalID string,
 	votingPowerBox types.VotingPowerBox,
 ) (currencydigest.Hal, error) {
 	h, err := hd.combineURL(
 		HandlerPathVotingPowerBox,
 		"contract", contract,
-		"dao_id", daoID,
 		"proposal_id", proposalID,
 	)
 	if err != nil {

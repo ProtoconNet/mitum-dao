@@ -18,7 +18,6 @@ type ExecuteFact struct {
 	base.BaseFact
 	sender     base.Address
 	contract   base.Address
-	daoID      currencytypes.ContractID
 	proposalID string
 	currency   currencytypes.CurrencyID
 }
@@ -27,7 +26,6 @@ func NewExecuteFact(
 	token []byte,
 	sender base.Address,
 	contract base.Address,
-	daoID currencytypes.ContractID,
 	proposalID string,
 	currency currencytypes.CurrencyID,
 ) ExecuteFact {
@@ -36,7 +34,6 @@ func NewExecuteFact(
 		BaseFact:   bf,
 		sender:     sender,
 		contract:   contract,
-		daoID:      daoID,
 		proposalID: proposalID,
 		currency:   currency,
 	}
@@ -58,7 +55,6 @@ func (fact ExecuteFact) Bytes() []byte {
 		fact.Token(),
 		fact.sender.Bytes(),
 		fact.contract.Bytes(),
-		fact.daoID.Bytes(),
 		[]byte(fact.proposalID),
 		fact.currency.Bytes(),
 	)
@@ -75,7 +71,6 @@ func (fact ExecuteFact) IsValid(b []byte) error {
 
 	if err := util.CheckIsValiders(nil, false,
 		fact.sender,
-		fact.daoID,
 		fact.contract,
 		fact.currency,
 	); err != nil {
@@ -103,10 +98,6 @@ func (fact ExecuteFact) Sender() base.Address {
 
 func (fact ExecuteFact) Contract() base.Address {
 	return fact.contract
-}
-
-func (fact ExecuteFact) DAOID() currencytypes.ContractID {
-	return fact.daoID
 }
 
 func (fact ExecuteFact) ProposalID() string {

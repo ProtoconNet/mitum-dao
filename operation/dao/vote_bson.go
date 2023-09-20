@@ -16,7 +16,6 @@ func (fact VoteFact) MarshalBSON() ([]byte, error) {
 			"_hint":       fact.Hint().String(),
 			"sender":      fact.sender,
 			"contract":    fact.contract,
-			"dao_id":      fact.daoID,
 			"proposal_id": fact.proposalID,
 			"vote":        fact.vote,
 			"currency":    fact.currency,
@@ -30,7 +29,6 @@ type VoteFactBSONUnmarshaler struct {
 	Hint       string `bson:"_hint"`
 	Sender     string `bson:"sender"`
 	Contract   string `bson:"contract"`
-	DAOID      string `bson:"dao_id"`
 	ProposalID string `bson:"proposal_id"`
 	Vote       uint8  `bson:"vote"`
 	Currency   string `bson:"currency"`
@@ -62,7 +60,6 @@ func (fact *VoteFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 	return fact.unpack(enc,
 		uf.Sender,
 		uf.Contract,
-		uf.DAOID,
 		uf.ProposalID,
 		uf.Vote,
 		uf.Currency,

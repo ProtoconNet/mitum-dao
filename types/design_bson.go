@@ -13,7 +13,6 @@ func (de Design) MarshalBSON() ([]byte, error) {
 		bson.M{
 			"_hint":  de.Hint().String(),
 			"option": de.option,
-			"dao_id": de.daoID,
 			"policy": de.policy,
 		})
 }
@@ -21,7 +20,6 @@ func (de Design) MarshalBSON() ([]byte, error) {
 type DesignBSONUnmarshaler struct {
 	Hint   string   `bson:"_hint"`
 	Option string   `bson:"option"`
-	DAO    string   `bson:"dao_id"`
 	Policy bson.Raw `bson:"policy"`
 }
 
@@ -38,5 +36,5 @@ func (de *Design) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		return e.Wrap(err)
 	}
 
-	return de.unpack(enc, ht, ud.Option, ud.DAO, ud.Policy)
+	return de.unpack(enc, ht, ud.Option, ud.Policy)
 }

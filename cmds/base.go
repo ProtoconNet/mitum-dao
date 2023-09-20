@@ -2,11 +2,11 @@ package cmds
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 
 	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
-
 	"github.com/ProtoconNet/mitum2/launch"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/encoder"
@@ -21,12 +21,6 @@ type BaseCommand struct {
 	Encoders *encoder.Encoders
 	Log      *zerolog.Logger
 	Out      io.Writer `kong:"-"`
-}
-
-func NewBaseCommand() *BaseCommand {
-	return &BaseCommand{
-		Out: os.Stdout,
-	}
 }
 
 func (cmd *BaseCommand) prepare(pctx context.Context) (context.Context, error) {
@@ -57,6 +51,11 @@ func (cmd *BaseCommand) prepare(pctx context.Context) (context.Context, error) {
 	)
 }
 
+func (cmd *BaseCommand) print(f string, a ...interface{}) {
+	_, _ = fmt.Fprintf(cmd.Out, f, a...)
+	_, _ = fmt.Fprintln(cmd.Out)
+}
+
 func PAddHinters(ctx context.Context) (context.Context, error) {
 	e := util.StringError("add hinters")
 
@@ -72,6 +71,7 @@ func PAddHinters(ctx context.Context) (context.Context, error) {
 	if err := LoadHinters(enc); err != nil {
 		return ctx, e.Wrap(err)
 	}
+
 	if err := LoadHinters(benc); err != nil {
 		return ctx, e.Wrap(err)
 	}

@@ -232,24 +232,34 @@ func (bs *BlockSession) prepareOperations() error {
 
 	for i := range bs.ops {
 		op := bs.ops[i]
-		found, inState, reason := node(op.Fact().Hash())
 
-		if !found {
-			return mitumutil.ErrNotFound.Errorf("operation, %s not found in operations tree", op.Fact().Hash().String())
+		var doc currencydigest.OperationDoc
+		switch found, inState, reason := node(op.Fact().Hash()); {
+		case !found:
+			return mitumutil.ErrNotFound.Errorf("operation, %v in operations tree", op.Fact().Hash().String())
+		default:
+			var reasonMsg string
+			switch {
+			case reason == nil:
+				reasonMsg = ""
+			default:
+				reasonMsg = reason.Msg()
+			}
+			d, err := currencydigest.NewOperationDoc(
+				op,
+				bs.st.DatabaseEncoder(),
+				bs.block.Manifest().Height(),
+				bs.block.SignedAt(),
+				inState,
+				reasonMsg,
+				uint64(i),
+			)
+			if err != nil {
+				return err
+			}
+			doc = d
 		}
 
-		doc, err := currencydigest.NewOperationDoc(
-			op,
-			bs.st.DatabaseEncoder(),
-			bs.block.Manifest().Height(),
-			bs.block.SignedAt(),
-			inState,
-			reason,
-			uint64(i),
-		)
-		if err != nil {
-			return err
-		}
 		bs.operationModels[i] = mongo.NewInsertOneModel().SetDocument(doc)
 	}
 

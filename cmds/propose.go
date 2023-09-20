@@ -4,14 +4,12 @@ import (
 	"context"
 
 	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
-
-	"github.com/pkg/errors"
-
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum-dao/operation/dao"
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
+	"github.com/pkg/errors"
 )
 
 type TransferCallDataCommand struct {
@@ -50,12 +48,11 @@ type BizProposalCommand struct {
 type ProposeCommand struct {
 	BaseCommand
 	currencycmds.OperationFlags
-	Sender     currencycmds.AddressFlag    `arg:"" name:"sender" help:"sender address" required:"true"`
-	Contract   currencycmds.AddressFlag    `arg:"" name:"contract" help:"contract address of credential" required:"true"`
-	DAO        currencycmds.ContractIDFlag `arg:"" name:"dao-id" help:"dao id" required:"true"`
-	Option     types.DAOOption             `arg:"" name:"option" help:"propose option; crypto | biz" required:"true"`
-	ProposalID string                      `arg:"" name:"proposal-id" help:"proposal id" required:"true"`
-	StartTime  uint64                      `arg:"" name:"start-time" help:"start time to proposal lifecycle" required:"true"`
+	Sender     currencycmds.AddressFlag `arg:"" name:"sender" help:"sender address" required:"true"`
+	Contract   currencycmds.AddressFlag `arg:"" name:"contract" help:"contract address of credential" required:"true"`
+	Option     types.DAOOption          `arg:"" name:"option" help:"propose option; crypto | biz" required:"true"`
+	ProposalID string                   `arg:"" name:"proposal-id" help:"proposal id" required:"true"`
+	StartTime  uint64                   `arg:"" name:"start-time" help:"start time to proposal lifecycle" required:"true"`
 	CryptoProposalCommand
 	BizProposalCommand
 	Currency currencycmds.CurrencyIDFlag `arg:"" name:"currency-id" help:"currency id" required:"true"`
@@ -188,7 +185,6 @@ func (cmd *ProposeCommand) createOperation() (base.Operation, error) { // nolint
 		[]byte(cmd.Token),
 		cmd.sender,
 		cmd.contract,
-		cmd.DAO.ID,
 		cmd.ProposalID,
 		cmd.proposal,
 		cmd.Currency.CID,

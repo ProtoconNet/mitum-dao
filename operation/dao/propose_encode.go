@@ -10,13 +10,12 @@ import (
 )
 
 func (fact *ProposeFact) unpack(enc encoder.Encoder,
-	sa, ca, did, pid string,
+	sa, ca, pid string,
 	bp []byte,
 	cid string,
 ) error {
 	e := util.StringError("failed to unmarshal ProposeFact")
 
-	fact.daoID = currencytypes.ContractID(did)
 	fact.proposalID = pid
 	fact.currency = currencytypes.CurrencyID(cid)
 

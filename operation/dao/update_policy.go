@@ -19,7 +19,6 @@ type UpdatePolicyFact struct {
 	base.BaseFact
 	sender               base.Address
 	contract             base.Address
-	daoID                currencytypes.ContractID
 	option               types.DAOOption
 	votingPowerToken     currencytypes.CurrencyID
 	threshold            common.Big
@@ -40,7 +39,6 @@ func NewUpdatePolicyFact(
 	token []byte,
 	sender base.Address,
 	contract base.Address,
-	daoID currencytypes.ContractID,
 	option types.DAOOption,
 	votingPowerToken currencytypes.CurrencyID,
 	threshold common.Big,
@@ -60,7 +58,6 @@ func NewUpdatePolicyFact(
 		BaseFact:             bf,
 		sender:               sender,
 		contract:             contract,
-		daoID:                daoID,
 		option:               option,
 		votingPowerToken:     votingPowerToken,
 		threshold:            threshold,
@@ -94,7 +91,6 @@ func (fact UpdatePolicyFact) Bytes() []byte {
 		fact.Token(),
 		fact.sender.Bytes(),
 		fact.contract.Bytes(),
-		fact.daoID.Bytes(),
 		fact.option.Bytes(),
 		fact.votingPowerToken.Bytes(),
 		fact.threshold.Bytes(),
@@ -123,7 +119,6 @@ func (fact UpdatePolicyFact) IsValid(b []byte) error {
 
 	if err := util.CheckIsValiders(nil, false,
 		fact.sender,
-		fact.daoID,
 		fact.contract,
 		fact.votingPowerToken,
 		fact.fee,
@@ -153,10 +148,6 @@ func (fact UpdatePolicyFact) Sender() base.Address {
 
 func (fact UpdatePolicyFact) Contract() base.Address {
 	return fact.contract
-}
-
-func (fact UpdatePolicyFact) DAOID() currencytypes.ContractID {
-	return fact.daoID
 }
 
 func (fact UpdatePolicyFact) Option() types.DAOOption {

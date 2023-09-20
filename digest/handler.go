@@ -19,11 +19,11 @@ import (
 )
 
 var (
-	HandlerPathDAOService     = `/dao/{contract:\w+}/service/{dao_id:\w+}`
-	HandlerPathProposal       = `/dao/{contract:\w+}/service/{dao_id:\w+}/proposal/{proposal_id:\w+}`
-	HandlerPathDelegator      = `/dao/{contract:\w+}/service/{dao_id:\w+}/proposal/{proposal_id:\w+}/delegator/{address:(?i)` + base.REStringAddressString + `}`
-	HandlerPathVoters         = `/dao/{contract:\w+}/service/{dao_id:\w+}/proposal/{proposal_id:\w+}/voter`
-	HandlerPathVotingPowerBox = `/dao/{contract:\w+}/service/{dao_id:\w+}/proposal/{proposal_id:\w+}/votingpower` // revive:disable-line:line-length-limit
+	HandlerPathDAOService     = `/dao/{contract:\w+}/service`
+	HandlerPathProposal       = `/dao/{contract:\w+}/proposal/{proposal_id:\w+}`
+	HandlerPathDelegator      = `/dao/{contract:\w+}/proposal/{proposal_id:\w+}/delegator/{address:(?i)` + base.REStringAddressString + `}`
+	HandlerPathVoters         = `/dao/{contract:\w+}/proposal/{proposal_id:\w+}/voter`
+	HandlerPathVotingPowerBox = `/dao/{contract:\w+}/proposal/{proposal_id:\w+}/votingpower` // revive:disable-line:line-length-limit
 )
 
 func init() {

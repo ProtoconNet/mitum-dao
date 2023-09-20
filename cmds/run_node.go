@@ -28,15 +28,17 @@ import (
 )
 
 type RunCommand struct { //nolint:govet //...
+	//revive:disable:line-length-limit
 	launch.DesignFlag
 	launch.DevFlags `embed:"" prefix:"dev."`
-	Vault           string                `name:"vault" help:"privatekey path of vault"`
-	Discovery       []launch.ConnInfoFlag `help:"member discovery" placeholder:"ConnInfo"`
-	Hold            launch.HeightFlag     `help:"hold consensus states"`
-	HTTPState       string                `name:"http-state" help:"runtime statistics thru https" placeholder:"bind address"`
-	exitf           func(error)
-	log             *zerolog.Logger
-	holded          bool
+	launch.PrivatekeyFlags
+	Discovery []launch.ConnInfoFlag `help:"member discovery" placeholder:"ConnInfo"`
+	Hold      launch.HeightFlag     `help:"hold consensus states"`
+	HTTPState string                `name:"http-state" help:"runtime statistics thru https" placeholder:"bind address"`
+	exitf     func(error)
+	log       *zerolog.Logger
+	holded    bool
+	//revive:enable:line-length-limit
 }
 
 func (cmd *RunCommand) Run(pctx context.Context) error {
@@ -47,7 +49,7 @@ func (cmd *RunCommand) Run(pctx context.Context) error {
 
 	log.Log().Debug().
 		Interface("design", cmd.DesignFlag).
-		Interface("vault", cmd.Vault).
+		Interface("privatekey", cmd.Privatekey).
 		Interface("discovery", cmd.Discovery).
 		Interface("hold", cmd.Hold).
 		Interface("http_state", cmd.HTTPState).
@@ -63,18 +65,15 @@ func (cmd *RunCommand) Run(pctx context.Context) error {
 	}
 
 	nctx := util.ContextWithValues(pctx, map[util.ContextKey]interface{}{
-		launch.DesignFlagContextKey:    cmd.DesignFlag,
-		launch.DevFlagsContextKey:      cmd.DevFlags,
-		launch.DiscoveryFlagContextKey: cmd.Discovery,
-		launch.VaultContextKey:         cmd.Vault,
+		launch.DesignFlagContextKey:     cmd.DesignFlag,
+		launch.DevFlagsContextKey:       cmd.DevFlags,
+		launch.DiscoveryFlagContextKey:  cmd.Discovery,
+		launch.PrivatekeyFromContextKey: cmd.Privatekey,
 	})
 
 	pps := currencycmds.DefaultRunPS()
 
-	_ = pps.AddOK(currencycmds.PNameMongoDBsDataBase, currencycmds.ProcessDatabase, nil, currencycmds.PNameDigestDesign, launch.PNameStorage).
-		AddOK(currencycmds.PNameDigester, ProcessDigester, nil, currencycmds.PNameMongoDBsDataBase).
-		AddOK(currencycmds.PNameDigest, currencycmds.ProcessDigestAPI, nil, currencycmds.PNameDigestDesign, currencycmds.PNameMongoDBsDataBase, launch.PNameMemberlist).
-		AddOK(currencycmds.PNameDigestStart, currencycmds.ProcessStartDigestAPI, nil, currencycmds.PNameDigest).
+	_ = pps.AddOK(currencycmds.PNameDigester, ProcessDigester, nil, currencycmds.PNameMongoDBsDataBase).
 		AddOK(currencycmds.PNameStartDigester, ProcessStartDigester, nil, currencycmds.PNameDigestStart)
 	_ = pps.POK(launch.PNameStorage).PostAddOK(ps.Name("check-hold"), cmd.pCheckHold)
 	_ = pps.POK(launch.PNameStates).

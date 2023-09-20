@@ -40,7 +40,6 @@ func (doc DesignDoc) MarshalBSON() ([]byte, error) {
 
 	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix)
 	m["contract"] = parsedKey[1]
-	m["dao_id"] = doc.de.DAOID()
 	m["height"] = doc.st.Height()
 	//m["design"] = doc.de
 
@@ -80,8 +79,7 @@ func (doc ProposalDoc) MarshalBSON() ([]byte, error) {
 
 	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix)
 	m["contract"] = parsedKey[1]
-	m["dao_id"] = parsedKey[2]
-	m["proposal_id"] = parsedKey[3]
+	m["proposal_id"] = parsedKey[2]
 	m["height"] = doc.st.Height()
 	m["proposal"] = doc.pr
 	m["proposal_status"] = doc.ps
@@ -120,8 +118,7 @@ func (doc DelegatorsDoc) MarshalBSON() ([]byte, error) {
 
 	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix)
 	m["contract"] = parsedKey[1]
-	m["dao_id"] = parsedKey[2]
-	m["proposal_id"] = parsedKey[3]
+	m["proposal_id"] = parsedKey[2]
 	m["height"] = doc.st.Height()
 	m["delegators"] = doc.di
 
@@ -159,8 +156,7 @@ func (doc VotersDoc) MarshalBSON() ([]byte, error) {
 
 	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix)
 	m["contract"] = parsedKey[1]
-	m["dao_id"] = parsedKey[2]
-	m["proposal_id"] = parsedKey[3]
+	m["proposal_id"] = parsedKey[2]
 	m["height"] = doc.st.Height()
 	m["voters"] = doc.vi
 
@@ -198,8 +194,7 @@ func (doc VotingPowerBoxDoc) MarshalBSON() ([]byte, error) {
 
 	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix)
 	m["contract"] = parsedKey[1]
-	m["dao_id"] = parsedKey[2]
-	m["proposal_id"] = parsedKey[3]
+	m["proposal_id"] = parsedKey[2]
 	m["height"] = doc.st.Height()
 	m["voting_power_box"] = doc.vpb
 

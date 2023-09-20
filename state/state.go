@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
@@ -18,8 +17,8 @@ var (
 	DesignSuffix         = ":design"
 )
 
-func StateKeyDAOPrefix(ca base.Address, daoID currencytypes.ContractID) string {
-	return fmt.Sprintf("%s%s:%s", DAOPrefix, ca.String(), daoID)
+func StateKeyDAOPrefix(ca base.Address) string {
+	return fmt.Sprintf("%s%s", DAOPrefix, ca.String())
 }
 
 type DesignStateValue struct {
@@ -74,8 +73,8 @@ func IsStateDesignKey(key string) bool {
 	return strings.HasPrefix(key, DAOPrefix) && strings.HasSuffix(key, DesignSuffix)
 }
 
-func StateKeyDesign(ca base.Address, daoID currencytypes.ContractID) string {
-	return fmt.Sprintf("%s%s", StateKeyDAOPrefix(ca, daoID), DesignSuffix)
+func StateKeyDesign(ca base.Address) string {
+	return fmt.Sprintf("%s%s", StateKeyDAOPrefix(ca), DesignSuffix)
 }
 
 var (
@@ -155,8 +154,8 @@ func IsStateProposalKey(key string) bool {
 	return strings.HasPrefix(key, DAOPrefix) && strings.HasSuffix(key, ProposalSuffix)
 }
 
-func StateKeyProposal(ca base.Address, daoID currencytypes.ContractID, pid string) string {
-	return fmt.Sprintf("%s:%s%s", StateKeyDAOPrefix(ca, daoID), pid, ProposalSuffix)
+func StateKeyProposal(ca base.Address, pid string) string {
+	return fmt.Sprintf("%s:%s%s", StateKeyDAOPrefix(ca), pid, ProposalSuffix)
 }
 
 var (
@@ -224,8 +223,8 @@ func IsStateDelegatorsKey(key string) bool {
 	return strings.HasPrefix(key, DAOPrefix) && strings.HasSuffix(key, DelegatorsSuffix)
 }
 
-func StateKeyDelegators(ca base.Address, daoID currencytypes.ContractID, pid string) string {
-	return fmt.Sprintf("%s:%s%s", StateKeyDAOPrefix(ca, daoID), pid, DelegatorsSuffix)
+func StateKeyDelegators(ca base.Address, pid string) string {
+	return fmt.Sprintf("%s:%s%s", StateKeyDAOPrefix(ca), pid, DelegatorsSuffix)
 }
 
 var (
@@ -302,8 +301,8 @@ func IsStateVotersKey(key string) bool {
 	return strings.HasPrefix(key, DAOPrefix) && strings.HasSuffix(key, VotersSuffix)
 }
 
-func StateKeyVoters(ca base.Address, daoID currencytypes.ContractID, pid string) string {
-	return fmt.Sprintf("%s:%s%s", StateKeyDAOPrefix(ca, daoID), pid, VotersSuffix)
+func StateKeyVoters(ca base.Address, pid string) string {
+	return fmt.Sprintf("%s:%s%s", StateKeyDAOPrefix(ca), pid, VotersSuffix)
 }
 
 //var (
@@ -424,8 +423,8 @@ func IsStateVotingPowerBoxKey(key string) bool {
 	return strings.HasPrefix(key, DAOPrefix) && strings.HasSuffix(key, VotingPowerBoxSuffix)
 }
 
-func StateKeyVotingPowerBox(ca base.Address, daoID currencytypes.ContractID, pid string) string {
-	return fmt.Sprintf("%s:%s%s", StateKeyDAOPrefix(ca, daoID), pid, VotingPowerBoxSuffix)
+func StateKeyVotingPowerBox(ca base.Address, pid string) string {
+	return fmt.Sprintf("%s:%s%s", StateKeyDAOPrefix(ca), pid, VotingPowerBoxSuffix)
 }
 
 func ParseStateKey(key string, Prefix string) ([]string, error) {

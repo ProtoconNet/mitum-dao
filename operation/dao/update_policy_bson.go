@@ -16,7 +16,6 @@ func (fact UpdatePolicyFact) MarshalBSON() ([]byte, error) {
 			"_hint":                  fact.Hint().String(),
 			"sender":                 fact.sender,
 			"contract":               fact.contract,
-			"dao_id":                 fact.daoID,
 			"option":                 fact.option,
 			"voting_power_token":     fact.votingPowerToken,
 			"threshold":              fact.threshold,
@@ -41,7 +40,6 @@ type UpdatePolicyFactBSONUnmarshaler struct {
 	Hint                 string   `bson:"_hint"`
 	Sender               string   `bson:"sender"`
 	Contract             string   `bson:"contract"`
-	DAOID                string   `bson:"dao_id"`
 	Option               string   `bson:"option"`
 	VotingPowerToken     string   `bson:"voting_power_token"`
 	Threshold            string   `bson:"threshold"`
@@ -84,7 +82,6 @@ func (fact *UpdatePolicyFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 	return fact.unpack(enc,
 		uf.Sender,
 		uf.Contract,
-		uf.DAOID,
 		uf.Option,
 		uf.VotingPowerToken,
 		uf.Threshold,

@@ -11,7 +11,7 @@ import (
 )
 
 func (fact *CreateDAOFact) unpack(enc encoder.Encoder,
-	sa, ca, did, op, tk, th string,
+	sa, ca, op, tk, th string,
 	bf, bw []byte,
 	prp, rp, prsp, vp, psp, edp uint64,
 	to, qou uint,
@@ -19,7 +19,6 @@ func (fact *CreateDAOFact) unpack(enc encoder.Encoder,
 ) error {
 	e := util.StringError("failed to unmarshal CreateDAOFact")
 
-	fact.daoID = currencytypes.ContractID(did)
 	fact.currency = currencytypes.CurrencyID(cid)
 	fact.option = types.DAOOption(op)
 	fact.votingPowerToken = currencytypes.CurrencyID(tk)

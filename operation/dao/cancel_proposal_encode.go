@@ -8,11 +8,10 @@ import (
 )
 
 func (fact *CancelProposalFact) unpack(enc encoder.Encoder,
-	sa, ca, did, pid, cid string,
+	sa, ca, pid, cid string,
 ) error {
 	e := util.StringError("failed to unmarshal CancelProposalFact")
 
-	fact.daoID = currencytypes.ContractID(did)
 	fact.proposalID = pid
 	fact.currency = currencytypes.CurrencyID(cid)
 

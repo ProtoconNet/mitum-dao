@@ -92,26 +92,26 @@ func (opp *ExecuteProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("fee currency doesn't exist, %q: %w", fact.Currency(), err), nil
 	}
 
-	if err := currencystate.CheckExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao design not found, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
+	if err := currencystate.CheckExistsState(state.StateKeyDesign(fact.Contract()), getStateFunc); err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("dao design not found, %s: %w", fact.Contract(), err), nil
 	}
 
-	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
+	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "key of proposal", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	}
 
 	p, err := state.StateProposalValue(st)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	}
 
 	if p.Status() == types.Canceled {
-		return nil, base.NewBaseOperationProcessReasonError("already canceled proposal, %s, %q, %q", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("already canceled proposal, %s, %q", fact.Contract(), fact.ProposalID()), nil
 	} else if p.Status() == types.Rejected {
-		return nil, base.NewBaseOperationProcessReasonError("rejected proposal, %s, %q, %q", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("rejected proposal, %s, %q", fact.Contract(), fact.ProposalID()), nil
 	} else if p.Status() == types.Executed {
-		return nil, base.NewBaseOperationProcessReasonError("already executed, %s, %q, %q", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+		return nil, base.NewBaseOperationProcessReasonError("already executed, %s, %q", fact.Contract(), fact.ProposalID()), nil
 	}
 
 	blockMap, found, err := opp.getLastBlockFunc()
@@ -126,8 +126,8 @@ func (opp *ExecuteProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("current time is not within the Execution, Execution period; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
 
-	if err := currencystate.CheckExistsState(state.StateKeyVotingPowerBox(fact.Contract(), fact.DAOID(), fact.ProposalID()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("voting power box state not found, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+	if err := currencystate.CheckExistsState(state.StateKeyVotingPowerBox(fact.Contract(), fact.ProposalID()), getStateFunc); err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("voting power box state not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	}
 
 	if err := currencystate.CheckFactSignsByState(fact.Sender(), op.Signs(), getStateFunc); err != nil {
@@ -181,14 +181,14 @@ func (opp *ExecuteProcessor) Process(
 		sts = append(sts, currencystate.NewStateMergeValue(sb.Key(), currency.NewBalanceStateValue(v.Amount.WithBig(v.Amount.Big().Sub(fee)))))
 	}
 
-	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()), "key of proposal", getStateFunc)
+	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "key of proposal", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	}
 
 	p, err := state.StateProposalValue(st)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s, %q, %q: %w", fact.Contract(), fact.DAOID(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	}
 
 	if p.Status() != types.Completed {
@@ -203,7 +203,7 @@ func (opp *ExecuteProcessor) Process(
 	}
 
 	sts = append(sts, currencystate.NewStateMergeValue(
-		state.StateKeyProposal(fact.Contract(), fact.DAOID(), fact.ProposalID()),
+		state.StateKeyProposal(fact.Contract(), fact.ProposalID()),
 		state.NewProposalStateValue(types.Executed, p.Proposal(), p.Policy()),
 	))
 
@@ -273,28 +273,28 @@ func (opp *ExecuteProcessor) Process(
 				return nil, base.NewBaseOperationProcessReasonError("expected GovernanceCalldata, not %T", cp.CallData()), nil
 			}
 
-			st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), "key of design", getStateFunc)
+			st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract()), "key of design", getStateFunc)
 			if err != nil {
-				return nil, base.NewBaseOperationProcessReasonError("dao design not found, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
+				return nil, base.NewBaseOperationProcessReasonError("dao design not found, %s: %w", fact.Contract(), err), nil
 			}
 
 			design, err := state.StateDesignValue(st)
 			if err != nil {
-				return nil, base.NewBaseOperationProcessReasonError("dao design value not found, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
+				return nil, base.NewBaseOperationProcessReasonError("dao design value not found, %s: %w", fact.Contract(), err), nil
 			}
 
-			nd := types.NewDesign(design.Option(), design.DAOID(), cd.Policy())
+			nd := types.NewDesign(design.Option(), cd.Policy())
 
 			if err := nd.IsValid(nil); err != nil {
 				sts = append(sts, currencystate.NewStateMergeValue(
-					state.StateKeyDesign(fact.Contract(), fact.DAOID()),
+					state.StateKeyDesign(fact.Contract()),
 					state.NewDesignStateValue(
 						nd,
 					),
 				))
 			}
 		default:
-			return nil, base.NewBaseOperationProcessReasonError("invalid calldata, %s, %q, %q", fact.Contract(), fact.DAOID(), fact.ProposalID()), nil
+			return nil, base.NewBaseOperationProcessReasonError("invalid calldata, %s, %q", fact.Contract(), fact.ProposalID()), nil
 		}
 	}
 

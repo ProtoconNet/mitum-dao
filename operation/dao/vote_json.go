@@ -12,7 +12,6 @@ type VoteFactJSONMarshaler struct {
 	base.BaseFactJSONMarshaler
 	Owner      base.Address             `json:"sender"`
 	Contract   base.Address             `json:"contract"`
-	DAOID      currencytypes.ContractID `json:"dao_id"`
 	ProposalID string                   `json:"proposal_id"`
 	Vote       uint8                    `json:"vote"`
 	Currency   currencytypes.CurrencyID `json:"currency"`
@@ -23,7 +22,6 @@ func (fact VoteFact) MarshalJSON() ([]byte, error) {
 		BaseFactJSONMarshaler: fact.BaseFact.JSONMarshaler(),
 		Owner:                 fact.sender,
 		Contract:              fact.contract,
-		DAOID:                 fact.daoID,
 		ProposalID:            fact.proposalID,
 		Vote:                  fact.vote,
 		Currency:              fact.currency,
@@ -34,7 +32,6 @@ type VoteFactJSONUnMarshaler struct {
 	base.BaseFactJSONUnmarshaler
 	Owner      string `json:"sender"`
 	Contract   string `json:"contract"`
-	DAOID      string `json:"dao_id"`
 	ProposalID string `json:"proposal_id"`
 	Vote       uint8  `json:"vote"`
 	Currency   string `json:"currency"`
@@ -53,7 +50,6 @@ func (fact *VoteFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 	return fact.unpack(enc,
 		uf.Owner,
 		uf.Contract,
-		uf.DAOID,
 		uf.ProposalID,
 		uf.Vote,
 		uf.Currency,

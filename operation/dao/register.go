@@ -18,7 +18,6 @@ type RegisterFact struct {
 	base.BaseFact
 	sender     base.Address
 	contract   base.Address
-	daoID      currencytypes.ContractID
 	proposalID string
 	delegated  base.Address
 	currency   currencytypes.CurrencyID
@@ -28,7 +27,6 @@ func NewRegisterFact(
 	token []byte,
 	sender base.Address,
 	contract base.Address,
-	daoID currencytypes.ContractID,
 	proposalID string,
 	delegated base.Address,
 	currency currencytypes.CurrencyID,
@@ -38,7 +36,6 @@ func NewRegisterFact(
 		BaseFact:   bf,
 		sender:     sender,
 		contract:   contract,
-		daoID:      daoID,
 		proposalID: proposalID,
 		delegated:  delegated,
 		currency:   currency,
@@ -61,7 +58,6 @@ func (fact RegisterFact) Bytes() []byte {
 		fact.Token(),
 		fact.sender.Bytes(),
 		fact.contract.Bytes(),
-		fact.daoID.Bytes(),
 		[]byte(fact.proposalID),
 		fact.delegated.Bytes(),
 		fact.currency.Bytes(),
@@ -79,7 +75,6 @@ func (fact RegisterFact) IsValid(b []byte) error {
 
 	if err := util.CheckIsValiders(nil, false,
 		fact.sender,
-		fact.daoID,
 		fact.contract,
 		fact.currency,
 		fact.delegated,
@@ -108,10 +103,6 @@ func (fact RegisterFact) Sender() base.Address {
 
 func (fact RegisterFact) Contract() base.Address {
 	return fact.contract
-}
-
-func (fact RegisterFact) DAOID() currencytypes.ContractID {
-	return fact.daoID
 }
 
 func (fact RegisterFact) ProposalID() string {

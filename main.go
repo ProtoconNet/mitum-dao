@@ -28,7 +28,7 @@ var CLI struct { //nolint:govet //...
 	launch.BaseFlags
 	Init      currencycmds.INITCommand `cmd:"" help:"init node"`
 	Run       cmds.RunCommand          `cmd:"" help:"run node"`
-	Storage   launchcmd.Storage        `cmd:""`
+	Storage   cmds.Storage             `cmd:""`
 	Operation struct {
 		Currency currencycmds.CurrencyCommand `cmd:"" help:"currency operation"`
 		Suffrage currencycmds.SuffrageCommand `cmd:"" help:"suffrage operation"`

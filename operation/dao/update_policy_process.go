@@ -96,8 +96,8 @@ func (opp *UpdatePolicyProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("not contract account owner, %s", fact.Sender()), nil
 	}
 
-	if err := currencystate.CheckExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao doesn't exist, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
+	if err := currencystate.CheckExistsState(state.StateKeyDesign(fact.Contract()), getStateFunc); err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("dao doesn't exist, %s: %w", fact.Contract(), err), nil
 	}
 
 	if err := currencystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.Currency()), getStateFunc); err != nil {
@@ -132,18 +132,18 @@ func (opp *UpdatePolicyProcessor) Process(
 		fact.postSnapshotPeriod, fact.executionDelayPeriod, fact.turnout, fact.quorum,
 	)
 	if err := policy.IsValid(nil); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("invalid dao policy, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("invalid dao policy, %s: %w", fact.Contract(), err), nil
 	}
 
-	design := types.NewDesign(fact.option, fact.DAOID(), policy)
+	design := types.NewDesign(fact.option, policy)
 	if err := design.IsValid(nil); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("invalid dao design, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("invalid dao design, %s: %w", fact.Contract(), err), nil
 	}
 
 	sts := make([]base.StateMergeValue, 2)
 
 	sts[0] = currencystate.NewStateMergeValue(
-		state.StateKeyDesign(fact.Contract(), fact.DAOID()),
+		state.StateKeyDesign(fact.Contract()),
 		state.NewDesignStateValue(design),
 	)
 

@@ -19,7 +19,6 @@ type ProposeFact struct {
 	base.BaseFact
 	sender     base.Address
 	contract   base.Address
-	daoID      currencytypes.ContractID
 	proposalID string
 	proposal   types.Proposal
 	currency   currencytypes.CurrencyID
@@ -29,7 +28,6 @@ func NewProposeFact(
 	token []byte,
 	sender base.Address,
 	contract base.Address,
-	daoID currencytypes.ContractID,
 	proposalID string,
 	proposal types.Proposal,
 	currency currencytypes.CurrencyID,
@@ -39,7 +37,6 @@ func NewProposeFact(
 		BaseFact:   bf,
 		sender:     sender,
 		contract:   contract,
-		daoID:      daoID,
 		proposalID: proposalID,
 		proposal:   proposal,
 		currency:   currency,
@@ -62,7 +59,6 @@ func (fact ProposeFact) Bytes() []byte {
 		fact.Token(),
 		fact.sender.Bytes(),
 		fact.contract.Bytes(),
-		fact.daoID.Bytes(),
 		[]byte(fact.proposalID),
 		fact.proposal.Bytes(),
 		fact.currency.Bytes(),
@@ -80,7 +76,6 @@ func (fact ProposeFact) IsValid(b []byte) error {
 
 	if err := util.CheckIsValiders(nil, false,
 		fact.sender,
-		fact.daoID,
 		fact.contract,
 		fact.proposal,
 		fact.currency,
@@ -109,10 +104,6 @@ func (fact ProposeFact) Sender() base.Address {
 
 func (fact ProposeFact) Contract() base.Address {
 	return fact.contract
-}
-
-func (fact ProposeFact) DAOID() currencytypes.ContractID {
-	return fact.daoID
 }
 
 func (fact ProposeFact) ProposalID() string {

@@ -18,7 +18,6 @@ type VoteFact struct {
 	base.BaseFact
 	sender     base.Address
 	contract   base.Address
-	daoID      currencytypes.ContractID
 	proposalID string
 	vote       uint8
 	currency   currencytypes.CurrencyID
@@ -28,7 +27,6 @@ func NewVoteFact(
 	token []byte,
 	sender base.Address,
 	contract base.Address,
-	daoID currencytypes.ContractID,
 	proposalID string,
 	vote uint8,
 	currency currencytypes.CurrencyID,
@@ -38,7 +36,6 @@ func NewVoteFact(
 		BaseFact:   bf,
 		sender:     sender,
 		contract:   contract,
-		daoID:      daoID,
 		proposalID: proposalID,
 		vote:       vote,
 		currency:   currency,
@@ -61,7 +58,6 @@ func (fact VoteFact) Bytes() []byte {
 		fact.Token(),
 		fact.sender.Bytes(),
 		fact.contract.Bytes(),
-		fact.daoID.Bytes(),
 		[]byte(fact.proposalID),
 		util.Uint8ToBytes(fact.vote),
 		fact.currency.Bytes(),
@@ -79,7 +75,6 @@ func (fact VoteFact) IsValid(b []byte) error {
 
 	if err := util.CheckIsValiders(nil, false,
 		fact.sender,
-		fact.daoID,
 		fact.contract,
 		fact.currency,
 	); err != nil {
@@ -107,10 +102,6 @@ func (fact VoteFact) Sender() base.Address {
 
 func (fact VoteFact) Contract() base.Address {
 	return fact.contract
-}
-
-func (fact VoteFact) DAOID() currencytypes.ContractID {
-	return fact.daoID
 }
 
 func (fact VoteFact) ProposalID() string {

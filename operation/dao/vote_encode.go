@@ -8,11 +8,10 @@ import (
 )
 
 func (fact *VoteFact) unpack(enc encoder.Encoder,
-	sa, ca, did, pid string, vt uint8, cid string,
+	sa, ca, pid string, vt uint8, cid string,
 ) error {
 	e := util.StringError("failed to unmarshal VoteFact")
 
-	fact.daoID = currencytypes.ContractID(did)
 	fact.proposalID = pid
 	fact.vote = vt
 	fact.currency = currencytypes.CurrencyID(cid)

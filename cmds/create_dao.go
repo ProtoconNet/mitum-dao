@@ -4,14 +4,12 @@ import (
 	"context"
 
 	currencycmds "github.com/ProtoconNet/mitum-currency/v3/cmds"
-
-	"github.com/pkg/errors"
-
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum-dao/operation/dao"
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
+	"github.com/pkg/errors"
 )
 
 type CreateDAOCommand struct {
@@ -19,7 +17,6 @@ type CreateDAOCommand struct {
 	currencycmds.OperationFlags
 	Sender               currencycmds.AddressFlag        `arg:"" name:"sender" help:"sender address" required:"true"`
 	Contract             currencycmds.AddressFlag        `arg:"" name:"contract" help:"contract address of credential" required:"true"`
-	DAO                  currencycmds.ContractIDFlag     `arg:"" name:"dao-id" help:"dao id" required:"true"`
 	Option               string                          `arg:"" name:"dao-option" help:"dao option" required:"true"`
 	VotingPowerToken     currencycmds.CurrencyIDFlag     `arg:"" name:"voting-power-token" help:"voting power token" required:"true"`
 	Threshold            currencycmds.BigFlag            `arg:"" name:"threshold" help:"threshold to propose" required:"true"`
@@ -38,13 +35,6 @@ type CreateDAOCommand struct {
 	contract             base.Address
 	whitelist            types.Whitelist
 	fee                  currencytypes.Amount
-}
-
-func NewCreateDAOCommand() CreateDAOCommand {
-	cmd := NewBaseCommand()
-	return CreateDAOCommand{
-		BaseCommand: *cmd,
-	}
 }
 
 func (cmd *CreateDAOCommand) Run(pctx context.Context) error { // nolint:dupl
@@ -108,7 +98,6 @@ func (cmd *CreateDAOCommand) createOperation() (base.Operation, error) { // noli
 		[]byte(cmd.Token),
 		cmd.sender,
 		cmd.contract,
-		cmd.DAO.ID,
 		types.DAOOption(cmd.Option),
 		cmd.VotingPowerToken.CID,
 		cmd.Threshold.Big,

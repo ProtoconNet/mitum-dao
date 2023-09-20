@@ -92,16 +92,16 @@ func (opp *CreateDAOProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("contract account value not found, %s: %w", fact.Contract(), err), nil
 	}
 
-	if !ca.Owner().Equal(fact.Sender()) {
-		return nil, base.NewBaseOperationProcessReasonError("not contract account owner, %s", fact.Sender()), nil
+	if !(ca.Owner().Equal(fact.sender) || ca.IsOperator(fact.Sender())) {
+		return nil, base.NewBaseOperationProcessReasonError("sender is neither the owner nor the operator of the target contract account, %q", fact.Sender()), nil
 	}
 
 	if ca.IsActive() {
 		return nil, base.NewBaseOperationProcessReasonError("a design is already registered, %q", fact.Contract().String()), nil
 	}
 
-	if err := currencystate.CheckNotExistsState(state.StateKeyDesign(fact.Contract(), fact.DAOID()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("dao already exists, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
+	if err := currencystate.CheckNotExistsState(state.StateKeyDesign(fact.Contract()), getStateFunc); err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("dao already exists, %s: %w", fact.Contract(), err), nil
 	}
 
 	if err := currencystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.Currency()), getStateFunc); err != nil {
@@ -136,18 +136,18 @@ func (opp *CreateDAOProcessor) Process(
 		fact.postSnapshotPeriod, fact.executionDelayPeriod, fact.turnout, fact.quorum,
 	)
 	if err := policy.IsValid(nil); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("invalid dao policy, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("invalid dao policy, %s: %w", fact.Contract(), err), nil
 	}
 
-	design := types.NewDesign(fact.option, fact.DAOID(), policy)
+	design := types.NewDesign(fact.option, policy)
 	if err := design.IsValid(nil); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("invalid dao design, %s, %q: %w", fact.Contract(), fact.DAOID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("invalid dao design, %s: %w", fact.Contract(), err), nil
 	}
 
 	sts := make([]base.StateMergeValue, 3)
 
 	sts[0] = currencystate.NewStateMergeValue(
-		state.StateKeyDesign(fact.Contract(), fact.DAOID()),
+		state.StateKeyDesign(fact.Contract()),
 		state.NewDesignStateValue(design),
 	)
 

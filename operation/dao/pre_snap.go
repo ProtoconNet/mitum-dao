@@ -18,7 +18,6 @@ type PreSnapFact struct {
 	base.BaseFact
 	sender     base.Address
 	contract   base.Address
-	daoID      currencytypes.ContractID
 	proposalID string
 	currency   currencytypes.CurrencyID
 }
@@ -27,7 +26,6 @@ func NewPreSnapFact(
 	token []byte,
 	sender base.Address,
 	contract base.Address,
-	daoID currencytypes.ContractID,
 	proposalID string,
 	currency currencytypes.CurrencyID,
 ) PreSnapFact {
@@ -36,7 +34,6 @@ func NewPreSnapFact(
 		BaseFact:   bf,
 		sender:     sender,
 		contract:   contract,
-		daoID:      daoID,
 		proposalID: proposalID,
 		currency:   currency,
 	}
@@ -58,7 +55,6 @@ func (fact PreSnapFact) Bytes() []byte {
 		fact.Token(),
 		fact.sender.Bytes(),
 		fact.contract.Bytes(),
-		fact.daoID.Bytes(),
 		[]byte(fact.proposalID),
 		fact.currency.Bytes(),
 	)
@@ -75,7 +71,6 @@ func (fact PreSnapFact) IsValid(b []byte) error {
 
 	if err := util.CheckIsValiders(nil, false,
 		fact.sender,
-		fact.daoID,
 		fact.contract,
 		fact.currency,
 	); err != nil {
@@ -103,10 +98,6 @@ func (fact PreSnapFact) Sender() base.Address {
 
 func (fact PreSnapFact) Contract() base.Address {
 	return fact.contract
-}
-
-func (fact PreSnapFact) DAOID() currencytypes.ContractID {
-	return fact.daoID
 }
 
 func (fact PreSnapFact) ProposalID() string {

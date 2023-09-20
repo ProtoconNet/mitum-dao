@@ -24,9 +24,8 @@ var (
 	defaultColNameVotingPowerBox = "digest_dao_voting_power_box"
 )
 
-func DAOService(st *currencydigest.Database, contract, daoID string) (types.Design, error) {
+func DAOService(st *currencydigest.Database, contract string) (types.Design, error) {
 	filter := util.NewBSONFilter("contract", contract)
-	filter = filter.Add("dao_id", daoID)
 
 	var design types.Design
 	var sta mitumbase.State
@@ -55,7 +54,7 @@ func DAOService(st *currencydigest.Database, contract, daoID string) (types.Desi
 	return design, nil
 }
 
-func DelegatorInfo(st *currencydigest.Database, contract, daoID, proposalID, delegator string) (types.DelegatorInfo, error) {
+func DelegatorInfo(st *currencydigest.Database, contract, proposalID, delegator string) (types.DelegatorInfo, error) {
 	var (
 		delegators    []types.DelegatorInfo
 		sta           mitumbase.State
@@ -64,7 +63,6 @@ func DelegatorInfo(st *currencydigest.Database, contract, daoID, proposalID, del
 	)
 
 	filter := util.NewBSONFilter("contract", contract)
-	filter = filter.Add("dao_id", daoID)
 	filter = filter.Add("proposal_id", proposalID)
 
 	if err = st.DatabaseClient().GetByFilter(
@@ -100,9 +98,8 @@ func DelegatorInfo(st *currencydigest.Database, contract, daoID, proposalID, del
 	return *delegatorInfo, nil
 }
 
-func Voters(st *currencydigest.Database, contract, daoID, proposalID string) ([]types.VoterInfo, error) {
+func Voters(st *currencydigest.Database, contract, proposalID string) ([]types.VoterInfo, error) {
 	filter := util.NewBSONFilter("contract", contract)
-	filter = filter.Add("dao_id", daoID)
 	filter = filter.Add("proposal_id", proposalID)
 
 	var voters []types.VoterInfo
@@ -131,9 +128,8 @@ func Voters(st *currencydigest.Database, contract, daoID, proposalID string) ([]
 	return voters, nil
 }
 
-func Proposal(st *currencydigest.Database, contract, daoID, proposalID string) (state.ProposalStateValue, error) {
+func Proposal(st *currencydigest.Database, contract, proposalID string) (state.ProposalStateValue, error) {
 	filter := util.NewBSONFilter("contract", contract)
-	filter = filter.Add("dao_id", daoID)
 	filter = filter.Add("proposal_id", proposalID)
 
 	var proposal state.ProposalStateValue
@@ -162,9 +158,8 @@ func Proposal(st *currencydigest.Database, contract, daoID, proposalID string) (
 	return proposal, nil
 }
 
-func VotingPowerBox(st *currencydigest.Database, contract, daoID, proposalID string) (types.VotingPowerBox, error) {
+func VotingPowerBox(st *currencydigest.Database, contract, proposalID string) (types.VotingPowerBox, error) {
 	filter := util.NewBSONFilter("contract", contract)
-	filter = filter.Add("dao_id", daoID)
 	filter = filter.Add("proposal_id", proposalID)
 
 	var votingPowerBox types.VotingPowerBox
