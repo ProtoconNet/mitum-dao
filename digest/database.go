@@ -12,16 +12,17 @@ import (
 )
 
 var (
-	defaultColNameAccount        = "digest_ac"
-	defaultColNameBalance        = "digest_bl"
-	defaultColNameCurrency       = "digest_cr"
-	defaultColNameOperation      = "digest_op"
-	defaultColNameBlock          = "digest_bm"
-	defaultColNameDAO            = "digest_dao_design"
-	defaultColNameProposal       = "digest_dao_proposal"
-	defaultColNameDelegators     = "digest_dao_delegators"
-	defaultColNameVoters         = "digest_dao_voters"
-	defaultColNameVotingPowerBox = "digest_dao_voting_power_box"
+	defaultColNameAccount         = "digest_ac"
+	defaultColNameContractAccount = "digest_ca"
+	defaultColNameBalance         = "digest_bl"
+	defaultColNameCurrency        = "digest_cr"
+	defaultColNameOperation       = "digest_op"
+	defaultColNameBlock           = "digest_bm"
+	defaultColNameDAO             = "digest_dao_design"
+	defaultColNameProposal        = "digest_dao_proposal"
+	defaultColNameDelegators      = "digest_dao_delegators"
+	defaultColNameVoters          = "digest_dao_voters"
+	defaultColNameVotingPowerBox  = "digest_dao_voting_power_box"
 )
 
 func DAOService(st *currencydigest.Database, contract string) (types.Design, error) {

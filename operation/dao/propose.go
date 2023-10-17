@@ -70,10 +70,6 @@ func (fact ProposeFact) IsValid(b []byte) error {
 		return err
 	}
 
-	if err := common.IsValidOperationFact(fact, b); err != nil {
-		return err
-	}
-
 	if err := util.CheckIsValiders(nil, false,
 		fact.sender,
 		fact.contract,
@@ -89,6 +85,10 @@ func (fact ProposeFact) IsValid(b []byte) error {
 
 	if len(fact.proposalID) == 0 {
 		return util.ErrInvalid.Errorf("empty propose id")
+	}
+
+	if err := common.IsValidOperationFact(fact, b); err != nil {
+		return err
 	}
 
 	return nil

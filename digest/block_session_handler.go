@@ -24,6 +24,14 @@ func (bs *BlockSession) handleBalanceState(st mitumbase.State) ([]mongo.WriteMod
 	return []mongo.WriteModel{mongo.NewInsertOneModel().SetDocument(doc)}, address, nil
 }
 
+func (bs *BlockSession) handleContractAccountState(st mitumbase.State) ([]mongo.WriteModel, error) {
+	doc, err := currencydigest.NewContractAccountStatusDoc(st, bs.st.DatabaseEncoder())
+	if err != nil {
+		return nil, err
+	}
+	return []mongo.WriteModel{mongo.NewInsertOneModel().SetDocument(doc)}, nil
+}
+
 func (bs *BlockSession) handleCurrencyState(st mitumbase.State) ([]mongo.WriteModel, error) {
 	doc, err := currencydigest.NewCurrencyDoc(st, bs.st.DatabaseEncoder())
 	if err != nil {

@@ -97,7 +97,7 @@ func (opp *CreateDAOProcessor) PreProcess(
 	}
 
 	if ca.IsActive() {
-		return nil, base.NewBaseOperationProcessReasonError("a design is already registered, %q", fact.Contract().String()), nil
+		return nil, base.NewBaseOperationProcessReasonError("a contract account is already used, %q", fact.Contract().String()), nil
 	}
 
 	if err := currencystate.CheckNotExistsState(state.StateKeyDesign(fact.Contract()), getStateFunc); err != nil {
@@ -160,11 +160,11 @@ func (opp *CreateDAOProcessor) Process(
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("failed to get state value of contract account, %q; %w", fact.Contract(), err), nil
 	}
-	ca.SetIsActive(true)
+	nca := ca.SetIsActive(true)
 
 	sts[1] = currencystate.NewStateMergeValue(
 		stateextension.StateKeyContractAccount(fact.Contract()),
-		stateextension.NewContractAccountStateValue(ca),
+		stateextension.NewContractAccountStateValue(nca),
 	)
 
 	currencyPolicy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)
