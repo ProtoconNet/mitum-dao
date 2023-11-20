@@ -6,6 +6,7 @@ import (
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/hint"
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -74,10 +75,10 @@ func (vp VotingPowerBox) MarshalBSON() ([]byte, error) {
 }
 
 type VotingPowerBoxBSONUnmarshaler struct {
-	Hint         string   `bson:"_hint"`
-	Total        string   `bson:"total"`
-	VotingPowers bson.Raw `bson:"voting_powers"`
-	Result       bson.Raw `bson:"result"`
+	Hint         string           `bson:"_hint"`
+	Total        string           `bson:"total"`
+	VotingPowers bson.Raw         `bson:"voting_powers"`
+	Result       map[uint8]string `bson:"result"`
 }
 
 func (vp *VotingPowerBox) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
@@ -93,5 +94,44 @@ func (vp *VotingPowerBox) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 		return e.Wrap(err)
 	}
 
-	return vp.unpack(enc, ht, u.Total, u.VotingPowers, u.Result)
+	vp.BaseHinter = hint.NewBaseHinter(ht)
+
+	big, err := common.NewBigFromString(u.Total)
+	if err != nil {
+		return e.Wrap(err)
+	}
+	vp.total = big
+
+	votingPowers := make(map[string]VotingPower)
+	m, err := enc.DecodeMap(u.VotingPowers)
+	if err != nil {
+		return e.Wrap(err)
+	}
+	for k, v := range m {
+		vp, ok := v.(VotingPower)
+		if !ok {
+			return e.Wrap(errors.Errorf("expected VotingPower, not %T", v))
+		}
+
+		if _, err := base.DecodeAddress(k, enc); err != nil {
+			return e.Wrap(err)
+		}
+
+		votingPowers[k] = vp
+	}
+	vp.votingPowers = votingPowers
+
+	result := make(map[uint8]common.Big)
+	for k, v := range u.Result {
+
+		big, err := common.NewBigFromString(v)
+		if err != nil {
+			return e.Wrap(err)
+		}
+
+		result[k] = big
+	}
+	vp.result = result
+
+	return nil
 }
