@@ -12,8 +12,8 @@ func (r VoterInfo) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bson.M{
 			"_hint":      r.Hint().String(),
-			"account":    r.Account,
-			"delegators": r.Delegators,
+			"account":    r.account,
+			"delegators": r.delegators,
 		},
 	)
 }
