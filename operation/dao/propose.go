@@ -83,6 +83,10 @@ func (fact ProposeFact) IsValid(b []byte) error {
 		return util.ErrInvalid.Errorf("contract address is same with sender, %q", fact.sender)
 	}
 
+	if !fact.sender.Equal(fact.Proposal().Proposer()) {
+		return util.ErrInvalid.Errorf("sender is not same with the proposer")
+	}
+
 	if len(fact.proposalID) == 0 {
 		return util.ErrInvalid.Errorf("empty propose id")
 	}
