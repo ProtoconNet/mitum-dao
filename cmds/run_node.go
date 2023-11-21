@@ -35,9 +35,10 @@ type RunCommand struct { //nolint:govet //...
 	Discovery []launch.ConnInfoFlag `help:"member discovery" placeholder:"ConnInfo"`
 	Hold      launch.HeightFlag     `help:"hold consensus states"`
 	HTTPState string                `name:"http-state" help:"runtime statistics thru https" placeholder:"bind address"`
-	exitf     func(error)
-	log       *zerolog.Logger
-	holded    bool
+	launch.ACLFlags
+	exitf  func(error)
+	log    *zerolog.Logger
+	holded bool
 	//revive:enable:line-length-limit
 }
 
@@ -49,11 +50,12 @@ func (cmd *RunCommand) Run(pctx context.Context) error {
 
 	log.Log().Debug().
 		Interface("design", cmd.DesignFlag).
-		Interface("privatekey", cmd.Privatekey).
+		Interface("privatekey", cmd.PrivatekeyFlags).
 		Interface("discovery", cmd.Discovery).
 		Interface("hold", cmd.Hold).
 		Interface("http_state", cmd.HTTPState).
 		Interface("dev", cmd.DevFlags).
+		Interface("acl", cmd.ACLFlags).
 		Msg("flags")
 
 	cmd.log = log.Log()
@@ -65,10 +67,11 @@ func (cmd *RunCommand) Run(pctx context.Context) error {
 	}
 
 	nctx := util.ContextWithValues(pctx, map[util.ContextKey]interface{}{
-		launch.DesignFlagContextKey:     cmd.DesignFlag,
-		launch.DevFlagsContextKey:       cmd.DevFlags,
-		launch.DiscoveryFlagContextKey:  cmd.Discovery,
-		launch.PrivatekeyFromContextKey: cmd.Privatekey,
+		launch.DesignFlagContextKey:      cmd.DesignFlag,
+		launch.DevFlagsContextKey:        cmd.DevFlags,
+		launch.DiscoveryFlagContextKey:   cmd.Discovery,
+		launch.PrivatekeyFlagsContextKey: cmd.PrivatekeyFlags,
+		launch.ACLFlagsContextKey:        cmd.ACLFlags,
 	})
 
 	pps := currencycmds.DefaultRunPS()
@@ -356,7 +359,7 @@ func (cmd *RunCommand) pDigestAPIHandlers(ctx context.Context) (context.Context,
 	}
 	router := dnt.Router()
 
-	defaultHandlers, err := cmd.setDigestDefaultHandlers(ctx, params, cache, router)
+	defaultHandlers, err := cmd.setDigestDefaultHandlers(ctx, params, cache, router, dnt.Queue())
 	if err != nil {
 		return ctx, err
 	}
@@ -373,6 +376,8 @@ func (cmd *RunCommand) pDigestAPIHandlers(ctx context.Context) (context.Context,
 	if err := handlers.Initialize(); err != nil {
 		return ctx, err
 	}
+
+	dnt.SetEncoder(enc)
 
 	return ctx, nil
 }
@@ -393,13 +398,14 @@ func (cmd *RunCommand) setDigestDefaultHandlers(
 	params *launch.LocalParams,
 	cache currencydigest.Cache,
 	router *mux.Router,
+	queue chan currencydigest.RequestWrapper,
 ) (*currencydigest.Handlers, error) {
 	var st *currencydigest.Database
 	if err := util.LoadFromContext(ctx, currencycmds.ContextValueDigestDatabase, &st); err != nil {
 		return nil, err
 	}
 
-	handlers := currencydigest.NewHandlers(ctx, params.ISAAC.NetworkID(), encs, enc, st, cache, router)
+	handlers := currencydigest.NewHandlers(ctx, params.ISAAC.NetworkID(), encs, enc, st, cache, router, queue)
 
 	h, err := cmd.setDigestNetworkClient(ctx, params, handlers)
 	if err != nil {

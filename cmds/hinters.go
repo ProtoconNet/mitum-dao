@@ -78,16 +78,16 @@ func init() {
 	copy(SupportedProposalOperationFactHinters[currencySupportedExtendedLen:], AddedSupportedHinters)
 }
 
-func LoadHinters(enc encoder.Encoder) error {
-	for _, hinter := range Hinters {
-		if err := enc.Add(hinter); err != nil {
-			return errors.Wrap(err, "failed to add to encoder")
+func LoadHinters(encs *encoder.Encoders) error {
+	for i := range Hinters {
+		if err := encs.AddDetail(Hinters[i]); err != nil {
+			return errors.Wrap(err, "add hinter to encoder")
 		}
 	}
 
-	for _, hinter := range SupportedProposalOperationFactHinters {
-		if err := enc.Add(hinter); err != nil {
-			return errors.Wrap(err, "failed to add to encoder")
+	for i := range SupportedProposalOperationFactHinters {
+		if err := encs.AddDetail(SupportedProposalOperationFactHinters[i]); err != nil {
+			return errors.Wrap(err, "add supported proposal operation fact hinter to encoder")
 		}
 	}
 

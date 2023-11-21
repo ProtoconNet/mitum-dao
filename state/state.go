@@ -38,7 +38,7 @@ func (de DesignStateValue) Hint() hint.Hint {
 }
 
 func (de DesignStateValue) IsValid([]byte) error {
-	e := util.ErrInvalid.Errorf("invalid DesignStateValue")
+	e := util.ErrInvalid.Errorf("invalid dao DesignStateValue")
 
 	if err := de.BaseHinter.IsValid(DesignStateValueHint.Type().Bytes()); err != nil {
 		return e.Wrap(err)
@@ -115,7 +115,7 @@ func (p ProposalStateValue) Policy() types.Policy {
 }
 
 func (p ProposalStateValue) IsValid([]byte) error {
-	e := util.ErrInvalid.Errorf("invalid ProposalStateValue")
+	e := util.ErrInvalid.Errorf("invalid dao ProposalStateValue")
 
 	if err := p.BaseHinter.IsValid(ProposalStateValueHint.Type().Bytes()); err != nil {
 		return e.Wrap(err)
@@ -180,7 +180,7 @@ func (dg DelegatorsStateValue) Hint() hint.Hint {
 }
 
 func (dg DelegatorsStateValue) IsValid([]byte) error {
-	e := util.ErrInvalid.Errorf("invalid DelegatorsStateValue")
+	e := util.ErrInvalid.Errorf("invalid dao DelegatorsStateValue")
 
 	if err := dg.BaseHinter.IsValid(DelegatorsStateValueHint.Type().Bytes()); err != nil {
 		return e.Wrap(err)
@@ -253,7 +253,7 @@ func (vt VotersStateValue) Voters() []types.VoterInfo {
 }
 
 func (vt VotersStateValue) IsValid([]byte) error {
-	e := util.ErrInvalid.Errorf("invalid VotersStateValue")
+	e := util.ErrInvalid.Errorf("invalid dao VotersStateValue")
 
 	if err := vt.BaseHinter.IsValid(VotersStateValueHint.Type().Bytes()); err != nil {
 		return e.Wrap(err)

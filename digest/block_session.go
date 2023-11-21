@@ -28,6 +28,7 @@ type BlockSession struct {
 	opstree                 fixedtree.Tree
 	sts                     []mitumbase.State
 	st                      *currencydigest.Database
+	proposal                mitumbase.ProposalSignFact
 	opsTreeNodes            map[string]mitumbase.OperationFixedtreeNode
 	blockModels             []mongo.WriteModel
 	operationModels         []mongo.WriteModel
@@ -50,6 +51,7 @@ func NewBlockSession(
 	ops []mitumbase.Operation,
 	opstree fixedtree.Tree,
 	sts []mitumbase.State,
+	proposal mitumbase.ProposalSignFact,
 ) (*BlockSession, error) {
 	if st.Readonly() {
 		return nil, errors.Errorf("readonly mode")
@@ -66,6 +68,7 @@ func NewBlockSession(
 		ops:         ops,
 		opstree:     opstree,
 		sts:         sts,
+		proposal:    proposal,
 		statesValue: &sync.Map{},
 	}, nil
 }
@@ -215,7 +218,7 @@ func (bs *BlockSession) prepareBlock() error {
 		bs.block.Manifest().ProposedAt(),
 	)
 
-	doc, err := currencydigest.NewManifestDoc(manifest, bs.st.DatabaseEncoder(), bs.block.Manifest().Height(), bs.ops, bs.block.SignedAt())
+	doc, err := currencydigest.NewManifestDoc(manifest, bs.st.DatabaseEncoder(), bs.block.Manifest().Height(), bs.ops, bs.block.SignedAt(), bs.proposal.ProposalFact().Proposer(), bs.proposal.ProposalFact().Point().Round())
 	if err != nil {
 		return err
 	}

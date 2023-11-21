@@ -136,16 +136,31 @@ func (di *Digester) digest(ctx context.Context, blk base.BlockMap) error {
 	case found:
 		sts = v.([]base.State) //nolint:forcetypeassert //...
 	}
+	var proposal base.ProposalSignFact
+	switch v, found, err := reader.Item(base.BlockMapItemTypeProposal); {
+	case err != nil:
+		return err
+	case found:
+		proposal = v.(base.ProposalSignFact) //nolint:forcetypeassert //...
+	}
 
-	if err := DigestBlock(ctx, di.database, blk, ops, opstree, sts); err != nil {
+	if err := DigestBlock(ctx, di.database, blk, ops, opstree, sts, proposal); err != nil {
 		return err
 	}
 
 	return di.database.SetLastBlock(blk.Manifest().Height())
 }
 
-func DigestBlock(ctx context.Context, st *currencydigest.Database, blk base.BlockMap, ops []base.Operation, opstree fixedtree.Tree, sts []base.State) error {
-	bs, err := NewBlockSession(st, blk, ops, opstree, sts)
+func DigestBlock(
+	ctx context.Context,
+	st *currencydigest.Database,
+	blk base.BlockMap,
+	ops []base.Operation,
+	opstree fixedtree.Tree,
+	sts []base.State,
+	proposal base.ProposalSignFact,
+) error {
+	bs, err := NewBlockSession(st, blk, ops, opstree, sts, proposal)
 	if err != nil {
 		return err
 	}

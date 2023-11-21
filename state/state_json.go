@@ -39,9 +39,11 @@ func (de *DesignStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 
 	if err := design.DecodeJSON(u.Design, enc); err != nil {
 		return e.Wrap(err)
+	} else if err = design.IsValid(nil); err != nil {
+		return e.Wrap(err)
+	} else {
+		de.design = design
 	}
-
-	de.design = design
 
 	return nil
 }
@@ -82,6 +84,8 @@ func (p *ProposalStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		return e.Wrap(err)
 	} else if pr, ok := hinter.(types.Proposal); !ok {
 		return e.Wrap(errors.Errorf("expected Proposal, not %T", hinter))
+	} else if err := pr.IsValid(nil); err != nil {
+		return e.Wrap(err)
 	} else {
 		p.proposal = pr
 	}
@@ -90,6 +94,8 @@ func (p *ProposalStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 		return e.Wrap(err)
 	} else if po, ok := hinter.(types.Policy); !ok {
 		return e.Wrap(errors.Errorf("expected Policy, not %T", hinter))
+	} else if err := po.IsValid(nil); err != nil {
+		return e.Wrap(err)
 	} else {
 		p.policy = po
 	}
@@ -130,6 +136,8 @@ func (dg *DelegatorsStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error
 	for i, hinter := range hr {
 		if v, ok := hinter.(types.DelegatorInfo); !ok {
 			return e.Wrap(errors.Errorf("expected types.DelegatorInfo, not %T", hinter))
+		} else if err := v.IsValid(nil); err != nil {
+			return e.Wrap(err)
 		} else {
 			dgs[i] = v
 		}
@@ -170,12 +178,13 @@ func (vt *VotersStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
 
 	infos := make([]types.VoterInfo, len(hr))
 	for i, hinter := range hr {
-		rg, ok := hinter.(types.VoterInfo)
-		if !ok {
+		if rg, ok := hinter.(types.VoterInfo); !ok {
 			return e.Wrap(errors.Errorf("expected types.VoterInfo, not %T", hinter))
+		} else if err := rg.IsValid(nil); err != nil {
+			return e.Wrap(err)
+		} else {
+			infos[i] = rg
 		}
-
-		infos[i] = rg
 	}
 	vt.voters = infos
 
@@ -209,9 +218,11 @@ func (vb *VotingPowerBoxStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) e
 	var vpb types.VotingPowerBox
 	if err := vpb.DecodeJSON(u.VotingPowerBox, enc); err != nil {
 		return e.Wrap(err)
+	} else if err = vpb.IsValid(nil); err != nil {
+		return e.Wrap(err)
+	} else {
+		vb.votingPowerBox = vpb
 	}
-
-	vb.votingPowerBox = vpb
 
 	return nil
 }
