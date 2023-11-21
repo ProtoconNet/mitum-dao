@@ -4,6 +4,7 @@ import (
 	currencydigest "github.com/ProtoconNet/mitum-currency/v3/digest"
 	"github.com/ProtoconNet/mitum-dao/state"
 	"github.com/ProtoconNet/mitum-dao/types"
+	mitumutil "github.com/ProtoconNet/mitum2/util"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strings"
@@ -40,9 +41,11 @@ func (hd *Handlers) handleDAOService(w http.ResponseWriter, r *http.Request) {
 func (hd *Handlers) handleDAODesignInGroup(contract string) (interface{}, error) {
 	switch design, err := DAOService(hd.database, contract); {
 	case err != nil:
-		return nil, err
+		return nil, mitumutil.ErrNotFound.WithMessage(err, "dao service, contract %s", contract)
+	case design == nil:
+		return nil, mitumutil.ErrNotFound.Errorf("dao service, contract %s", contract)
 	default:
-		hal, err := hd.buildDAODesignHal(contract, design)
+		hal, err := hd.buildDAODesignHal(contract, *design)
 		if err != nil {
 			return nil, err
 		}
@@ -95,9 +98,11 @@ func (hd *Handlers) handleProposal(w http.ResponseWriter, r *http.Request) {
 func (hd *Handlers) handleProposalInGroup(contract, proposalID string) (interface{}, error) {
 	switch proposal, err := Proposal(hd.database, contract, proposalID); {
 	case err != nil:
-		return nil, err
+		return nil, mitumutil.ErrNotFound.WithMessage(err, "proposal, contract %s, proposalID %s", contract, proposalID)
+	case proposal == nil:
+		return nil, mitumutil.ErrNotFound.Errorf("proposal, contract %s, proposalID %s", contract, proposalID)
 	default:
-		hal, err := hd.buildProposalHal(contract, proposalID, proposal)
+		hal, err := hd.buildProposalHal(contract, proposalID, *proposal)
 		if err != nil {
 			return nil, err
 		}
@@ -155,9 +160,11 @@ func (hd *Handlers) handleDelegator(w http.ResponseWriter, r *http.Request) {
 func (hd *Handlers) handleDelegatorInGroup(contract, proposalID, delegator string) (interface{}, error) {
 	switch delegatorInfo, err := DelegatorInfo(hd.database, contract, proposalID, delegator); {
 	case err != nil:
-		return nil, err
+		return nil, mitumutil.ErrNotFound.WithMessage(err, "delegator info, contract %s, proposalID %s, delegator %s", contract, proposalID, delegator)
+	case delegatorInfo == nil:
+		return nil, mitumutil.ErrNotFound.Errorf("delegator info, contract %s, proposalID %s, delegator %s", contract, proposalID, delegator)
 	default:
-		hal, err := hd.buildDelegatorHal(contract, proposalID, delegator, delegatorInfo)
+		hal, err := hd.buildDelegatorHal(contract, proposalID, delegator, *delegatorInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -217,7 +224,9 @@ func (hd *Handlers) handleVoters(w http.ResponseWriter, r *http.Request) {
 func (hd *Handlers) handleVotersInGroup(contract, proposalID string) (interface{}, error) {
 	switch voters, err := Voters(hd.database, contract, proposalID); {
 	case err != nil:
-		return nil, err
+		return nil, mitumutil.ErrNotFound.WithMessage(err, "voters, contract %s, proposalID %s", contract, proposalID)
+	case voters == nil:
+		return nil, mitumutil.ErrNotFound.Errorf("voters, contract %s, proposalID %s", contract, proposalID)
 	default:
 		hal, err := hd.buildVotersHal(contract, proposalID, voters)
 		if err != nil {
@@ -273,9 +282,12 @@ func (hd *Handlers) handleVotingPowerBox(w http.ResponseWriter, r *http.Request)
 func (hd *Handlers) handleVotingPowerBoxInGroup(contract, proposalID string) (interface{}, error) {
 	switch votingPowerBox, err := VotingPowerBox(hd.database, contract, proposalID); {
 	case err != nil:
-		return nil, err
+		return nil, mitumutil.ErrNotFound.WithMessage(err, "voting power box, contract %s, proposalID %s", contract, proposalID)
+	case votingPowerBox == nil:
+		return nil, mitumutil.ErrNotFound.Errorf("voting power box, contract %s, proposalID %s", contract, proposalID)
+
 	default:
-		hal, err := hd.buildVotingPowerBoxHal(contract, proposalID, votingPowerBox)
+		hal, err := hd.buildVotingPowerBoxHal(contract, proposalID, *votingPowerBox)
 		if err != nil {
 			return nil, err
 		}

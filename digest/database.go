@@ -25,7 +25,7 @@ var (
 	defaultColNameVotingPowerBox  = "digest_dao_voting_power_box"
 )
 
-func DAOService(st *currencydigest.Database, contract string) (types.Design, error) {
+func DAOService(st *currencydigest.Database, contract string) (*types.Design, error) {
 	filter := util.NewBSONFilter("contract", contract)
 
 	var design types.Design
@@ -49,13 +49,13 @@ func DAOService(st *currencydigest.Database, contract string) (types.Design, err
 		},
 		options.FindOne().SetSort(util.NewBSONFilter("height", -1).D()),
 	); err != nil {
-		return types.Design{}, err
+		return nil, err
 	}
 
-	return design, nil
+	return &design, nil
 }
 
-func DelegatorInfo(st *currencydigest.Database, contract, proposalID, delegator string) (types.DelegatorInfo, error) {
+func DelegatorInfo(st *currencydigest.Database, contract, proposalID, delegator string) (*types.DelegatorInfo, error) {
 	var (
 		delegators    []types.DelegatorInfo
 		sta           mitumbase.State
@@ -83,7 +83,7 @@ func DelegatorInfo(st *currencydigest.Database, contract, proposalID, delegator 
 		},
 		options.FindOne().SetSort(util.NewBSONFilter("height", -1).D()),
 	); err != nil {
-		return types.DelegatorInfo{}, err
+		return nil, err
 	}
 
 	for i := range delegators {
@@ -93,10 +93,10 @@ func DelegatorInfo(st *currencydigest.Database, contract, proposalID, delegator 
 		}
 	}
 	if delegatorInfo == nil {
-		return types.DelegatorInfo{}, errors.Errorf("delegator not found, %s", delegator)
+		return nil, errors.Errorf("delegator not found, %s", delegator)
 	}
 
-	return *delegatorInfo, nil
+	return delegatorInfo, nil
 }
 
 func Voters(st *currencydigest.Database, contract, proposalID string) ([]types.VoterInfo, error) {
@@ -129,7 +129,7 @@ func Voters(st *currencydigest.Database, contract, proposalID string) ([]types.V
 	return voters, nil
 }
 
-func Proposal(st *currencydigest.Database, contract, proposalID string) (state.ProposalStateValue, error) {
+func Proposal(st *currencydigest.Database, contract, proposalID string) (*state.ProposalStateValue, error) {
 	filter := util.NewBSONFilter("contract", contract)
 	filter = filter.Add("proposal_id", proposalID)
 
@@ -153,13 +153,13 @@ func Proposal(st *currencydigest.Database, contract, proposalID string) (state.P
 		},
 		options.FindOne().SetSort(util.NewBSONFilter("height", -1).D()),
 	); err != nil {
-		return state.ProposalStateValue{}, err
+		return nil, err
 	}
 
-	return proposal, nil
+	return &proposal, nil
 }
 
-func VotingPowerBox(st *currencydigest.Database, contract, proposalID string) (types.VotingPowerBox, error) {
+func VotingPowerBox(st *currencydigest.Database, contract, proposalID string) (*types.VotingPowerBox, error) {
 	filter := util.NewBSONFilter("contract", contract)
 	filter = filter.Add("proposal_id", proposalID)
 
@@ -183,10 +183,10 @@ func VotingPowerBox(st *currencydigest.Database, contract, proposalID string) (t
 		},
 		options.FindOne().SetSort(util.NewBSONFilter("height", -1).D()),
 	); err != nil {
-		return types.VotingPowerBox{}, err
+		return nil, err
 	}
 
-	return votingPowerBox, nil
+	return &votingPowerBox, nil
 }
 
 //func CredentialsByServiceAndTemplate(
