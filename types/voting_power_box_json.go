@@ -23,6 +23,7 @@ func (vp VotingPower) MarshalJSON() ([]byte, error) {
 		BaseHinter:  vp.BaseHinter,
 		Account:     vp.account,
 		Voted:       vp.voted,
+		VoteFor:     vp.voteFor,
 		VotingPower: vp.amount.String(),
 	})
 }
