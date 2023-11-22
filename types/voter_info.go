@@ -4,7 +4,6 @@ import (
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/hint"
-	"github.com/pkg/errors"
 )
 
 var VoterInfoHint = hint.MustNewHint("mitum-dao-voter-info-v0.0.1")
@@ -43,9 +42,9 @@ func (r VoterInfo) IsValid([]byte) error {
 			return e.Wrap(err)
 		}
 
-		if ac.Equal(r.account) {
-			return e.Wrap(errors.Errorf("approving address is same with approved address, %q", r.Account()))
-		}
+		//if ac.Equal(r.account) {
+		//	return e.Wrap(errors.Errorf("approving address is same with approved address, %q", r.Account()))
+		//}
 	}
 
 	return nil

@@ -3,12 +3,11 @@ package state
 import (
 	"encoding/json"
 
-	"github.com/pkg/errors"
-
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/util"
 	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
 	"github.com/ProtoconNet/mitum2/util/hint"
+	"github.com/pkg/errors"
 )
 
 type DesignStateValueJSONMarshaler struct {

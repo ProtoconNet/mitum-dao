@@ -160,7 +160,7 @@ func (opp *RegisterProcessor) PreProcess(
 
 		for _, delegator := range delegators {
 			if delegator.Account().Equal(fact.Sender()) {
-				return nil, base.NewBaseOperationProcessReasonError("sender %s already delegates, %s, %q: %w", fact.Sender(), fact.Contract(), fact.ProposalID(), err), nil
+				return nil, base.NewBaseOperationProcessReasonError("sender %s already delegates, %s, %q: %w", fact.Sender(), fact.Contract(), fact.ProposalID()), nil
 			}
 		}
 	}
