@@ -111,7 +111,7 @@ func (hd *Handlers) handleProposalInGroup(contract, proposalID string) (interfac
 }
 
 func (hd *Handlers) buildProposalHal(contract, proposalID string, proposal state.ProposalStateValue) (currencydigest.Hal, error) {
-	h, err := hd.combineURL(HandlerPathDAOService, "contract", contract, "proposal_id", proposalID)
+	h, err := hd.combineURL(HandlerPathProposal, "contract", contract, "proposal_id", proposalID)
 	if err != nil {
 		return nil, err
 	}
