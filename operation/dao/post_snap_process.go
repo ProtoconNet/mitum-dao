@@ -305,20 +305,32 @@ func (opp *PostSnapProcessor) Process(
 	actualTurnoutCount := p.Policy().Turnout().Quorum(currencyDesign.Aggregate())
 	actualQuorumCount := p.Policy().Quorum().Quorum(votedTotal)
 
-	r := types.Completed
+	r := types.Rejected
 
-	if nvpb.Total().Compare(actualTurnoutCount) < 0 {
+	switch {
+	case nvpb.Total().Compare(actualTurnoutCount) < 0:
 		r = types.Canceled
-	} else if votedTotal.Compare(actualQuorumCount) < 0 {
-		r = types.Rejected
-	} else if p.Proposal().Option() == types.ProposalCrypto {
+	case votedTotal.Compare(actualQuorumCount) < 0:
+	case p.Proposal().Option() == types.ProposalCrypto:
 		vr0, found0 := votingResult[0]
 		vr1, found1 := votingResult[1]
-
-		if !(found0 && 0 < vr0.Compare(actualQuorumCount) && (!found1 || (found1 && 0 < vr0.Compare(vr1)))) {
+		if !found0 {
 			r = types.Rejected
+			break
+		} else {
+			if found1 {
+				if (0 < vr0.Compare(actualQuorumCount)) && (0 < vr0.Compare(vr1)) {
+					r = types.Completed
+					break
+				}
+			} else {
+				if 0 < vr0.Compare(actualQuorumCount) {
+					r = types.Completed
+					break
+				}
+			}
 		}
-	} else if p.Proposal().Option() == types.ProposalBiz {
+	case p.Proposal().Option() == types.ProposalBiz:
 		options := p.Proposal().VoteOptionsCount() - 1
 
 		var count = 0
@@ -336,10 +348,44 @@ func (opp *PostSnapProcessor) Process(
 			}
 		}
 
-		if count != 1 {
-			r = types.Rejected
+		if count == 1 {
+			r = types.Completed
 		}
 	}
+
+	//if nvpb.Total().Compare(actualTurnoutCount) < 0 {
+	//	r = types.Canceled
+	//} else if votedTotal.Compare(actualQuorumCount) < 0 {
+	//	r = types.Rejected
+	//} else if p.Proposal().Option() == types.ProposalCrypto {
+	//	vr0, found0 := votingResult[0]
+	//	vr1, found1 := votingResult[1]
+	//
+	//	if !(found0 && 0 < vr0.Compare(actualQuorumCount) && (!found1 || (found1 && 0 < vr0.Compare(vr1)))) {
+	//		r = types.Rejected
+	//	}
+	//} else if p.Proposal().Option() == types.ProposalBiz {
+	//	options := p.Proposal().VoteOptionsCount() - 1
+	//
+	//	var count = 0
+	//	var mvp = common.ZeroBig
+	//	var i uint8 = 0
+	//
+	//	for ; i < options; i++ {
+	//		if votingResult[i].Compare(actualQuorumCount) >= 0 {
+	//			if mvp.Compare(votingResult[i]) < 0 {
+	//				count = 1
+	//				mvp = votingResult[i]
+	//			} else if mvp.Equal(votingResult[i]) {
+	//				count += 1
+	//			}
+	//		}
+	//	}
+	//
+	//	if count != 1 {
+	//		r = types.Rejected
+	//	}
+	//}
 
 	sts = append(sts, currencystate.NewStateMergeValue(
 		state.StateKeyProposal(fact.Contract(), fact.ProposalID()),
