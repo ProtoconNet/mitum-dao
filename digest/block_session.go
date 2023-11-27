@@ -147,25 +147,25 @@ func (bs *BlockSession) Commit(ctx context.Context) error {
 	}
 
 	if len(bs.daoProposalModels) > 0 {
-		if err := bs.writeModels(ctx, defaultColNameProposal, bs.daoProposalModels); err != nil {
+		if err := bs.writeModels(ctx, defaultColNameDAOProposal, bs.daoProposalModels); err != nil {
 			return err
 		}
 	}
 
 	if len(bs.daoDelegatorsModels) > 0 {
-		if err := bs.writeModels(ctx, defaultColNameDelegators, bs.daoDelegatorsModels); err != nil {
+		if err := bs.writeModels(ctx, defaultColNameDAODelegators, bs.daoDelegatorsModels); err != nil {
 			return err
 		}
 	}
 
 	if len(bs.daoVotersModels) > 0 {
-		if err := bs.writeModels(ctx, defaultColNameVoters, bs.daoVotersModels); err != nil {
+		if err := bs.writeModels(ctx, defaultColNameDAOVoters, bs.daoVotersModels); err != nil {
 			return err
 		}
 	}
 
 	if len(bs.daoVotingPowerBoxModels) > 0 {
-		if err := bs.writeModels(ctx, defaultColNameVotingPowerBox, bs.daoVotingPowerBoxModels); err != nil {
+		if err := bs.writeModels(ctx, defaultColNameDAOVotingPowerBox, bs.daoVotingPowerBoxModels); err != nil {
 			return err
 		}
 	}

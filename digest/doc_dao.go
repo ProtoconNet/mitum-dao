@@ -9,30 +9,30 @@ import (
 	"github.com/ProtoconNet/mitum2/util/encoder"
 )
 
-type DesignDoc struct {
+type DAODesignDoc struct {
 	mongodbstorage.BaseDoc
 	st base.State
 	de types.Design
 }
 
-func NewDesignDoc(st base.State, enc encoder.Encoder) (DesignDoc, error) {
+func NewDAODesignDoc(st base.State, enc encoder.Encoder) (DAODesignDoc, error) {
 	de, err := state.StateDesignValue(st)
 	if err != nil {
-		return DesignDoc{}, err
+		return DAODesignDoc{}, err
 	}
 	b, err := mongodbstorage.NewBaseDoc(nil, st, enc)
 	if err != nil {
-		return DesignDoc{}, err
+		return DAODesignDoc{}, err
 	}
 
-	return DesignDoc{
+	return DAODesignDoc{
 		BaseDoc: b,
 		st:      st,
 		de:      de,
 	}, nil
 }
 
-func (doc DesignDoc) MarshalBSON() ([]byte, error) {
+func (doc DAODesignDoc) MarshalBSON() ([]byte, error) {
 	m, err := doc.BaseDoc.M()
 	if err != nil {
 		return nil, err
@@ -46,24 +46,24 @@ func (doc DesignDoc) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(m)
 }
 
-type ProposalDoc struct {
+type DAOProposalDoc struct {
 	mongodbstorage.BaseDoc
 	st base.State
 	pr types.Proposal
 	ps types.ProposalStatus
 }
 
-func NewProposalDoc(st base.State, enc encoder.Encoder) (ProposalDoc, error) {
+func NewDAOProposalDoc(st base.State, enc encoder.Encoder) (DAOProposalDoc, error) {
 	pv, err := state.StateProposalValue(st)
 	if err != nil {
-		return ProposalDoc{}, err
+		return DAOProposalDoc{}, err
 	}
 	b, err := mongodbstorage.NewBaseDoc(nil, st, enc)
 	if err != nil {
-		return ProposalDoc{}, err
+		return DAOProposalDoc{}, err
 	}
 
-	return ProposalDoc{
+	return DAOProposalDoc{
 		BaseDoc: b,
 		st:      st,
 		pr:      pv.Proposal(),
@@ -71,7 +71,7 @@ func NewProposalDoc(st base.State, enc encoder.Encoder) (ProposalDoc, error) {
 	}, nil
 }
 
-func (doc ProposalDoc) MarshalBSON() ([]byte, error) {
+func (doc DAOProposalDoc) MarshalBSON() ([]byte, error) {
 	m, err := doc.BaseDoc.M()
 	if err != nil {
 		return nil, err
@@ -87,30 +87,30 @@ func (doc ProposalDoc) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(m)
 }
 
-type DelegatorsDoc struct {
+type DAODelegatorsDoc struct {
 	mongodbstorage.BaseDoc
 	st base.State
 	di []types.DelegatorInfo
 }
 
-func NewDelegatorsDoc(st base.State, enc encoder.Encoder) (DelegatorsDoc, error) {
+func NewDAODelegatorsDoc(st base.State, enc encoder.Encoder) (DAODelegatorsDoc, error) {
 	di, err := state.StateDelegatorsValue(st)
 	if err != nil {
-		return DelegatorsDoc{}, err
+		return DAODelegatorsDoc{}, err
 	}
 	b, err := mongodbstorage.NewBaseDoc(nil, st, enc)
 	if err != nil {
-		return DelegatorsDoc{}, err
+		return DAODelegatorsDoc{}, err
 	}
 
-	return DelegatorsDoc{
+	return DAODelegatorsDoc{
 		BaseDoc: b,
 		st:      st,
 		di:      di,
 	}, nil
 }
 
-func (doc DelegatorsDoc) MarshalBSON() ([]byte, error) {
+func (doc DAODelegatorsDoc) MarshalBSON() ([]byte, error) {
 	m, err := doc.BaseDoc.M()
 	if err != nil {
 		return nil, err
@@ -125,30 +125,30 @@ func (doc DelegatorsDoc) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(m)
 }
 
-type VotersDoc struct {
+type DAOVotersDoc struct {
 	mongodbstorage.BaseDoc
 	st base.State
 	vi []types.VoterInfo
 }
 
-func NewVotersDoc(st base.State, enc encoder.Encoder) (VotersDoc, error) {
+func NewDAOVotersDoc(st base.State, enc encoder.Encoder) (DAOVotersDoc, error) {
 	vi, err := state.StateVotersValue(st)
 	if err != nil {
-		return VotersDoc{}, err
+		return DAOVotersDoc{}, err
 	}
 	b, err := mongodbstorage.NewBaseDoc(nil, st, enc)
 	if err != nil {
-		return VotersDoc{}, err
+		return DAOVotersDoc{}, err
 	}
 
-	return VotersDoc{
+	return DAOVotersDoc{
 		BaseDoc: b,
 		st:      st,
 		vi:      vi,
 	}, nil
 }
 
-func (doc VotersDoc) MarshalBSON() ([]byte, error) {
+func (doc DAOVotersDoc) MarshalBSON() ([]byte, error) {
 	m, err := doc.BaseDoc.M()
 	if err != nil {
 		return nil, err
@@ -163,30 +163,30 @@ func (doc VotersDoc) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(m)
 }
 
-type VotingPowerBoxDoc struct {
+type DAOVotingPowerBoxDoc struct {
 	mongodbstorage.BaseDoc
 	st  base.State
 	vpb types.VotingPowerBox
 }
 
-func NewVotingPowerBoxDoc(st base.State, enc encoder.Encoder) (VotingPowerBoxDoc, error) {
+func NewDAOVotingPowerBoxDoc(st base.State, enc encoder.Encoder) (DAOVotingPowerBoxDoc, error) {
 	vpb, err := state.StateVotingPowerBoxValue(st)
 	if err != nil {
-		return VotingPowerBoxDoc{}, err
+		return DAOVotingPowerBoxDoc{}, err
 	}
 	b, err := mongodbstorage.NewBaseDoc(nil, st, enc)
 	if err != nil {
-		return VotingPowerBoxDoc{}, err
+		return DAOVotingPowerBoxDoc{}, err
 	}
 
-	return VotingPowerBoxDoc{
+	return DAOVotingPowerBoxDoc{
 		BaseDoc: b,
 		st:      st,
 		vpb:     vpb,
 	}, nil
 }
 
-func (doc VotingPowerBoxDoc) MarshalBSON() ([]byte, error) {
+func (doc DAOVotingPowerBoxDoc) MarshalBSON() ([]byte, error) {
 	m, err := doc.BaseDoc.M()
 	if err != nil {
 		return nil, err

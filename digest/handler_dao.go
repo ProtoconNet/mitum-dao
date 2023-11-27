@@ -64,7 +64,7 @@ func (hd *Handlers) buildDAODesignHal(contract string, design types.Design) (cur
 	return hal, nil
 }
 
-func (hd *Handlers) handleProposal(w http.ResponseWriter, r *http.Request) {
+func (hd *Handlers) handleDAOProposal(w http.ResponseWriter, r *http.Request) {
 	cacheKey := currencydigest.CacheKeyPath(r)
 	if err := currencydigest.LoadFromCache(hd.cache, cacheKey, w); err == nil {
 		return
@@ -84,7 +84,7 @@ func (hd *Handlers) handleProposal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if v, err, shared := hd.rg.Do(cacheKey, func() (interface{}, error) {
-		return hd.handleProposalInGroup(contract, proposalID)
+		return hd.handleDAOProposalInGroup(contract, proposalID)
 	}); err != nil {
 		currencydigest.HTTP2HandleError(w, err)
 	} else {
@@ -95,14 +95,14 @@ func (hd *Handlers) handleProposal(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (hd *Handlers) handleProposalInGroup(contract, proposalID string) (interface{}, error) {
-	switch proposal, err := Proposal(hd.database, contract, proposalID); {
+func (hd *Handlers) handleDAOProposalInGroup(contract, proposalID string) (interface{}, error) {
+	switch proposal, err := DAOProposal(hd.database, contract, proposalID); {
 	case err != nil:
 		return nil, mitumutil.ErrNotFound.WithMessage(err, "proposal, contract %s, proposalID %s", contract, proposalID)
 	case proposal == nil:
 		return nil, mitumutil.ErrNotFound.Errorf("proposal, contract %s, proposalID %s", contract, proposalID)
 	default:
-		hal, err := hd.buildProposalHal(contract, proposalID, *proposal)
+		hal, err := hd.buildDAOProposalHal(contract, proposalID, *proposal)
 		if err != nil {
 			return nil, err
 		}
@@ -110,8 +110,8 @@ func (hd *Handlers) handleProposalInGroup(contract, proposalID string) (interfac
 	}
 }
 
-func (hd *Handlers) buildProposalHal(contract, proposalID string, proposal state.ProposalStateValue) (currencydigest.Hal, error) {
-	h, err := hd.combineURL(HandlerPathProposal, "contract", contract, "proposal_id", proposalID)
+func (hd *Handlers) buildDAOProposalHal(contract, proposalID string, proposal state.ProposalStateValue) (currencydigest.Hal, error) {
+	h, err := hd.combineURL(HandlerPathDAOProposal, "contract", contract, "proposal_id", proposalID)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (hd *Handlers) buildProposalHal(contract, proposalID string, proposal state
 	return hal, nil
 }
 
-func (hd *Handlers) handleDelegator(w http.ResponseWriter, r *http.Request) {
+func (hd *Handlers) handleDAODelegator(w http.ResponseWriter, r *http.Request) {
 	cacheKey := currencydigest.CacheKeyPath(r)
 	if err := currencydigest.LoadFromCache(hd.cache, cacheKey, w); err == nil {
 		return
@@ -146,7 +146,7 @@ func (hd *Handlers) handleDelegator(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if v, err, shared := hd.rg.Do(cacheKey, func() (interface{}, error) {
-		return hd.handleDelegatorInGroup(contract, proposalID, delegator)
+		return hd.handleDAODelegatorInGroup(contract, proposalID, delegator)
 	}); err != nil {
 		currencydigest.HTTP2HandleError(w, err)
 	} else {
@@ -157,14 +157,14 @@ func (hd *Handlers) handleDelegator(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (hd *Handlers) handleDelegatorInGroup(contract, proposalID, delegator string) (interface{}, error) {
-	switch delegatorInfo, err := DelegatorInfo(hd.database, contract, proposalID, delegator); {
+func (hd *Handlers) handleDAODelegatorInGroup(contract, proposalID, delegator string) (interface{}, error) {
+	switch delegatorInfo, err := DAODelegatorInfo(hd.database, contract, proposalID, delegator); {
 	case err != nil:
 		return nil, mitumutil.ErrNotFound.WithMessage(err, "delegator info, contract %s, proposalID %s, delegator %s", contract, proposalID, delegator)
 	case delegatorInfo == nil:
 		return nil, mitumutil.ErrNotFound.Errorf("delegator info, contract %s, proposalID %s, delegator %s", contract, proposalID, delegator)
 	default:
-		hal, err := hd.buildDelegatorHal(contract, proposalID, delegator, *delegatorInfo)
+		hal, err := hd.buildDAODelegatorHal(contract, proposalID, delegator, *delegatorInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -172,12 +172,12 @@ func (hd *Handlers) handleDelegatorInGroup(contract, proposalID, delegator strin
 	}
 }
 
-func (hd *Handlers) buildDelegatorHal(
+func (hd *Handlers) buildDAODelegatorHal(
 	contract, proposalID, delegator string,
 	delegatorInfo types.DelegatorInfo,
 ) (currencydigest.Hal, error) {
 	h, err := hd.combineURL(
-		HandlerPathDelegator,
+		HandlerPathDAODelegator,
 		"contract", contract,
 		"proposal_id", proposalID,
 		"address", delegator,
@@ -191,7 +191,7 @@ func (hd *Handlers) buildDelegatorHal(
 	return hal, nil
 }
 
-func (hd *Handlers) handleVoters(w http.ResponseWriter, r *http.Request) {
+func (hd *Handlers) handleDAOVoters(w http.ResponseWriter, r *http.Request) {
 	cacheKey := currencydigest.CacheKeyPath(r)
 	if err := currencydigest.LoadFromCache(hd.cache, cacheKey, w); err == nil {
 		return
@@ -210,7 +210,7 @@ func (hd *Handlers) handleVoters(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if v, err, shared := hd.rg.Do(cacheKey, func() (interface{}, error) {
-		return hd.handleVotersInGroup(contract, proposalID)
+		return hd.handleDAOVotersInGroup(contract, proposalID)
 	}); err != nil {
 		currencydigest.HTTP2HandleError(w, err)
 	} else {
@@ -221,14 +221,14 @@ func (hd *Handlers) handleVoters(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (hd *Handlers) handleVotersInGroup(contract, proposalID string) (interface{}, error) {
-	switch voters, err := Voters(hd.database, contract, proposalID); {
+func (hd *Handlers) handleDAOVotersInGroup(contract, proposalID string) (interface{}, error) {
+	switch voters, err := DAOVoters(hd.database, contract, proposalID); {
 	case err != nil:
 		return nil, mitumutil.ErrNotFound.WithMessage(err, "voters, contract %s, proposalID %s", contract, proposalID)
 	case voters == nil:
 		return nil, mitumutil.ErrNotFound.Errorf("voters, contract %s, proposalID %s", contract, proposalID)
 	default:
-		hal, err := hd.buildVotersHal(contract, proposalID, voters)
+		hal, err := hd.buildDAOVotersHal(contract, proposalID, voters)
 		if err != nil {
 			return nil, err
 		}
@@ -236,10 +236,10 @@ func (hd *Handlers) handleVotersInGroup(contract, proposalID string) (interface{
 	}
 }
 
-func (hd *Handlers) buildVotersHal(
+func (hd *Handlers) buildDAOVotersHal(
 	contract, proposalID string, voters []types.VoterInfo,
 ) (currencydigest.Hal, error) {
-	h, err := hd.combineURL(HandlerPathVoters, "contract", contract, "proposal_id", proposalID)
+	h, err := hd.combineURL(HandlerPathDAOVoters, "contract", contract, "proposal_id", proposalID)
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +249,7 @@ func (hd *Handlers) buildVotersHal(
 	return hal, nil
 }
 
-func (hd *Handlers) handleVotingPowerBox(w http.ResponseWriter, r *http.Request) {
+func (hd *Handlers) handleDAOVotingPowerBox(w http.ResponseWriter, r *http.Request) {
 	cacheKey := currencydigest.CacheKeyPath(r)
 	if err := currencydigest.LoadFromCache(hd.cache, cacheKey, w); err == nil {
 		return
@@ -268,7 +268,7 @@ func (hd *Handlers) handleVotingPowerBox(w http.ResponseWriter, r *http.Request)
 	}
 
 	if v, err, shared := hd.rg.Do(cacheKey, func() (interface{}, error) {
-		return hd.handleVotingPowerBoxInGroup(contract, proposalID)
+		return hd.handleDAOVotingPowerBoxInGroup(contract, proposalID)
 	}); err != nil {
 		currencydigest.HTTP2HandleError(w, err)
 	} else {
@@ -279,15 +279,15 @@ func (hd *Handlers) handleVotingPowerBox(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (hd *Handlers) handleVotingPowerBoxInGroup(contract, proposalID string) (interface{}, error) {
-	switch votingPowerBox, err := VotingPowerBox(hd.database, contract, proposalID); {
+func (hd *Handlers) handleDAOVotingPowerBoxInGroup(contract, proposalID string) (interface{}, error) {
+	switch votingPowerBox, err := DAOVotingPowerBox(hd.database, contract, proposalID); {
 	case err != nil:
 		return nil, mitumutil.ErrNotFound.WithMessage(err, "voting power box, contract %s, proposalID %s", contract, proposalID)
 	case votingPowerBox == nil:
 		return nil, mitumutil.ErrNotFound.Errorf("voting power box, contract %s, proposalID %s", contract, proposalID)
 
 	default:
-		hal, err := hd.buildVotingPowerBoxHal(contract, proposalID, *votingPowerBox)
+		hal, err := hd.buildDAOVotingPowerBoxHal(contract, proposalID, *votingPowerBox)
 		if err != nil {
 			return nil, err
 		}
@@ -295,12 +295,12 @@ func (hd *Handlers) handleVotingPowerBoxInGroup(contract, proposalID string) (in
 	}
 }
 
-func (hd *Handlers) buildVotingPowerBoxHal(
+func (hd *Handlers) buildDAOVotingPowerBoxHal(
 	contract, proposalID string,
 	votingPowerBox types.VotingPowerBox,
 ) (currencydigest.Hal, error) {
 	h, err := hd.combineURL(
-		HandlerPathVotingPowerBox,
+		HandlerPathDAOVotingPowerBox,
 		"contract", contract,
 		"proposal_id", proposalID,
 	)
