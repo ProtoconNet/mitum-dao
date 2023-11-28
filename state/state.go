@@ -12,13 +12,13 @@ import (
 )
 
 var (
-	DAOPrefix            = "dao:"
+	DAOPrefix            = "dao"
 	DesignStateValueHint = hint.MustNewHint("mitum-dao-design-state-value-v0.0.1")
-	DesignSuffix         = ":design"
+	DesignSuffix         = "design"
 )
 
 func StateKeyDAOPrefix(ca base.Address) string {
-	return fmt.Sprintf("%s%s", DAOPrefix, ca.String())
+	return fmt.Sprintf("%s:%s", DAOPrefix, ca.String())
 }
 
 type DesignStateValue struct {
@@ -74,12 +74,12 @@ func IsStateDesignKey(key string) bool {
 }
 
 func StateKeyDesign(ca base.Address) string {
-	return fmt.Sprintf("%s%s", StateKeyDAOPrefix(ca), DesignSuffix)
+	return fmt.Sprintf("%s:%s", StateKeyDAOPrefix(ca), DesignSuffix)
 }
 
 var (
 	ProposalStateValueHint = hint.MustNewHint("mitum-dao-proposal-state-value-v0.0.1")
-	ProposalSuffix         = ":dao-proposal"
+	ProposalSuffix         = "dao-proposal"
 )
 
 type ProposalStateValue struct {
@@ -155,12 +155,12 @@ func IsStateProposalKey(key string) bool {
 }
 
 func StateKeyProposal(ca base.Address, pid string) string {
-	return fmt.Sprintf("%s:%s%s", StateKeyDAOPrefix(ca), pid, ProposalSuffix)
+	return fmt.Sprintf("%s:%s:%s", StateKeyDAOPrefix(ca), pid, ProposalSuffix)
 }
 
 var (
 	DelegatorsStateValueHint = hint.MustNewHint("mitum-dao-delegators-state-value-v0.0.1")
-	DelegatorsSuffix         = ":delegators"
+	DelegatorsSuffix         = "delegators"
 )
 
 type DelegatorsStateValue struct {
@@ -224,12 +224,12 @@ func IsStateDelegatorsKey(key string) bool {
 }
 
 func StateKeyDelegators(ca base.Address, pid string) string {
-	return fmt.Sprintf("%s:%s%s", StateKeyDAOPrefix(ca), pid, DelegatorsSuffix)
+	return fmt.Sprintf("%s:%s:%s", StateKeyDAOPrefix(ca), pid, DelegatorsSuffix)
 }
 
 var (
 	VotersStateValueHint = hint.MustNewHint("mitum-dao-voters-state-value-v0.0.1")
-	VotersSuffix         = ":voters"
+	VotersSuffix         = "voters"
 )
 
 type VotersStateValue struct {
@@ -302,7 +302,7 @@ func IsStateVotersKey(key string) bool {
 }
 
 func StateKeyVoters(ca base.Address, pid string) string {
-	return fmt.Sprintf("%s:%s%s", StateKeyDAOPrefix(ca), pid, VotersSuffix)
+	return fmt.Sprintf("%s:%s:%s", StateKeyDAOPrefix(ca), pid, VotersSuffix)
 }
 
 //var (
@@ -368,7 +368,7 @@ func StateKeyVoters(ca base.Address, pid string) string {
 
 var (
 	VotingPowerBoxStateValueHint = hint.MustNewHint("mitum-dao-voting-power-box-state-value-v0.0.1")
-	VotingPowerBoxSuffix         = ":votingpowerbox"
+	VotingPowerBoxSuffix         = "votingpowerbox"
 )
 
 type VotingPowerBoxStateValue struct {
@@ -424,16 +424,16 @@ func IsStateVotingPowerBoxKey(key string) bool {
 }
 
 func StateKeyVotingPowerBox(ca base.Address, pid string) string {
-	return fmt.Sprintf("%s:%s%s", StateKeyDAOPrefix(ca), pid, VotingPowerBoxSuffix)
+	return fmt.Sprintf("%s:%s:%s", StateKeyDAOPrefix(ca), pid, VotingPowerBoxSuffix)
 }
 
-func ParseStateKey(key string, Prefix string) ([]string, error) {
+func ParseStateKey(key string, Prefix string, expected int) ([]string, error) {
 	parsedKey := strings.Split(key, ":")
 	if parsedKey[0] != Prefix[:len(Prefix)-1] {
 		return nil, errors.Errorf("State Key not include Prefix, %s", parsedKey)
 	}
-	if len(parsedKey) < 3 {
-		return nil, errors.Errorf("parsing State Key string failed, %s", parsedKey)
+	if len(parsedKey) < expected {
+		return nil, errors.Errorf("parsed State Key length under %v", expected)
 	} else {
 		return parsedKey, nil
 	}

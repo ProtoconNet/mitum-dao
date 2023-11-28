@@ -81,7 +81,7 @@ func (opp *RegisterProcessor) PreProcess(
 	}
 
 	if err := currencystate.CheckNotExistsState(extensioncurrency.StateKeyContractAccount(fact.Sender()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("contract account cannot delegate, %s: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("sender cannot be a contract account, %s: %w", fact.Sender(), err), nil
 	}
 
 	if err := currencystate.CheckExistsState(extensioncurrency.StateKeyContractAccount(fact.Contract()), getStateFunc); err != nil {

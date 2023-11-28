@@ -31,7 +31,9 @@ func DAOService(st *currencydigest.Database, contract string) (*types.Design, er
 	var design types.Design
 	var sta mitumbase.State
 	var err error
-	if err := st.DatabaseClient().GetByFilter(
+	if st.DatabaseClient() == nil {
+		return nil, errors.Errorf("empty Database client")
+	} else if err := st.DatabaseClient().GetByFilter(
 		defaultColNameDAO,
 		filter.D(),
 		func(res *mongo.SingleResult) error {
@@ -66,7 +68,9 @@ func DAODelegatorInfo(st *currencydigest.Database, contract, proposalID, delegat
 	filter := util.NewBSONFilter("contract", contract)
 	filter = filter.Add("proposal_id", proposalID)
 
-	if err = st.DatabaseClient().GetByFilter(
+	if st.DatabaseClient() == nil {
+		return nil, errors.Errorf("empty Database client")
+	} else if err = st.DatabaseClient().GetByFilter(
 		defaultColNameDAODelegators,
 		filter.D(),
 		func(res *mongo.SingleResult) error {
@@ -106,7 +110,9 @@ func DAOVoters(st *currencydigest.Database, contract, proposalID string) ([]type
 	var voters []types.VoterInfo
 	var sta mitumbase.State
 	var err error
-	if err = st.DatabaseClient().GetByFilter(
+	if st.DatabaseClient() == nil {
+		return nil, errors.Errorf("empty Database client")
+	} else if err = st.DatabaseClient().GetByFilter(
 		defaultColNameDAOVoters,
 		filter.D(),
 		func(res *mongo.SingleResult) error {
@@ -136,7 +142,9 @@ func DAOProposal(st *currencydigest.Database, contract, proposalID string) (*sta
 	var proposal state.ProposalStateValue
 	var sta mitumbase.State
 	var err error
-	if err = st.DatabaseClient().GetByFilter(
+	if st.DatabaseClient() == nil {
+		return nil, errors.Errorf("empty Database client")
+	} else if err = st.DatabaseClient().GetByFilter(
 		defaultColNameDAOProposal,
 		filter.D(),
 		func(res *mongo.SingleResult) error {
@@ -166,7 +174,9 @@ func DAOVotingPowerBox(st *currencydigest.Database, contract, proposalID string)
 	var votingPowerBox types.VotingPowerBox
 	var sta mitumbase.State
 	var err error
-	if err = st.DatabaseClient().GetByFilter(
+	if st.DatabaseClient() == nil {
+		return nil, errors.Errorf("empty Database client")
+	} else if err = st.DatabaseClient().GetByFilter(
 		defaultColNameDAOVotingPowerBox,
 		filter.D(),
 		func(res *mongo.SingleResult) error {

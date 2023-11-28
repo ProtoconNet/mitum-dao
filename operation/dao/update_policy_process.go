@@ -79,7 +79,7 @@ func (opp *UpdatePolicyProcessor) PreProcess(
 	}
 
 	if err := currencystate.CheckNotExistsState(stateextension.StateKeyContractAccount(fact.Sender()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("contract account cannot update dao policy, %s: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("sender cannot be a contract account, %s: %w", fact.Sender(), err), nil
 	}
 
 	st, err := currencystate.ExistsState(stateextension.StateKeyContractAccount(fact.Contract()), "key of contract account", getStateFunc)

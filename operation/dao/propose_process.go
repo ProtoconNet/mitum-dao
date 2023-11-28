@@ -79,7 +79,7 @@ func (opp *ProposeProcessor) PreProcess(
 	}
 
 	if err := currencystate.CheckNotExistsState(stateextionsion.StateKeyContractAccount(fact.Sender()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("contract account cannot propose proposal, %s: %w", fact.Sender(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("sender cannot be a contract account, %s: %w", fact.Sender(), err), nil
 	}
 
 	if err := currencystate.CheckExistsState(stateextionsion.StateKeyContractAccount(fact.Contract()), getStateFunc); err != nil {

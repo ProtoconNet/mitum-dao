@@ -38,7 +38,7 @@ func (doc DAODesignDoc) MarshalBSON() ([]byte, error) {
 		return nil, err
 	}
 
-	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix)
+	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix, 3)
 	m["contract"] = parsedKey[1]
 	m["height"] = doc.st.Height()
 	//m["design"] = doc.de
@@ -77,7 +77,7 @@ func (doc DAOProposalDoc) MarshalBSON() ([]byte, error) {
 		return nil, err
 	}
 
-	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix)
+	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix, 4)
 	m["contract"] = parsedKey[1]
 	m["proposal_id"] = parsedKey[2]
 	m["height"] = doc.st.Height()
@@ -116,7 +116,7 @@ func (doc DAODelegatorsDoc) MarshalBSON() ([]byte, error) {
 		return nil, err
 	}
 
-	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix)
+	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix, 4)
 	m["contract"] = parsedKey[1]
 	m["proposal_id"] = parsedKey[2]
 	m["height"] = doc.st.Height()
@@ -154,7 +154,7 @@ func (doc DAOVotersDoc) MarshalBSON() ([]byte, error) {
 		return nil, err
 	}
 
-	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix)
+	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix, 4)
 	m["contract"] = parsedKey[1]
 	m["proposal_id"] = parsedKey[2]
 	m["height"] = doc.st.Height()
@@ -192,7 +192,7 @@ func (doc DAOVotingPowerBoxDoc) MarshalBSON() ([]byte, error) {
 		return nil, err
 	}
 
-	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix)
+	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix, 4)
 	m["contract"] = parsedKey[1]
 	m["proposal_id"] = parsedKey[2]
 	m["height"] = doc.st.Height()
