@@ -3,6 +3,7 @@ package digest
 import (
 	mongodbstorage "github.com/ProtoconNet/mitum-currency/v3/digest/mongodb"
 	bsonenc "github.com/ProtoconNet/mitum-currency/v3/digest/util/bson"
+	crcystate "github.com/ProtoconNet/mitum-currency/v3/state"
 	"github.com/ProtoconNet/mitum-dao/state"
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/base"
@@ -38,7 +39,7 @@ func (doc DAODesignDoc) MarshalBSON() ([]byte, error) {
 		return nil, err
 	}
 
-	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix, 3)
+	parsedKey, err := crcystate.ParseStateKey(doc.st.Key(), state.DAOPrefix, 3)
 	m["contract"] = parsedKey[1]
 	m["height"] = doc.st.Height()
 	//m["design"] = doc.de
@@ -77,7 +78,7 @@ func (doc DAOProposalDoc) MarshalBSON() ([]byte, error) {
 		return nil, err
 	}
 
-	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix, 4)
+	parsedKey, err := crcystate.ParseStateKey(doc.st.Key(), state.DAOPrefix, 4)
 	m["contract"] = parsedKey[1]
 	m["proposal_id"] = parsedKey[2]
 	m["height"] = doc.st.Height()
@@ -116,7 +117,7 @@ func (doc DAODelegatorsDoc) MarshalBSON() ([]byte, error) {
 		return nil, err
 	}
 
-	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix, 4)
+	parsedKey, err := crcystate.ParseStateKey(doc.st.Key(), state.DAOPrefix, 4)
 	m["contract"] = parsedKey[1]
 	m["proposal_id"] = parsedKey[2]
 	m["height"] = doc.st.Height()
@@ -154,7 +155,7 @@ func (doc DAOVotersDoc) MarshalBSON() ([]byte, error) {
 		return nil, err
 	}
 
-	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix, 4)
+	parsedKey, err := crcystate.ParseStateKey(doc.st.Key(), state.DAOPrefix, 4)
 	m["contract"] = parsedKey[1]
 	m["proposal_id"] = parsedKey[2]
 	m["height"] = doc.st.Height()
@@ -192,7 +193,7 @@ func (doc DAOVotingPowerBoxDoc) MarshalBSON() ([]byte, error) {
 		return nil, err
 	}
 
-	parsedKey, err := state.ParseStateKey(doc.st.Key(), state.DAOPrefix, 4)
+	parsedKey, err := crcystate.ParseStateKey(doc.st.Key(), state.DAOPrefix, 4)
 	m["contract"] = parsedKey[1]
 	m["proposal_id"] = parsedKey[2]
 	m["height"] = doc.st.Height()
