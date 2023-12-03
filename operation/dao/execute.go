@@ -77,6 +77,10 @@ func (fact ExecuteFact) IsValid(b []byte) error {
 		return util.ErrInvalid.Errorf("empty propose id")
 	}
 
+	if !currencytypes.ReSpcecialChar.Match([]byte(fact.proposalID)) {
+		return util.ErrInvalid.Errorf("invalid proposalID due to the inclusion of special characters")
+	}
+
 	if fact.sender.Equal(fact.contract) {
 		return util.ErrInvalid.Errorf("contract address is same with sender, %q", fact.sender)
 	}

@@ -3,7 +3,7 @@ module github.com/ProtoconNet/mitum-dao
 go 1.21
 
 require (
-	github.com/ProtoconNet/mitum-currency/v3 v3.0.0-alpha.0.20231129064149-66ce05a50e31
+	github.com/ProtoconNet/mitum-currency/v3 v3.0.0-alpha.0.20231203031618-c8c4f7815ceb
 	github.com/ProtoconNet/mitum2 v0.0.0-20231128070632-a93b2076a5bc
 	github.com/alecthomas/kong v0.8.1
 	github.com/arl/statsviz v0.6.0

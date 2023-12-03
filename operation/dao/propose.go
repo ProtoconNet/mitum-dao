@@ -91,6 +91,10 @@ func (fact ProposeFact) IsValid(b []byte) error {
 		return util.ErrInvalid.Errorf("empty propose id")
 	}
 
+	if !currencytypes.ReSpcecialChar.Match([]byte(fact.proposalID)) {
+		return util.ErrInvalid.Errorf("invalid proposalID due to the inclusion of special characters")
+	}
+
 	if err := common.IsValidOperationFact(fact, b); err != nil {
 		return err
 	}
