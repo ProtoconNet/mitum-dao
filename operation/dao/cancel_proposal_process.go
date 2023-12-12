@@ -2,9 +2,9 @@ package dao
 
 import (
 	"context"
+	"github.com/ProtoconNet/mitum-currency/v3/common"
 	"sync"
 
-	"github.com/ProtoconNet/mitum-currency/v3/common"
 	"github.com/ProtoconNet/mitum-currency/v3/operation/processor"
 	currencystate "github.com/ProtoconNet/mitum-currency/v3/state"
 	"github.com/ProtoconNet/mitum-currency/v3/state/currency"
@@ -149,34 +149,109 @@ func (opp *CancelProposalProcessor) Process(
 	var sts []base.StateMergeValue
 
 	{ // caculate operation fee
-		policy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)
+		//policy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)
+		//if err != nil {
+		//	return nil, base.NewBaseOperationProcessReasonError("failed to find currency policy, %q: %w", fact.Currency(), err), nil
+		//}
+		//
+		//fee, err := policy.Feeer().Fee(common.ZeroBig)
+		//if err != nil {
+		//	return nil, base.NewBaseOperationProcessReasonError("failed to check fee of currency, %q: %w", fact.Currency(), err), nil
+		//}
+		//
+		//st, err := currencystate.ExistsState(currency.StateKeyBalance(fact.Sender(), fact.Currency()), "key of sender balance", getStateFunc)
+		//if err != nil {
+		//	return nil, base.NewBaseOperationProcessReasonError("sender balance not found, %s, %q: %w", fact.Sender(), fact.Currency(), err), nil
+		//}
+		//sb := currencystate.NewStateMergeValue(st.Key(), st.Value())
+		//
+		//switch b, err := currency.StateBalanceValue(st); {
+		//case err != nil:
+		//	return nil, base.NewBaseOperationProcessReasonError("failed to get balance value, %s, %q: %w", fact.Sender(), fact.Currency(), err), nil
+		//case b.Big().Compare(fee) < 0:
+		//	return nil, base.NewBaseOperationProcessReasonError("not enough balance of sender, %s, %q", fact.Sender(), fact.Currency()), nil
+		//}
+		//
+		//v, ok := sb.Value().(currency.BalanceStateValue)
+		//if !ok {
+		//	return nil, base.NewBaseOperationProcessReasonError("expected BalanceStateValue, not %T", sb.Value()), nil
+		//}
+		//sts = append(sts, currencystate.NewStateMergeValue(sb.Key(), currency.NewBalanceStateValue(v.Amount.WithBig(v.Amount.Big().Sub(fee)))))
+		currencyPolicy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find currency policy, %q: %w", fact.Currency(), err), nil
+			return nil, base.NewBaseOperationProcessReasonError("currency not found, %q; %w", fact.Currency(), err), nil
 		}
 
-		fee, err := policy.Feeer().Fee(common.ZeroBig)
+		fee, err := currencyPolicy.Feeer().Fee(common.ZeroBig)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to check fee of currency, %q: %w", fact.Currency(), err), nil
+			return nil, base.NewBaseOperationProcessReasonError(
+				"failed to check fee of currency, %q; %w",
+				fact.Currency(),
+				err,
+			), nil
 		}
 
-		st, err := currencystate.ExistsState(currency.StateKeyBalance(fact.Sender(), fact.Currency()), "key of sender balance", getStateFunc)
+		senderBalSt, err := currencystate.ExistsState(
+			currency.StateKeyBalance(fact.Sender(), fact.Currency()),
+			"key of sender balance",
+			getStateFunc,
+		)
 		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("sender balance not found, %s, %q: %w", fact.Sender(), fact.Currency(), err), nil
+			return nil, base.NewBaseOperationProcessReasonError(
+				"sender balance not found, %q; %w",
+				fact.Sender(),
+				err,
+			), nil
 		}
-		sb := currencystate.NewStateMergeValue(st.Key(), st.Value())
 
-		switch b, err := currency.StateBalanceValue(st); {
+		switch senderBal, err := currency.StateBalanceValue(senderBalSt); {
 		case err != nil:
-			return nil, base.NewBaseOperationProcessReasonError("failed to get balance value, %s, %q: %w", fact.Sender(), fact.Currency(), err), nil
-		case b.Big().Compare(fee) < 0:
-			return nil, base.NewBaseOperationProcessReasonError("not enough balance of sender, %s, %q", fact.Sender(), fact.Currency()), nil
+			return nil, base.NewBaseOperationProcessReasonError(
+				"failed to get balance value, %q; %w",
+				currency.StateKeyBalance(fact.Sender(), fact.Currency()),
+				err,
+			), nil
+		case senderBal.Big().Compare(fee) < 0:
+			return nil, base.NewBaseOperationProcessReasonError(
+				"not enough balance of sender, %q",
+				fact.Sender(),
+			), nil
 		}
 
-		v, ok := sb.Value().(currency.BalanceStateValue)
+		v, ok := senderBalSt.Value().(currency.BalanceStateValue)
 		if !ok {
-			return nil, base.NewBaseOperationProcessReasonError("expected BalanceStateValue, not %T", sb.Value()), nil
+			return nil, base.NewBaseOperationProcessReasonError("expected BalanceStateValue, not %T", senderBalSt.Value()), nil
 		}
-		sts = append(sts, currencystate.NewStateMergeValue(sb.Key(), currency.NewBalanceStateValue(v.Amount.WithBig(v.Amount.Big().Sub(fee)))))
+
+		if currencyPolicy.Feeer().Receiver() != nil {
+			if err := currencystate.CheckExistsState(currency.StateKeyAccount(currencyPolicy.Feeer().Receiver()), getStateFunc); err != nil {
+				return nil, nil, err
+			} else if feeRcvrSt, found, err := getStateFunc(currency.StateKeyBalance(currencyPolicy.Feeer().Receiver(), fact.currency)); err != nil {
+				return nil, nil, err
+			} else if !found {
+				return nil, nil, errors.Errorf("feeer receiver %s not found", currencyPolicy.Feeer().Receiver())
+			} else if feeRcvrSt.Key() != senderBalSt.Key() {
+				r, ok := feeRcvrSt.Value().(currency.BalanceStateValue)
+				if !ok {
+					return nil, nil, errors.Errorf("expected %T, not %T", currency.BalanceStateValue{}, feeRcvrSt.Value())
+				}
+				sts = append(sts, common.NewBaseStateMergeValue(
+					feeRcvrSt.Key(),
+					currency.NewAddBalanceStateValue(r.Amount.WithBig(fee)),
+					func(height base.Height, st base.State) base.StateValueMerger {
+						return currency.NewBalanceStateValueMerger(height, feeRcvrSt.Key(), fact.currency, st)
+					},
+				))
+
+				sts = append(sts, common.NewBaseStateMergeValue(
+					senderBalSt.Key(),
+					currency.NewDeductBalanceStateValue(v.Amount.WithBig(fee)),
+					func(height base.Height, st base.State) base.StateValueMerger {
+						return currency.NewBalanceStateValueMerger(height, senderBalSt.Key(), fact.currency, st)
+					},
+				))
+			}
+		}
 	}
 
 	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "key of proposal", getStateFunc)
