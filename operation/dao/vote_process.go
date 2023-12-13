@@ -185,12 +185,56 @@ func (opp *VoteProcessor) Process(
 		return nil, nil, e.Errorf("expected VoteFact, not %T", op.Fact())
 	}
 
-	sts := []base.StateMergeValue{}
+	var sts []base.StateMergeValue
+
+	var votingPowerBox types.VotingPowerBox
+	switch st, found, err := getStateFunc(state.StateKeyVotingPowerBox(fact.Contract(), fact.ProposalID())); {
+	case err != nil:
+		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
+	case !found:
+		return nil, base.NewBaseOperationProcessReasonError("voting power box state not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
+	default:
+		vpb, err := state.StateVotingPowerBoxValue(st)
+		if err != nil {
+			return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box value from state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
+		}
+		votingPowerBox = vpb
+	}
+
+	vp, found := votingPowerBox.VotingPowers()[fact.Sender().String()]
+	if !found {
+		return nil, base.NewBaseOperationProcessReasonError("sender voting power not found, sender(%s), %s, %q", fact.Sender(), fact.Contract(), fact.ProposalID()), nil
+	}
+	vp.SetVoted(true)
+	vp.SetVoteFor(fact.Vote())
+
+	vpb := votingPowerBox.VotingPowers()
+	vpb[fact.Sender().String()] = vp
+	votingPowerBox.SetVotingPowers(vpb)
+
+	result := votingPowerBox.Result()
+	if _, found := result[fact.Vote()]; found {
+		result[fact.Vote()] = result[fact.Vote()].Add(vp.Amount())
+	} else {
+		result[fact.Vote()] = common.ZeroBig.Add(vp.Amount())
+	}
+	votingPowerBox.SetResult(result)
+
+	sts = append(sts,
+		currencystate.NewStateMergeValue(
+			state.StateKeyVotingPowerBox(fact.Contract(), fact.ProposalID()),
+			state.NewVotingPowerBoxStateValue(votingPowerBox),
+		),
+	)
 
 	{ // caculate operation fee
 		currencyPolicy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)
 		if err != nil {
 			return nil, base.NewBaseOperationProcessReasonError("currency not found, %q; %w", fact.Currency(), err), nil
+		}
+
+		if currencyPolicy.Feeer().Receiver() == nil {
+			return sts, nil, nil
 		}
 
 		fee, err := currencyPolicy.Feeer().Fee(common.ZeroBig)
@@ -234,111 +278,34 @@ func (opp *VoteProcessor) Process(
 			return nil, base.NewBaseOperationProcessReasonError("expected BalanceStateValue, not %T", senderBalSt.Value()), nil
 		}
 
-		if currencyPolicy.Feeer().Receiver() != nil {
-			if err := currencystate.CheckExistsState(currency.StateKeyAccount(currencyPolicy.Feeer().Receiver()), getStateFunc); err != nil {
-				return nil, nil, err
-			} else if feeRcvrSt, found, err := getStateFunc(currency.StateKeyBalance(currencyPolicy.Feeer().Receiver(), fact.currency)); err != nil {
-				return nil, nil, err
-			} else if !found {
-				return nil, nil, errors.Errorf("feeer receiver %s not found", currencyPolicy.Feeer().Receiver())
-			} else if feeRcvrSt.Key() != senderBalSt.Key() {
-				r, ok := feeRcvrSt.Value().(currency.BalanceStateValue)
-				if !ok {
-					return nil, nil, errors.Errorf("expected %T, not %T", currency.BalanceStateValue{}, feeRcvrSt.Value())
-				}
-				sts = append(sts, common.NewBaseStateMergeValue(
-					feeRcvrSt.Key(),
-					currency.NewAddBalanceStateValue(r.Amount.WithBig(fee)),
-					func(height base.Height, st base.State) base.StateValueMerger {
-						return currency.NewBalanceStateValueMerger(height, feeRcvrSt.Key(), fact.currency, st)
-					},
-				))
-
-				sts = append(sts, common.NewBaseStateMergeValue(
-					senderBalSt.Key(),
-					currency.NewDeductBalanceStateValue(v.Amount.WithBig(fee)),
-					func(height base.Height, st base.State) base.StateValueMerger {
-						return currency.NewBalanceStateValueMerger(height, senderBalSt.Key(), fact.currency, st)
-					},
-				))
+		if err := currencystate.CheckExistsState(currency.StateKeyAccount(currencyPolicy.Feeer().Receiver()), getStateFunc); err != nil {
+			return nil, nil, err
+		} else if feeRcvrSt, found, err := getStateFunc(currency.StateKeyBalance(currencyPolicy.Feeer().Receiver(), fact.currency)); err != nil {
+			return nil, nil, err
+		} else if !found {
+			return nil, nil, errors.Errorf("feeer receiver %s not found", currencyPolicy.Feeer().Receiver())
+		} else if feeRcvrSt.Key() != senderBalSt.Key() {
+			r, ok := feeRcvrSt.Value().(currency.BalanceStateValue)
+			if !ok {
+				return nil, nil, errors.Errorf("expected %T, not %T", currency.BalanceStateValue{}, feeRcvrSt.Value())
 			}
+			sts = append(sts, common.NewBaseStateMergeValue(
+				feeRcvrSt.Key(),
+				currency.NewAddBalanceStateValue(r.Amount.WithBig(fee)),
+				func(height base.Height, st base.State) base.StateValueMerger {
+					return currency.NewBalanceStateValueMerger(height, feeRcvrSt.Key(), fact.currency, st)
+				},
+			))
+
+			sts = append(sts, common.NewBaseStateMergeValue(
+				senderBalSt.Key(),
+				currency.NewDeductBalanceStateValue(v.Amount.WithBig(fee)),
+				func(height base.Height, st base.State) base.StateValueMerger {
+					return currency.NewBalanceStateValueMerger(height, senderBalSt.Key(), fact.currency, st)
+				},
+			))
 		}
 	}
-
-	var votingPowerBox types.VotingPowerBox
-	switch st, found, err := getStateFunc(state.StateKeyVotingPowerBox(fact.Contract(), fact.ProposalID())); {
-	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
-	case !found:
-		return nil, base.NewBaseOperationProcessReasonError("voting power box state not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
-	default:
-		vpb, err := state.StateVotingPowerBoxValue(st)
-		if err != nil {
-			return nil, base.NewBaseOperationProcessReasonError("failed to find voting power box value from state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
-		}
-		votingPowerBox = vpb
-	}
-
-	vp, found := votingPowerBox.VotingPowers()[fact.Sender().String()]
-	if !found {
-		return nil, base.NewBaseOperationProcessReasonError("sender voting power not found, sender(%s), %s, %q", fact.Sender(), fact.Contract(), fact.ProposalID()), nil
-	}
-	vp.SetVoted(true)
-	vp.SetVoteFor(fact.Vote())
-
-	vpb := votingPowerBox.VotingPowers()
-	vpb[fact.Sender().String()] = vp
-	votingPowerBox.SetVotingPowers(vpb)
-
-	result := votingPowerBox.Result()
-	if _, found := result[fact.Vote()]; found {
-		result[fact.Vote()] = result[fact.Vote()].Add(vp.Amount())
-	} else {
-		result[fact.Vote()] = common.ZeroBig.Add(vp.Amount())
-	}
-	votingPowerBox.SetResult(result)
-
-	sts = append(sts,
-		currencystate.NewStateMergeValue(
-			state.StateKeyVotingPowerBox(fact.Contract(), fact.ProposalID()),
-			state.NewVotingPowerBoxStateValue(votingPowerBox),
-		),
-	)
-
-	currencyPolicy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("currency not found, %q: %w", fact.Currency(), err), nil
-	}
-
-	fee, err := currencyPolicy.Feeer().Fee(common.ZeroBig)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("failed to check fee of currency, %q: %w", fact.Currency(), err), nil
-	}
-
-	st, err := currencystate.ExistsState(currency.StateKeyBalance(fact.Sender(), fact.Currency()), "key of sender balance", getStateFunc)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("sender balance not found, %s, %q: %w", fact.Sender(), fact.Currency(), err), nil
-	}
-	sb := currencystate.NewStateMergeValue(st.Key(), st.Value())
-
-	switch b, err := currency.StateBalanceValue(st); {
-	case err != nil:
-		return nil, base.NewBaseOperationProcessReasonError("failed to get balance value, %s, %q: %w", fact.Sender(), fact.Currency(), err), nil
-	case b.Big().Compare(fee) < 0:
-		return nil, base.NewBaseOperationProcessReasonError("not enough balance of sender, %s, %q", fact.Sender(), fact.Currency()), nil
-	}
-
-	v, ok := sb.Value().(currency.BalanceStateValue)
-	if !ok {
-		return nil, base.NewBaseOperationProcessReasonError("expected BalanceStateValue, not %T", sb.Value()), nil
-	}
-
-	sts = append(sts,
-		currencystate.NewStateMergeValue(
-			sb.Key(),
-			currency.NewBalanceStateValue(v.Amount.WithBig(v.Amount.Big().Sub(fee))),
-		),
-	)
 
 	return sts, nil, nil
 }
