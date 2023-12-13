@@ -149,34 +149,6 @@ func (opp *CancelProposalProcessor) Process(
 	var sts []base.StateMergeValue
 
 	{ // caculate operation fee
-		//policy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)
-		//if err != nil {
-		//	return nil, base.NewBaseOperationProcessReasonError("failed to find currency policy, %q: %w", fact.Currency(), err), nil
-		//}
-		//
-		//fee, err := policy.Feeer().Fee(common.ZeroBig)
-		//if err != nil {
-		//	return nil, base.NewBaseOperationProcessReasonError("failed to check fee of currency, %q: %w", fact.Currency(), err), nil
-		//}
-		//
-		//st, err := currencystate.ExistsState(currency.StateKeyBalance(fact.Sender(), fact.Currency()), "key of sender balance", getStateFunc)
-		//if err != nil {
-		//	return nil, base.NewBaseOperationProcessReasonError("sender balance not found, %s, %q: %w", fact.Sender(), fact.Currency(), err), nil
-		//}
-		//sb := currencystate.NewStateMergeValue(st.Key(), st.Value())
-		//
-		//switch b, err := currency.StateBalanceValue(st); {
-		//case err != nil:
-		//	return nil, base.NewBaseOperationProcessReasonError("failed to get balance value, %s, %q: %w", fact.Sender(), fact.Currency(), err), nil
-		//case b.Big().Compare(fee) < 0:
-		//	return nil, base.NewBaseOperationProcessReasonError("not enough balance of sender, %s, %q", fact.Sender(), fact.Currency()), nil
-		//}
-		//
-		//v, ok := sb.Value().(currency.BalanceStateValue)
-		//if !ok {
-		//	return nil, base.NewBaseOperationProcessReasonError("expected BalanceStateValue, not %T", sb.Value()), nil
-		//}
-		//sts = append(sts, currencystate.NewStateMergeValue(sb.Key(), currency.NewBalanceStateValue(v.Amount.WithBig(v.Amount.Big().Sub(fee)))))
 		currencyPolicy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)
 		if err != nil {
 			return nil, base.NewBaseOperationProcessReasonError("currency not found, %q; %w", fact.Currency(), err), nil

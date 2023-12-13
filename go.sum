@@ -1,8 +1,8 @@
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/Masterminds/semver/v3 v3.2.1 h1:RN9w6+7QoMeJVGyfmbcgs28Br8cvmnucEXnY0rYXWg0=
 github.com/Masterminds/semver/v3 v3.2.1/go.mod h1:qvl/7zhW3nngYb5+80sSMF+FG2BjYrf8m9wsX0PNOMQ=
-github.com/ProtoconNet/mitum-currency/v3 v3.0.0-alpha.0.20231212070407-a3424d9517ef h1:HBcoLNCDfsq4D5Bxio/Y35Nk+JNbsT1LKjFCRVE+tkU=
-github.com/ProtoconNet/mitum-currency/v3 v3.0.0-alpha.0.20231212070407-a3424d9517ef/go.mod h1:CBFNvcPgl9E5hoiSOncG2BQFamrA5cClRrQQIXprDog=
+github.com/ProtoconNet/mitum-currency/v3 v3.0.0-alpha.0.20231213070613-80eee28f1a7b h1:rLeXAEhmFrBvVTnnFr3JMXSw+ypDm1tpQpgRnfHpE7Y=
+github.com/ProtoconNet/mitum-currency/v3 v3.0.0-alpha.0.20231213070613-80eee28f1a7b/go.mod h1:CBFNvcPgl9E5hoiSOncG2BQFamrA5cClRrQQIXprDog=
 github.com/ProtoconNet/mitum2 v0.0.0-20231128070632-a93b2076a5bc h1:4XgFQL04jXcbcazyMnvnWMpuBg4Xr/lDxST5hm8C0P8=
 github.com/ProtoconNet/mitum2 v0.0.0-20231128070632-a93b2076a5bc/go.mod h1:lcjjTzqnHbIsYpEpXLd8XOx6lmUIqxAF+QMgSd4RZT4=
 github.com/aead/siphash v1.0.1/go.mod h1:Nywa3cDsYNNK3gaciGTWPwHt0wlpNV15vwmswBAUSII=
