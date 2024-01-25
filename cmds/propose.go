@@ -66,9 +66,6 @@ func (cmd *ProposeCommand) Run(pctx context.Context) error { // nolint:dupl
 		return err
 	}
 
-	encs = cmd.Encoders
-	enc = cmd.Encoder
-
 	if err := cmd.parseFlags(); err != nil {
 		return err
 	}
@@ -88,13 +85,13 @@ func (cmd *ProposeCommand) parseFlags() error {
 		return err
 	}
 
-	sender, err := cmd.Sender.Encode(enc)
+	sender, err := cmd.Sender.Encode(cmd.Encoders.JSON())
 	if err != nil {
 		return errors.Wrapf(err, "invalid sender format, %q", cmd.Sender.String())
 	}
 	cmd.sender = sender
 
-	contract, err := cmd.Contract.Encode(enc)
+	contract, err := cmd.Contract.Encode(cmd.Encoders.JSON())
 	if err != nil {
 		return errors.Wrapf(err, "invalid contract account format, %q", cmd.Contract.String())
 	}
@@ -102,12 +99,12 @@ func (cmd *ProposeCommand) parseFlags() error {
 
 	if cmd.Option == types.ProposalCrypto {
 		if cmd.CalldataOption == types.CalldataTransfer {
-			from, err := cmd.From.Encode(enc)
+			from, err := cmd.From.Encode(cmd.Encoders.JSON())
 			if err != nil {
 				return errors.Wrapf(err, "invalid from address format, %q", cmd.From.String())
 			}
 
-			to, err := cmd.To.Encode(enc)
+			to, err := cmd.To.Encode(cmd.Encoders.JSON())
 			if err != nil {
 				return errors.Wrapf(err, "invalid to address format, %q", cmd.To.String())
 			}
@@ -128,7 +125,7 @@ func (cmd *ProposeCommand) parseFlags() error {
 			whitelist := types.NewWhitelist(false, []base.Address{})
 
 			if 0 < len(cmd.Whitelist.String()) {
-				a, err := cmd.Whitelist.Encode(enc)
+				a, err := cmd.Whitelist.Encode(cmd.Encoders.JSON())
 				if err != nil {
 					return errors.Wrapf(err, "invalid whitelist account format, %q", cmd.Whitelist.String())
 				}

@@ -28,9 +28,6 @@ func (cmd *RegisterCommand) Run(pctx context.Context) error { // nolint:dupl
 		return err
 	}
 
-	encs = cmd.Encoders
-	enc = cmd.Encoder
-
 	if err := cmd.parseFlags(); err != nil {
 		return err
 	}
@@ -50,19 +47,19 @@ func (cmd *RegisterCommand) parseFlags() error {
 		return err
 	}
 
-	sender, err := cmd.Sender.Encode(enc)
+	sender, err := cmd.Sender.Encode(cmd.Encoders.JSON())
 	if err != nil {
 		return errors.Wrapf(err, "invalid sender format, %q", cmd.Sender.String())
 	}
 	cmd.sender = sender
 
-	contract, err := cmd.Contract.Encode(enc)
+	contract, err := cmd.Contract.Encode(cmd.Encoders.JSON())
 	if err != nil {
 		return errors.Wrapf(err, "invalid contract account format, %q", cmd.Contract.String())
 	}
 	cmd.contract = contract
 
-	delegated, err := cmd.Delegated.Encode(enc)
+	delegated, err := cmd.Delegated.Encode(cmd.Encoders.JSON())
 	if err != nil {
 		return errors.Wrapf(err, "invalid delegated account format, %q", cmd.Delegated.String())
 	}
