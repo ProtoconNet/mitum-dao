@@ -8,7 +8,7 @@ import (
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
-	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
+	"github.com/ProtoconNet/mitum2/util/encoder"
 )
 
 type CreateDAOFactJSONMarshaler struct {
@@ -73,7 +73,7 @@ type CreateDAOFactJSONUnMarshaler struct {
 	Currency             string          `json:"currency"`
 }
 
-func (fact *CreateDAOFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (fact *CreateDAOFact) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of CreateDAOFact")
 
 	var uf CreateDAOFactJSONUnMarshaler
@@ -113,7 +113,7 @@ func (op CreateDAO) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func (op *CreateDAO) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (op *CreateDAO) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of CreateDAO")
 
 	var ubo common.BaseOperation

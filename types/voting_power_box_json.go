@@ -6,7 +6,7 @@ import (
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
-	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
+	"github.com/ProtoconNet/mitum2/util/encoder"
 	"github.com/ProtoconNet/mitum2/util/hint"
 )
 
@@ -35,7 +35,7 @@ type VotingPowerJSONUnmarshaler struct {
 	VotingPower string `json:"voting_power"`
 }
 
-func (vp *VotingPower) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (vp *VotingPower) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of VotingPower")
 
 	var u VotingPowerJSONUnmarshaler
@@ -84,7 +84,7 @@ type VotingPowerBoxJSONUnmarshaler struct {
 	Result       json.RawMessage `json:"result"`
 }
 
-func (vp *VotingPowerBox) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (vp *VotingPowerBox) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of VotingPowerBox")
 
 	var u VotingPowerBoxJSONUnmarshaler

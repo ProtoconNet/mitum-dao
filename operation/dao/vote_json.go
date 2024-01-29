@@ -5,7 +5,7 @@ import (
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
-	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
+	"github.com/ProtoconNet/mitum2/util/encoder"
 )
 
 type VoteFactJSONMarshaler struct {
@@ -37,7 +37,7 @@ type VoteFactJSONUnMarshaler struct {
 	Currency   string `json:"currency"`
 }
 
-func (fact *VoteFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (fact *VoteFact) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of VoteFact")
 
 	var uf VoteFactJSONUnMarshaler
@@ -66,7 +66,7 @@ func (op Vote) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func (op *Vote) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (op *Vote) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of Vote")
 
 	var ubo common.BaseOperation

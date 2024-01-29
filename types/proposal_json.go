@@ -5,7 +5,7 @@ import (
 
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
-	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
+	"github.com/ProtoconNet/mitum2/util/encoder"
 	"github.com/ProtoconNet/mitum2/util/hint"
 )
 
@@ -32,7 +32,7 @@ type CryptoProposalJSONUnmarshaler struct {
 	CallData  json.RawMessage `json:"call_data"`
 }
 
-func (p *CryptoProposal) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (p *CryptoProposal) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of CryptoProposal")
 
 	var up CryptoProposalJSONUnmarshaler
@@ -72,7 +72,7 @@ type BizProposalJSONUnmarshaler struct {
 	Options   uint8     `json:"options"`
 }
 
-func (p *BizProposal) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (p *BizProposal) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of BizProposal")
 
 	var up BizProposalJSONUnmarshaler

@@ -7,7 +7,7 @@ import (
 	currencytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
-	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
+	"github.com/ProtoconNet/mitum2/util/encoder"
 	"github.com/ProtoconNet/mitum2/util/hint"
 )
 
@@ -31,7 +31,7 @@ type WhitelistJSONUnmarshaler struct {
 	Accounts []string  `json:"accounts"`
 }
 
-func (wl *Whitelist) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (wl *Whitelist) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of Whitelist")
 
 	var uw WhitelistJSONUnmarshaler
@@ -92,7 +92,7 @@ type PolicyJSONUnmarshaler struct {
 	Quorum               uint            `json:"quorum"`
 }
 
-func (po *Policy) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (po *Policy) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of Policy")
 
 	var upo PolicyJSONUnmarshaler

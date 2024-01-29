@@ -8,7 +8,7 @@ import (
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
-	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
+	"github.com/ProtoconNet/mitum2/util/encoder"
 )
 
 type UpdatePolicyFactJSONMarshaler struct {
@@ -73,7 +73,7 @@ type UpdatePolicyFactJSONUnMarshaler struct {
 	Currency             string          `json:"currency"`
 }
 
-func (fact *UpdatePolicyFact) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (fact *UpdatePolicyFact) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of UpdatePolicyFact")
 
 	var uf UpdatePolicyFactJSONUnMarshaler
@@ -113,7 +113,7 @@ func (op UpdatePolicy) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func (op *UpdatePolicy) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (op *UpdatePolicy) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of UpdatePolicy")
 
 	var ubo common.BaseOperation

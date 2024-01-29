@@ -5,7 +5,7 @@ import (
 
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/util"
-	jsonenc "github.com/ProtoconNet/mitum2/util/encoder/json"
+	"github.com/ProtoconNet/mitum2/util/encoder"
 	"github.com/ProtoconNet/mitum2/util/hint"
 	"github.com/pkg/errors"
 )
@@ -26,7 +26,7 @@ type DesignStateValueJSONUnmarshaler struct {
 	Design json.RawMessage `json:"design"`
 }
 
-func (de *DesignStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (de *DesignStateValue) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of DesignStateValue")
 
 	var u DesignStateValueJSONUnmarshaler
@@ -69,7 +69,7 @@ type ProposalStateValueJSONUnmarshaler struct {
 	Policy   json.RawMessage `json:"policy"`
 }
 
-func (p *ProposalStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (p *ProposalStateValue) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of ProposalStateValue")
 
 	var u ProposalStateValueJSONUnmarshaler
@@ -118,7 +118,7 @@ type DelegatorsStateValueJSONUnmarshaler struct {
 	Delegators json.RawMessage `json:"delegators"`
 }
 
-func (dg *DelegatorsStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (dg *DelegatorsStateValue) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of DelegatorsStateValue")
 
 	var u DelegatorsStateValueJSONUnmarshaler
@@ -162,7 +162,7 @@ type VotersStateValueJSONUnmarshaler struct {
 	Voters json.RawMessage `json:"voters"`
 }
 
-func (vt *VotersStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (vt *VotersStateValue) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of VotersStateValue")
 
 	var u VotersStateValueJSONUnmarshaler
@@ -206,7 +206,7 @@ type VotingPowerBoxStateValueJSONUnmarshaler struct {
 	VotingPowerBox json.RawMessage `json:"voting_power_box"`
 }
 
-func (vb *VotingPowerBoxStateValue) DecodeJSON(b []byte, enc *jsonenc.Encoder) error {
+func (vb *VotingPowerBoxStateValue) DecodeJSON(b []byte, enc encoder.Encoder) error {
 	e := util.StringError("failed to decode json of VotingPowerBoxStateValue")
 
 	var u VotingPowerBoxStateValueJSONUnmarshaler
