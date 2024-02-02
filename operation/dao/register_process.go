@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/ProtoconNet/mitum-currency/v3/common"
@@ -119,6 +120,7 @@ func (opp *RegisterProcessor) PreProcess(
 
 	period, start, end := types.GetPeriodOfCurrentTime(p.Policy(), p.Proposal(), types.Registration, blockMap)
 	if period != types.Registration {
+		fmt.Printf("current time is not within the Registration period, Registration period; start(%d), end(%d), but now(%d), %s\n", start, end, blockMap.Manifest().ProposedAt().Unix(), op.Hash().String())
 		return nil, base.NewBaseOperationProcessReasonError("current time is not within the Registration period, Registration period; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
 
@@ -294,9 +296,12 @@ func (opp *RegisterProcessor) Process(
 	}
 
 	sts = append(sts,
-		currencystate.NewStateMergeValue(
+		common.NewBaseStateMergeValue(
 			state.StateKeyVoters(fact.Contract(), fact.ProposalID()),
 			state.NewVotersStateValue(voters),
+			func(height base.Height, st base.State) base.StateValueMerger {
+				return state.NewVotersStateValueMerger(height, state.StateKeyVoters(fact.Contract(), fact.ProposalID()), st)
+			},
 		),
 	)
 
@@ -312,16 +317,22 @@ func (opp *RegisterProcessor) Process(
 		delegators = append(delegators, types.NewDelegatorInfo(fact.Sender(), fact.Delegated()))
 
 		sts = append(sts,
-			currencystate.NewStateMergeValue(
+			common.NewBaseStateMergeValue(
 				state.StateKeyDelegators(fact.Contract(), fact.ProposalID()),
 				state.NewDelegatorsStateValue(delegators),
+				func(height base.Height, st base.State) base.StateValueMerger {
+					return state.NewDelegatorsStateValueMerger(height, state.StateKeyDelegators(fact.Contract(), fact.ProposalID()), st)
+				},
 			),
 		)
 	default:
 		sts = append(sts,
-			currencystate.NewStateMergeValue(
+			common.NewBaseStateMergeValue(
 				state.StateKeyDelegators(fact.Contract(), fact.ProposalID()),
 				state.NewDelegatorsStateValue([]types.DelegatorInfo{types.NewDelegatorInfo(fact.Sender(), fact.Delegated())}),
+				func(height base.Height, st base.State) base.StateValueMerger {
+					return state.NewDelegatorsStateValueMerger(height, state.StateKeyDelegators(fact.Contract(), fact.ProposalID()), st)
+				},
 			),
 		)
 	}
