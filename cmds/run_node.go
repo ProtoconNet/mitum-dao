@@ -82,7 +82,6 @@ func (cmd *RunCommand) Run(pctx context.Context) error {
 	_ = pps.POK(launch.PNameStates).
 		PreAddOK(PNameOperationProcessorsMap, POperationProcessorsMap).
 		PreAddOK(ps.Name("when-new-block-saved-in-consensus-state-func"), cmd.pWhenNewBlockSavedInConsensusStateFunc).
-		PreAddOK(ps.Name("when-new-block-saved-in-syncing-state-func"), cmd.pWhenNewBlockSavedInSyncingStateFunc).
 		PreAddOK(ps.Name("when-new-block-confirmed-func"), cmd.pWhenNewBlockConfirmed)
 	_ = pps.POK(launch.PNameEncoder).
 		PostAddOK(launch.PNameAddHinters, PAddHinters)
@@ -185,55 +184,6 @@ func (cmd *RunCommand) runStates(ctx, pctx context.Context) (func(), error) {
 	}, nil
 }
 
-func (cmd *RunCommand) pWhenNewBlockSavedInSyncingStateFunc(pctx context.Context) (context.Context, error) {
-	var log *logging.Logging
-	var db isaac.Database
-	var di *digest.Digester
-
-	if err := util.LoadFromContextOK(pctx,
-		launch.LoggingContextKey, &log,
-		launch.CenterDatabaseContextKey, &db,
-	); err != nil {
-		return pctx, err
-	}
-
-	if err := util.LoadFromContext(pctx, currencycmds.ContextValueDigester, &di); err != nil {
-		return pctx, err
-	}
-
-	var f func(height base.Height)
-	if di != nil {
-		g := cmd.whenBlockSaved(db, di)
-
-		f = func(height base.Height) {
-			g(pctx)
-			l := log.Log().With().Interface("height", height).Logger()
-
-			if cmd.Hold.IsSet() && height == cmd.Hold.Height() {
-				l.Debug().Msg("will be stopped by hold")
-				cmd.exitf(errHoldStop.WithStack())
-
-				return
-			}
-		}
-	} else {
-		f = func(height base.Height) {
-			l := log.Log().With().Interface("height", height).Logger()
-
-			if cmd.Hold.IsSet() && height == cmd.Hold.Height() {
-				l.Debug().Msg("will be stopped by hold")
-				cmd.exitf(errHoldStop.WithStack())
-
-				return
-			}
-		}
-	}
-
-	return context.WithValue(pctx,
-		launch.WhenNewBlockSavedInSyncingStateFuncContextKey, f,
-	), nil
-}
-
 func (cmd *RunCommand) pWhenNewBlockSavedInConsensusStateFunc(pctx context.Context) (context.Context, error) {
 	var log *logging.Logging
 
@@ -279,11 +229,15 @@ func (cmd *RunCommand) pWhenNewBlockConfirmed(pctx context.Context) (context.Con
 
 	var f func(height base.Height)
 	if di != nil {
-		g := cmd.whenBlockSaved(db, di)
-
 		f = func(height base.Height) {
-			g(pctx)
 			l := log.Log().With().Interface("height", height).Logger()
+
+			err := digestFollowup(pctx, height)
+			if err != nil {
+				cmd.exitf(err)
+
+				return
+			}
 
 			if cmd.Hold.IsSet() && height == cmd.Hold.Height() {
 				l.Debug().Msg("will be stopped by hold")

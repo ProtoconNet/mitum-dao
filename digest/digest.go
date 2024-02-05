@@ -75,10 +75,6 @@ end:
 
 			break end
 		case blk := <-di.blockChan:
-			if m, _, _, _, _, _ := di.database.ManifestByHeight(blk.Manifest().Height()); m != nil {
-				continue
-			}
-
 			err := util.Retry(ctx, func() (bool, error) {
 				if err := di.digest(ctx, blk); err != nil {
 					go errch(currencydigest.NewDigestError(err, blk.Manifest().Height()))
@@ -160,6 +156,10 @@ func DigestBlock(
 	sts []base.State,
 	proposal base.ProposalSignFact,
 ) error {
+	if m, _, _, _, _, _ := st.ManifestByHeight(blk.Manifest().Height()); m != nil {
+		return nil
+	}
+
 	bs, err := NewBlockSession(st, blk, ops, opstree, sts, proposal)
 	if err != nil {
 		return err
