@@ -273,6 +273,7 @@ func (opp *PreSnapProcessor) Process(
 		votingPowers := map[string]types.VotingPower{}
 		for _, info := range voters {
 			votingPower := common.ZeroBig
+
 			for _, delegator := range info.Delegators() {
 				st, err = currencystate.ExistsState(currency.StateKeyBalance(delegator, votingPowerToken), "key of balance", getStateFunc)
 				if err != nil {
@@ -286,8 +287,17 @@ func (opp *PreSnapProcessor) Process(
 
 				votingPower = votingPower.Add(b.Big())
 			}
+
+			v, found := votingPowers[info.Account().String()]
+			if found {
+				votingPower = v.Amount().Add(votingPower)
+			}
+
 			votingPowers[info.Account().String()] = types.NewVotingPower(info.Account(), votingPower)
-			total = total.Add(votingPower)
+		}
+
+		for _, v := range votingPowers {
+			total = total.Add(v.Amount())
 		}
 		votingPowerBox.SetVotingPowers(votingPowers)
 		votingPowerBox.SetTotal(total)

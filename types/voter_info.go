@@ -69,3 +69,7 @@ func (r VoterInfo) Account() base.Address {
 func (r VoterInfo) Delegators() []base.Address {
 	return r.delegators
 }
+
+func (r *VoterInfo) SetDelegators(delegators []base.Address) {
+	r.delegators = delegators
+}
