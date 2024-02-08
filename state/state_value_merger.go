@@ -1,6 +1,7 @@
 package state
 
 import (
+	"fmt"
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/base"
@@ -13,8 +14,8 @@ import (
 
 type VotersStateValueMerger struct {
 	*common.BaseStateValueMerger
-	existing []types.VoterInfo
-	add      []types.VoterInfo
+	existing map[string]types.VoterInfo
+	add      map[string]types.VoterInfo
 	sync.Mutex
 }
 
@@ -28,8 +29,14 @@ func NewVotersStateValueMerger(height base.Height, key string, st base.State) *V
 		BaseStateValueMerger: common.NewBaseStateValueMerger(height, nst.Key(), nst),
 	}
 
+	s.existing = make(map[string]types.VoterInfo)
+	s.add = make(map[string]types.VoterInfo)
+	var voters []types.VoterInfo
 	if nst.Value() != nil {
-		s.existing = nst.Value().(VotersStateValue).voters //nolint:forcetypeassert //...
+		voters = nst.Value().(VotersStateValue).voters
+		for i := range voters {
+			s.existing[voters[i].Account().String()] = voters[i]
+		}
 	}
 
 	return s
@@ -41,7 +48,17 @@ func (s *VotersStateValueMerger) Merge(value base.StateValue, op util.Hash) erro
 
 	switch t := value.(type) {
 	case VotersStateValue:
-		s.add = append(s.add, t.voters...)
+		for i := range t.voters {
+			switch v, found := s.add[t.voters[i].Account().String()]; {
+			case !found:
+				s.add[t.voters[i].Account().String()] = t.voters[i]
+			default:
+				delegators := append(v.Delegators(), t.voters[i].Delegators()...)
+				delegators, _ = util.RemoveDuplicatedSlice(delegators, func(address base.Address) (string, error) { return address.String(), nil })
+				v.SetDelegators(delegators)
+				s.add[t.voters[i].Account().String()] = v
+			}
+		}
 	default:
 		return errors.Errorf("unsupported voters state value, %T", value)
 	}
@@ -68,18 +85,28 @@ func (s *VotersStateValueMerger) CloseValue() (base.State, error) {
 func (s *VotersStateValueMerger) closeValue() (base.StateValue, error) {
 	var nvoters []types.VoterInfo
 	if len(s.add) > 0 {
-		nvoters = append(s.existing, s.add...)
-	} else {
-		nvoters = s.existing
+		for k, v := range s.add {
+			switch value, found := s.existing[k]; {
+			case !found:
+				s.existing[k] = v
+			default:
+				delegators := append(value.Delegators(), v.Delegators()...)
+				delegators, _ = util.RemoveDuplicatedSlice(delegators, func(address base.Address) (string, error) { return address.String(), nil })
+				value.SetDelegators(delegators)
+				s.existing[k] = value
+			}
+		}
+	}
+	for _, v := range s.existing {
+		nvoters = append(nvoters, v)
 	}
 
-	rvoters, _ := util.RemoveDuplicatedSlice(nvoters, func(v types.VoterInfo) (string, error) { return string(v.Bytes()), nil })
-	sort.Slice(rvoters, func(i, j int) bool { // NOTE sort by address
-		return strings.Compare(string(rvoters[i].Bytes()), string(rvoters[j].Bytes())) < 0
+	sort.Slice(nvoters, func(i, j int) bool { // NOTE sort by address
+		return strings.Compare(nvoters[i].Account().String(), nvoters[j].Account().String()) < 0
 	})
-
+	fmt.Println(nvoters)
 	return NewVotersStateValue(
-		rvoters,
+		nvoters,
 	), nil
 }
 
