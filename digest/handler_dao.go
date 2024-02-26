@@ -33,7 +33,7 @@ func (hd *Handlers) handleDAOService(w http.ResponseWriter, r *http.Request) {
 	} else {
 		currencydigest.HTTP2WriteHalBytes(hd.encoder, w, v.([]byte), http.StatusOK)
 		if !shared {
-			currencydigest.HTTP2WriteCache(w, cacheKey, time.Second*3)
+			currencydigest.HTTP2WriteCache(w, cacheKey, time.Millisecond*500)
 		}
 	}
 }
@@ -90,7 +90,7 @@ func (hd *Handlers) handleDAOProposal(w http.ResponseWriter, r *http.Request) {
 	} else {
 		currencydigest.HTTP2WriteHalBytes(hd.encoder, w, v.([]byte), http.StatusOK)
 		if !shared {
-			currencydigest.HTTP2WriteCache(w, cacheKey, time.Second*3)
+			currencydigest.HTTP2WriteCache(w, cacheKey, time.Millisecond*500)
 		}
 	}
 }
@@ -152,7 +152,7 @@ func (hd *Handlers) handleDAODelegator(w http.ResponseWriter, r *http.Request) {
 	} else {
 		currencydigest.HTTP2WriteHalBytes(hd.encoder, w, v.([]byte), http.StatusOK)
 		if !shared {
-			currencydigest.HTTP2WriteCache(w, cacheKey, time.Second*3)
+			currencydigest.HTTP2WriteCache(w, cacheKey, time.Millisecond*500)
 		}
 	}
 }
@@ -216,7 +216,7 @@ func (hd *Handlers) handleDAOVoters(w http.ResponseWriter, r *http.Request) {
 	} else {
 		currencydigest.HTTP2WriteHalBytes(hd.encoder, w, v.([]byte), http.StatusOK)
 		if !shared {
-			currencydigest.HTTP2WriteCache(w, cacheKey, time.Second*3)
+			currencydigest.HTTP2WriteCache(w, cacheKey, time.Millisecond*500)
 		}
 	}
 }
@@ -274,7 +274,7 @@ func (hd *Handlers) handleDAOVotingPowerBox(w http.ResponseWriter, r *http.Reque
 	} else {
 		currencydigest.HTTP2WriteHalBytes(hd.encoder, w, v.([]byte), http.StatusOK)
 		if !shared {
-			currencydigest.HTTP2WriteCache(w, cacheKey, time.Second*3)
+			currencydigest.HTTP2WriteCache(w, cacheKey, time.Millisecond*500)
 		}
 	}
 }

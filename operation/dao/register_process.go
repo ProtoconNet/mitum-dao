@@ -2,7 +2,6 @@ package dao
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/ProtoconNet/mitum-currency/v3/common"
@@ -111,19 +110,6 @@ func (opp *RegisterProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("already canceled proposal, %s, %q", fact.Contract(), fact.ProposalID()), nil
 	}
 
-	blockMap, found, err := opp.getLastBlockFunc()
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("get LastBlock failed: %w", err), nil
-	} else if !found {
-		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
-	}
-
-	period, start, end := types.GetPeriodOfCurrentTime(p.Policy(), p.Proposal(), types.Registration, blockMap)
-	if period != types.Registration {
-		fmt.Printf("current time is not within the Registration period, Registration period; start(%d), end(%d), but now(%d), %s\n", start, end, blockMap.Manifest().ProposedAt().Unix(), op.Hash().String())
-		return nil, base.NewBaseOperationProcessReasonError("current time is not within the Registration period, Registration period; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
-	}
-
 	switch st, found, err := getStateFunc(state.StateKeyVoters(fact.Contract(), fact.ProposalID())); {
 	case err != nil:
 		return nil, base.NewBaseOperationProcessReasonError("failed to find voters state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
@@ -183,6 +169,28 @@ func (opp *RegisterProcessor) Process(
 	fact, ok := op.Fact().(RegisterFact)
 	if !ok {
 		return nil, nil, e.Errorf("expected RegisterFact, not %T", op.Fact())
+	}
+
+	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "key of proposal", getStateFunc)
+	if err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("proposal state not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
+	}
+
+	p, err := state.StateProposalValue(st)
+	if err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
+	}
+
+	blockMap, found, err := opp.getLastBlockFunc()
+	if err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("get LastBlock failed: %w", err), nil
+	} else if !found {
+		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
+	}
+
+	period, start, end := types.GetPeriodOfCurrentTime(p.Policy(), p.Proposal(), types.Registration, blockMap)
+	if period != types.Registration {
+		return nil, base.NewBaseOperationProcessReasonError("current time is not within the Registration period, Registration period; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
 
 	sts := []base.StateMergeValue{}

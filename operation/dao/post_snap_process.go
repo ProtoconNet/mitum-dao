@@ -65,15 +65,15 @@ func NewPostSnapProcessor(getLastBlockFunc processor.GetLastBlockFunc) currencyt
 func (opp *PostSnapProcessor) PreProcess(
 	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc,
 ) (context.Context, base.OperationProcessReasonError, error) {
-	e := util.StringError("failed to preprocess PostSnap")
+	//e := util.StringError("failed to preprocess PostSnap")
 
 	fact, ok := op.Fact().(PostSnapFact)
 	if !ok {
-		return ctx, nil, e.Errorf("not PostSnapFact, %T", op.Fact())
+		return ctx, base.NewBaseOperationProcessReasonError("not PostSnapFact, %T", op.Fact()), nil
 	}
 
 	if err := fact.IsValid(nil); err != nil {
-		return ctx, nil, e.Wrap(err)
+		return ctx, base.NewBaseOperationProcessReasonError("%w", err), nil
 	}
 
 	if err := currencystate.CheckExistsState(currency.StateKeyAccount(fact.Sender()), getStateFunc); err != nil {
@@ -112,18 +112,6 @@ func (opp *PostSnapProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("already post snapped, %s, %q", fact.Contract(), fact.ProposalID()), nil
 	}
 
-	blockMap, found, err := opp.getLastBlockFunc()
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("get LastBlock failed: %w", err), nil
-	} else if !found {
-		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
-	}
-
-	period, start, end := types.GetPeriodOfCurrentTime(p.Policy(), p.Proposal(), types.PostSnapshot, blockMap)
-	if period != types.PostSnapshot {
-		return nil, base.NewBaseOperationProcessReasonError("current time is not within the PostSnapshotPeriod, PostSnapshotPeriod; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
-	}
-
 	if err := currencystate.CheckExistsState(state.StateKeyVoters(fact.Contract(), fact.ProposalID()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("voters state not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	}
@@ -148,6 +136,28 @@ func (opp *PostSnapProcessor) Process(
 	fact, ok := op.Fact().(PostSnapFact)
 	if !ok {
 		return nil, nil, e.Errorf("expected PostSnapFact, not %T", op.Fact())
+	}
+
+	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "key of proposal", getStateFunc)
+	if err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
+	}
+
+	p, err := state.StateProposalValue(st)
+	if err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
+	}
+
+	blockMap, found, err := opp.getLastBlockFunc()
+	if err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("get LastBlock failed: %w", err), nil
+	} else if !found {
+		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
+	}
+
+	period, start, end := types.GetPeriodOfCurrentTime(p.Policy(), p.Proposal(), types.PostSnapshot, blockMap)
+	if period != types.PostSnapshot {
+		return nil, base.NewBaseOperationProcessReasonError("current time is not within the PostSnapshotPeriod, PostSnapshotPeriod; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
 
 	var sts []base.StateMergeValue
@@ -228,16 +238,6 @@ func (opp *PostSnapProcessor) Process(
 				))
 			}
 		}
-	}
-
-	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "key of proposal", getStateFunc)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
-	}
-
-	p, err := state.StateProposalValue(st)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	}
 
 	if p.Status() != types.PreSnapped {

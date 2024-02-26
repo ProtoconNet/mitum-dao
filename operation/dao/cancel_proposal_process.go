@@ -116,18 +116,6 @@ func (opp *CancelProposalProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("cancel-proposal is unavailable, %s, %q", fact.Contract(), fact.ProposalID()), nil
 	}
 
-	blockMap, found, err := opp.getLastBlockFunc()
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("get LastBlock failed: %w", err), nil
-	} else if !found {
-		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
-	}
-
-	period, start, _ := types.GetPeriodOfCurrentTime(p.Policy(), p.Proposal(), types.Voting, blockMap)
-	if !(period == types.PreLifeCycle || period == types.ProposalReview || period == types.Registration) {
-		return nil, base.NewBaseOperationProcessReasonError("cancellable period has passed; voting-started(%d), now(%d)", start, blockMap.Manifest().ProposedAt().Unix()), nil
-	}
-
 	if err := currencystate.CheckFactSignsByState(fact.Sender(), op.Signs(), getStateFunc); err != nil {
 		return ctx, base.NewBaseOperationProcessReasonError("invalid signing: %w", err), nil
 	}
@@ -144,6 +132,28 @@ func (opp *CancelProposalProcessor) Process(
 	fact, ok := op.Fact().(CancelProposalFact)
 	if !ok {
 		return nil, nil, e.Errorf("expected CancelProposalFact, not %T", op.Fact())
+	}
+
+	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "key of proposal", getStateFunc)
+	if err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s,%q: %w", fact.Contract(), fact.ProposalID(), err), nil
+	}
+
+	p, err := state.StateProposalValue(st)
+	if err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
+	}
+
+	blockMap, found, err := opp.getLastBlockFunc()
+	if err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("get LastBlock failed: %w", err), nil
+	} else if !found {
+		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
+	}
+
+	period, start, _ := types.GetPeriodOfCurrentTime(p.Policy(), p.Proposal(), types.Voting, blockMap)
+	if !(period == types.PreLifeCycle || period == types.ProposalReview || period == types.Registration) {
+		return nil, base.NewBaseOperationProcessReasonError("cancellable period has passed; voting-started(%d), now(%d)", start, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
 
 	var sts []base.StateMergeValue
@@ -224,16 +234,6 @@ func (opp *CancelProposalProcessor) Process(
 				))
 			}
 		}
-	}
-
-	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "key of proposal", getStateFunc)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
-	}
-
-	p, err := state.StateProposalValue(st)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	}
 
 	sts = append(sts, currencystate.NewStateMergeValue(

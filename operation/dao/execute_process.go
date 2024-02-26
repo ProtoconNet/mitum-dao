@@ -128,18 +128,6 @@ func (opp *ExecuteProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError("already executed, %s, %q", fact.Contract(), fact.ProposalID()), nil
 	}
 
-	blockMap, found, err := opp.getLastBlockFunc()
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("get LastBlock failed: %w", err), nil
-	} else if !found {
-		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
-	}
-
-	period, start, end := types.GetPeriodOfCurrentTime(p.Policy(), p.Proposal(), types.Execute, blockMap)
-	if period != types.Execute {
-		return nil, base.NewBaseOperationProcessReasonError("current time is not within the Execution, Execution period; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
-	}
-
 	if err := crcystate.CheckExistsState(state.StateKeyVotingPowerBox(fact.Contract(), fact.ProposalID()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("voting power box state not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	}
@@ -160,6 +148,32 @@ func (opp *ExecuteProcessor) Process(
 	fact, ok := op.Fact().(ExecuteFact)
 	if !ok {
 		return nil, nil, e.Errorf("expected ExecuteFact, not %T", op.Fact())
+	}
+
+	st, err := crcystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "key of proposal", getStateFunc)
+	if err != nil {
+		return nil, base.NewBaseOperationProcessReasonError(
+			"proposal not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err,
+		), nil
+	}
+
+	p, err := state.StateProposalValue(st)
+	if err != nil {
+		return nil, base.NewBaseOperationProcessReasonError(
+			"proposal value not found from state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err,
+		), nil
+	}
+
+	blockMap, found, err := opp.getLastBlockFunc()
+	if err != nil {
+		return nil, base.NewBaseOperationProcessReasonError("get LastBlock failed: %w", err), nil
+	} else if !found {
+		return nil, base.NewBaseOperationProcessReasonError("LastBlock not found"), nil
+	}
+
+	period, start, end := types.GetPeriodOfCurrentTime(p.Policy(), p.Proposal(), types.Execute, blockMap)
+	if period != types.Execute {
+		return nil, base.NewBaseOperationProcessReasonError("current time is not within the Execution, Execution period; start(%d), end(%d), but now(%d)", start, end, blockMap.Manifest().ProposedAt().Unix()), nil
 	}
 
 	var sts []base.StateMergeValue
@@ -240,16 +254,6 @@ func (opp *ExecuteProcessor) Process(
 				))
 			}
 		}
-	}
-
-	st, err := crcystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "key of proposal", getStateFunc)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
-	}
-
-	p, err := state.StateProposalValue(st)
-	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal value not found from state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	}
 
 	if p.Status() != types.Completed {
