@@ -3,8 +3,8 @@ module github.com/ProtoconNet/mitum-dao
 go 1.21
 
 require (
-	github.com/ProtoconNet/mitum-currency/v3 v3.0.0-alpha.0.20240214041438-9c22eba325ce
-	github.com/ProtoconNet/mitum2 v0.0.0-20240129021047-ff4078070a49
+	github.com/ProtoconNet/mitum-currency/v3 v3.0.0-alpha.0.20240311015208-04f46a341f7a
+	github.com/ProtoconNet/mitum2 v0.0.0-20240304003123-6f2bcc584965
 	github.com/alecthomas/kong v0.8.1
 	github.com/arl/statsviz v0.6.0
 	github.com/gorilla/mux v1.8.1
@@ -99,7 +99,8 @@ require (
 	github.com/holiman/uint256 v1.2.4 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/oklog/ulid/v2 v2.1.0 // indirect
-	github.com/quic-go/quic-go v0.41.0 // indirect
+	github.com/quic-go/qtls-go1-20 v0.3.4 // indirect
+	github.com/quic-go/quic-go v0.39.1 // indirect
 	github.com/redis/go-redis/v9 v9.4.0 // indirect
 	go.uber.org/mock v0.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
