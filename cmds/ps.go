@@ -32,11 +32,11 @@ func POperationProcessorsMap(pctx context.Context) (context.Context, error) {
 		return pctx, err
 	}
 
-	err := opr.SetCheckDuplicationFunc(processor.CheckDuplication)
-	if err != nil {
-		return pctx, err
-	}
-	err = opr.SetGetNewProcessorFunc(processor.GetNewProcessor)
+	//err := opr.SetCheckDuplicationFunc(processor.CheckDuplication)
+	//if err != nil {
+	//	return pctx, err
+	//}
+	err := opr.SetGetNewProcessorFunc(processor.GetNewProcessor)
 	if err != nil {
 		return pctx, err
 	}
