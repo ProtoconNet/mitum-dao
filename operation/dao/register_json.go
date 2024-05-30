@@ -38,22 +38,23 @@ type RegisterFactJSONUnMarshaler struct {
 }
 
 func (fact *RegisterFact) DecodeJSON(b []byte, enc encoder.Encoder) error {
-	e := util.StringError("failed to decode json of RegisterFact")
-
 	var uf RegisterFactJSONUnMarshaler
 	if err := enc.Unmarshal(b, &uf); err != nil {
-		return e.Wrap(err)
+		return common.DecorateError(err, common.ErrDecodeJson, *fact)
 	}
 
 	fact.BaseFact.SetJSONUnmarshaler(uf.BaseFactJSONUnmarshaler)
-
-	return fact.unpack(enc,
+	if err := fact.unpack(enc,
 		uf.Owner,
 		uf.Contract,
 		uf.ProposalID,
 		uf.Delegated,
 		uf.Currency,
-	)
+	); err != nil {
+		return common.DecorateError(err, common.ErrDecodeJson, *fact)
+	}
+
+	return nil
 }
 
 type RegisterMarshaler struct {
@@ -67,11 +68,9 @@ func (op Register) MarshalJSON() ([]byte, error) {
 }
 
 func (op *Register) DecodeJSON(b []byte, enc encoder.Encoder) error {
-	e := util.StringError("failed to decode json of Register")
-
 	var ubo common.BaseOperation
 	if err := ubo.DecodeJSON(b, enc); err != nil {
-		return e.Wrap(err)
+		return common.DecorateError(err, common.ErrDecodeJson, *op)
 	}
 
 	op.BaseOperation = ubo

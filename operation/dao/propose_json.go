@@ -41,22 +41,23 @@ type ProposeFactJSONUnMarshaler struct {
 }
 
 func (fact *ProposeFact) DecodeJSON(b []byte, enc encoder.Encoder) error {
-	e := util.StringError("failed to decode json of ProposeFact")
-
 	var uf ProposeFactJSONUnMarshaler
 	if err := enc.Unmarshal(b, &uf); err != nil {
-		return e.Wrap(err)
+		return common.DecorateError(err, common.ErrDecodeJson, *fact)
 	}
 
 	fact.BaseFact.SetJSONUnmarshaler(uf.BaseFactJSONUnmarshaler)
-
-	return fact.unpack(enc,
+	if err := fact.unpack(enc,
 		uf.Owner,
 		uf.Contract,
 		uf.ProposalID,
 		uf.Proposal,
 		uf.Currency,
-	)
+	); err != nil {
+		return common.DecorateError(err, common.ErrDecodeJson, *fact)
+	}
+
+	return nil
 }
 
 type ProposeMarshaler struct {
@@ -70,11 +71,9 @@ func (op Propose) MarshalJSON() ([]byte, error) {
 }
 
 func (op *Propose) DecodeJSON(b []byte, enc encoder.Encoder) error {
-	e := util.StringError("failed to decode json of Propose")
-
 	var ubo common.BaseOperation
 	if err := ubo.DecodeJSON(b, enc); err != nil {
-		return e.Wrap(err)
+		return common.DecorateError(err, common.ErrDecodeJson, *op)
 	}
 
 	op.BaseOperation = ubo

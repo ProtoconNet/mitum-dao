@@ -35,21 +35,22 @@ type PostSnapFactJSONUnMarshaler struct {
 }
 
 func (fact *PostSnapFact) DecodeJSON(b []byte, enc encoder.Encoder) error {
-	e := util.StringError("failed to decode json of PostSnapFact")
-
 	var uf PostSnapFactJSONUnMarshaler
 	if err := enc.Unmarshal(b, &uf); err != nil {
-		return e.Wrap(err)
+		return common.DecorateError(err, common.ErrDecodeJson, *fact)
 	}
 
 	fact.BaseFact.SetJSONUnmarshaler(uf.BaseFactJSONUnmarshaler)
-
-	return fact.unpack(enc,
+	if err := fact.unpack(enc,
 		uf.Owner,
 		uf.Contract,
 		uf.ProposalID,
 		uf.Currency,
-	)
+	); err != nil {
+		return common.DecorateError(err, common.ErrDecodeJson, *fact)
+	}
+
+	return nil
 }
 
 type PostSnapJSONMarshaler struct {
@@ -63,11 +64,9 @@ func (op PostSnap) MarshalJSON() ([]byte, error) {
 }
 
 func (op *PostSnap) DecodeJSON(b []byte, enc encoder.Encoder) error {
-	e := util.StringError("failed to decode json of PostSnap")
-
 	var ubo common.BaseOperation
 	if err := ubo.DecodeJSON(b, enc); err != nil {
-		return e.Wrap(err)
+		return common.DecorateError(err, common.ErrDecodeJson, *op)
 	}
 
 	op.BaseOperation = ubo

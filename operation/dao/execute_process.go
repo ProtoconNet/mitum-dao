@@ -8,7 +8,6 @@ import (
 	"github.com/ProtoconNet/mitum-currency/v3/operation/processor"
 	crcystate "github.com/ProtoconNet/mitum-currency/v3/state"
 	"github.com/ProtoconNet/mitum-currency/v3/state/currency"
-	stextension "github.com/ProtoconNet/mitum-currency/v3/state/extension"
 	crcytypes "github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum-dao/state"
 	"github.com/ProtoconNet/mitum-dao/types"
@@ -65,75 +64,99 @@ func NewExecuteProcessor(getLastBlockFunc processor.GetLastBlockFunc) crcytypes.
 func (opp *ExecuteProcessor) PreProcess(
 	ctx context.Context, op base.Operation, getStateFunc base.GetStateFunc,
 ) (context.Context, base.OperationProcessReasonError, error) {
-	e := util.StringError("failed to preprocess Execute")
-
 	fact, ok := op.Fact().(ExecuteFact)
 	if !ok {
-		return ctx, nil, e.Errorf("not ExecuteFact, %T", op.Fact())
+		return ctx, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.
+				Wrap(common.ErrMTypeMismatch).
+				Errorf("expected %T, not %T", ExecuteFact{}, op.Fact())), nil
 	}
 
 	if err := fact.IsValid(nil); err != nil {
-		return ctx, nil, e.Wrap(err)
-	}
-
-	if err := crcystate.CheckExistsState(currency.StateKeyAccount(fact.Sender()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError(
-			"sender not found, %s: %w", fact.Sender(), err,
-		), nil
-	}
-
-	if err := crcystate.CheckNotExistsState(stextension.StateKeyContractAccount(fact.Sender()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError(
-			"sender cannot be a contract account, %s: %w", fact.Sender(), err,
-		), nil
-	}
-
-	if err := crcystate.CheckExistsState(stextension.StateKeyContractAccount(fact.Contract()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError(
-			"dao contract account not found, %s: %w", fact.Contract(), err,
-		), nil
+		return ctx, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.
+				Errorf("%v", err)), nil
 	}
 
 	if err := crcystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.Currency()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError(
-			"fee currency doesn't exist, %q: %w", fact.Currency(), err,
-		), nil
+		return ctx, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.Wrap(common.ErrMCurrencyNF).Errorf("currency id, %v", fact.Currency())), nil
 	}
 
-	if err := crcystate.CheckExistsState(state.StateKeyDesign(fact.Contract()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError(
-			"dao design not found, %s: %w", fact.Contract(), err,
-		), nil
+	if _, _, aErr, cErr := crcystate.ExistsCAccount(fact.Sender(), "sender", true, false, getStateFunc); aErr != nil {
+		return ctx, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.
+				Errorf("%v", aErr)), nil
+	} else if cErr != nil {
+		return ctx, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.Wrap(common.ErrMCAccountNA).
+				Errorf("%v", cErr)), nil
 	}
 
-	st, err := crcystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "key of proposal", getStateFunc)
+	_, _, aErr, cErr := crcystate.ExistsCAccount(fact.Contract(), "contract", true, true, getStateFunc)
+	if aErr != nil {
+		return ctx, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.
+				Errorf("%v", aErr)), nil
+	} else if cErr != nil {
+		return ctx, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.
+				Errorf("%v", cErr)), nil
+	}
+
+	if st, err := crcystate.ExistsState(state.StateKeyDesign(fact.Contract()), "design", getStateFunc); err != nil {
+		return nil, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.
+				Wrap(common.ErrMServiceNF).Errorf("dao design, %v",
+				fact.Contract(),
+			)), nil
+	} else if _, err := state.StateDesignValue(st); err != nil {
+		return nil, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.
+				Wrap(common.ErrMServiceNF).Errorf("dao design, %v",
+				fact.Contract(),
+			)), nil
+	}
+
+	st, err := crcystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "proposal", getStateFunc)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
-			"proposal not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err,
-		), nil
+			common.ErrMPreProcess.
+				Wrap(common.ErrMStateNF).Errorf("proposal, %s,%v: %v", fact.Contract(), fact.ProposalID(), err)), nil
 	}
 
 	p, err := state.StateProposalValue(st)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
-			"proposal value not found from state, %s, %q: %w", fact.Contract(), fact.ProposalID(), err,
-		), nil
+			common.ErrMPreProcess.
+				Wrap(common.ErrMStateValInvalid).Errorf("proposal, %s,%v: %v", fact.Contract(), fact.ProposalID(), err)), nil
 	}
 
 	if p.Status() == types.Canceled {
-		return nil, base.NewBaseOperationProcessReasonError("already canceled proposal, %s, %q", fact.Contract(), fact.ProposalID()), nil
+		return ctx, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
+				Errorf("already canceled proposal, %s, %q", fact.Contract(), fact.ProposalID())), nil
 	} else if p.Status() == types.Rejected {
-		return nil, base.NewBaseOperationProcessReasonError("rejected proposal, %s, %q", fact.Contract(), fact.ProposalID()), nil
+		return ctx, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
+				Errorf("rejected proposal, %s, %q", fact.Contract(), fact.ProposalID())), nil
 	} else if p.Status() == types.Executed {
-		return nil, base.NewBaseOperationProcessReasonError("already executed, %s, %q", fact.Contract(), fact.ProposalID()), nil
+		return ctx, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
+				Errorf("already executed, %s, %q", fact.Contract(), fact.ProposalID())), nil
 	}
 
 	if err := crcystate.CheckExistsState(state.StateKeyVotingPowerBox(fact.Contract(), fact.ProposalID()), getStateFunc); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("voting power box state not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
+				Errorf("voting power box, %s, %v: %v", fact.Contract(), fact.ProposalID(), err)), nil
 	}
 
 	if err := crcystate.CheckFactSignsByState(fact.Sender(), op.Signs(), getStateFunc); err != nil {
-		return ctx, base.NewBaseOperationProcessReasonError("invalid signing: %w", err), nil
+		return ctx, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.
+				Wrap(common.ErrMSignInvalid).
+				Errorf("%v", err)), nil
 	}
 
 	return ctx, nil, nil

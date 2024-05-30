@@ -7,6 +7,7 @@ import (
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/hint"
 	"github.com/ProtoconNet/mitum2/util/valuehash"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -66,7 +67,7 @@ func (fact RegisterFact) Bytes() []byte {
 
 func (fact RegisterFact) IsValid(b []byte) error {
 	if err := fact.BaseHinter.IsValid(nil); err != nil {
-		return err
+		return common.ErrFactInvalid.Wrap(err)
 	}
 
 	if err := util.CheckIsValiders(nil, false,
@@ -75,23 +76,27 @@ func (fact RegisterFact) IsValid(b []byte) error {
 		fact.currency,
 		fact.delegated,
 	); err != nil {
-		return err
+		return common.ErrFactInvalid.Wrap(err)
 	}
 
 	if len(fact.proposalID) == 0 {
-		return util.ErrInvalid.Errorf("empty propose id")
+		return common.ErrFactInvalid.Wrap(common.ErrValOOR.Wrap(errors.Errorf("empty proposal ID")))
 	}
 
 	if !currencytypes.ReSpcecialChar.Match([]byte(fact.proposalID)) {
-		return util.ErrInvalid.Errorf("invalid proposalID due to the inclusion of special characters")
+		return common.ErrFactInvalid.Wrap(
+			common.ErrValueInvalid.Wrap(
+				errors.Errorf("proposal ID %s, must match regex `^[^\\s:/?#\\[\\]@]*$`", fact.proposalID)))
 	}
 
 	if fact.sender.Equal(fact.contract) {
-		return util.ErrInvalid.Errorf("contract address is same with sender, %q", fact.sender)
+		return common.ErrFactInvalid.Wrap(
+			common.ErrSelfTarget.Wrap(
+				errors.Errorf("contract address is same with sender, %q", fact.sender)))
 	}
 
 	if err := common.IsValidOperationFact(fact, b); err != nil {
-		return err
+		return common.ErrFactInvalid.Wrap(err)
 	}
 
 	return nil

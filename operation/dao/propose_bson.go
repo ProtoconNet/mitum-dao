@@ -5,7 +5,6 @@ import (
 
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	bsonenc "github.com/ProtoconNet/mitum-currency/v3/digest/util/bson"
-	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/hint"
 	"github.com/ProtoconNet/mitum2/util/valuehash"
 )
@@ -35,12 +34,10 @@ type ProposeFactBSONUnmarshaler struct {
 }
 
 func (fact *ProposeFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringError("failed to decode bson of ProposeFact")
-
 	var ubf common.BaseFactBSONUnmarshaler
 
 	if err := enc.Unmarshal(b, &ubf); err != nil {
-		return e.Wrap(err)
+		return common.DecorateError(err, common.ErrDecodeBson, *fact)
 	}
 
 	fact.BaseFact.SetHash(valuehash.NewBytesFromString(ubf.Hash))
@@ -48,22 +45,25 @@ func (fact *ProposeFact) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
 
 	var uf ProposeFactBSONUnmarshaler
 	if err := bson.Unmarshal(b, &uf); err != nil {
-		return e.Wrap(err)
+		return common.DecorateError(err, common.ErrDecodeBson, *fact)
 	}
 
 	ht, err := hint.ParseHint(uf.Hint)
 	if err != nil {
-		return e.Wrap(err)
+		return common.DecorateError(err, common.ErrDecodeBson, *fact)
 	}
 	fact.BaseHinter = hint.NewBaseHinter(ht)
-
-	return fact.unpack(enc,
+	if err := fact.unpack(enc,
 		uf.Sender,
 		uf.Contract,
 		uf.ProposalID,
 		uf.Proposal,
 		uf.Currency,
-	)
+	); err != nil {
+		return common.DecorateError(err, common.ErrDecodeBson, *fact)
+	}
+
+	return nil
 }
 
 func (op Propose) MarshalBSON() ([]byte, error) {
@@ -77,11 +77,9 @@ func (op Propose) MarshalBSON() ([]byte, error) {
 }
 
 func (op *Propose) DecodeBSON(b []byte, enc *bsonenc.Encoder) error {
-	e := util.StringError("failed to decode bson of Propose")
-
 	var ubo common.BaseOperation
 	if err := ubo.DecodeBSON(b, enc); err != nil {
-		return e.Wrap(err)
+		return common.DecorateError(err, common.ErrDecodeBson, *op)
 	}
 
 	op.BaseOperation = ubo

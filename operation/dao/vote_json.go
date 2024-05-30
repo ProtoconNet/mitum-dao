@@ -38,22 +38,23 @@ type VoteFactJSONUnMarshaler struct {
 }
 
 func (fact *VoteFact) DecodeJSON(b []byte, enc encoder.Encoder) error {
-	e := util.StringError("failed to decode json of VoteFact")
-
 	var uf VoteFactJSONUnMarshaler
 	if err := enc.Unmarshal(b, &uf); err != nil {
-		return e.Wrap(err)
+		return common.DecorateError(err, common.ErrDecodeJson, *fact)
 	}
 
 	fact.BaseFact.SetJSONUnmarshaler(uf.BaseFactJSONUnmarshaler)
-
-	return fact.unpack(enc,
+	if err := fact.unpack(enc,
 		uf.Owner,
 		uf.Contract,
 		uf.ProposalID,
 		uf.Vote,
 		uf.Currency,
-	)
+	); err != nil {
+		return common.DecorateError(err, common.ErrDecodeJson, *fact)
+	}
+
+	return nil
 }
 
 type VoteMarshaler struct {
@@ -67,11 +68,9 @@ func (op Vote) MarshalJSON() ([]byte, error) {
 }
 
 func (op *Vote) DecodeJSON(b []byte, enc encoder.Encoder) error {
-	e := util.StringError("failed to decode json of Vote")
-
 	var ubo common.BaseOperation
 	if err := ubo.DecodeJSON(b, enc); err != nil {
-		return e.Wrap(err)
+		return common.DecorateError(err, common.ErrDecodeJson, *op)
 	}
 
 	op.BaseOperation = ubo

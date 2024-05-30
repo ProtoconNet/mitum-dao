@@ -35,21 +35,23 @@ type ExecuteFactJSONUnMarshaler struct {
 }
 
 func (fact *ExecuteFact) DecodeJSON(b []byte, enc encoder.Encoder) error {
-	e := util.StringError("failed to decode json of ExecuteFact")
-
 	var uf ExecuteFactJSONUnMarshaler
 	if err := enc.Unmarshal(b, &uf); err != nil {
-		return e.Wrap(err)
+		return common.DecorateError(err, common.ErrDecodeJson, *fact)
 	}
 
 	fact.BaseFact.SetJSONUnmarshaler(uf.BaseFactJSONUnmarshaler)
 
-	return fact.unpack(enc,
+	if err := fact.unpack(enc,
 		uf.Owner,
 		uf.Contract,
 		uf.ProposalID,
 		uf.Currency,
-	)
+	); err != nil {
+		return common.DecorateError(err, common.ErrDecodeJson, *fact)
+	}
+
+	return nil
 }
 
 type ExecuteJSONMarshaler struct {
@@ -63,11 +65,9 @@ func (op Execute) MarshalJSON() ([]byte, error) {
 }
 
 func (op *Execute) DecodeJSON(b []byte, enc encoder.Encoder) error {
-	e := util.StringError("failed to decode json of Execute")
-
 	var ubo common.BaseOperation
 	if err := ubo.DecodeJSON(b, enc); err != nil {
-		return e.Wrap(err)
+		return common.DecorateError(err, common.ErrDecodeJson, *op)
 	}
 
 	op.BaseOperation = ubo

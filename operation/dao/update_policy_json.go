@@ -74,16 +74,13 @@ type UpdatePolicyFactJSONUnMarshaler struct {
 }
 
 func (fact *UpdatePolicyFact) DecodeJSON(b []byte, enc encoder.Encoder) error {
-	e := util.StringError("failed to decode json of UpdatePolicyFact")
-
 	var uf UpdatePolicyFactJSONUnMarshaler
 	if err := enc.Unmarshal(b, &uf); err != nil {
-		return e.Wrap(err)
+		return common.DecorateError(err, common.ErrDecodeJson, *fact)
 	}
 
 	fact.BaseFact.SetJSONUnmarshaler(uf.BaseFactJSONUnmarshaler)
-
-	return fact.unpack(enc,
+	if err := fact.unpack(enc,
 		uf.Owner,
 		uf.Contract,
 		uf.Option,
@@ -100,7 +97,11 @@ func (fact *UpdatePolicyFact) DecodeJSON(b []byte, enc encoder.Encoder) error {
 		uf.Turnout,
 		uf.Quorum,
 		uf.Currency,
-	)
+	); err != nil {
+		return common.DecorateError(err, common.ErrDecodeJson, *fact)
+	}
+
+	return nil
 }
 
 type UpdatePolicyMarshaler struct {
@@ -114,11 +115,9 @@ func (op UpdatePolicy) MarshalJSON() ([]byte, error) {
 }
 
 func (op *UpdatePolicy) DecodeJSON(b []byte, enc encoder.Encoder) error {
-	e := util.StringError("failed to decode json of UpdatePolicy")
-
 	var ubo common.BaseOperation
 	if err := ubo.DecodeJSON(b, enc); err != nil {
-		return e.Wrap(err)
+		return common.DecorateError(err, common.ErrDecodeJson, *op)
 	}
 
 	op.BaseOperation = ubo

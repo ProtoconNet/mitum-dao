@@ -8,6 +8,7 @@ import (
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/hint"
 	"github.com/ProtoconNet/mitum2/util/valuehash"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -110,7 +111,7 @@ func (fact CreateDAOFact) Bytes() []byte {
 
 func (fact CreateDAOFact) IsValid(b []byte) error {
 	if err := fact.BaseHinter.IsValid(nil); err != nil {
-		return err
+		return common.ErrFactInvalid.Wrap(err)
 	}
 
 	if err := util.CheckIsValiders(nil, false,
@@ -124,15 +125,15 @@ func (fact CreateDAOFact) IsValid(b []byte) error {
 		fact.quorum,
 		fact.currency,
 	); err != nil {
-		return err
+		return common.ErrFactInvalid.Wrap(err)
 	}
 
 	if fact.sender.Equal(fact.contract) {
-		return util.ErrInvalid.Errorf("contract address is same with sender, %q", fact.sender)
+		return common.ErrFactInvalid.Wrap(common.ErrSelfTarget.Wrap(errors.Errorf("contract address is same with sender, %q", fact.sender)))
 	}
 
 	if err := common.IsValidOperationFact(fact, b); err != nil {
-		return err
+		return common.ErrFactInvalid.Wrap(err)
 	}
 
 	return nil
