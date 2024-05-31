@@ -80,11 +80,8 @@ func (cmd *RegisterCommand) createOperation() (base.Operation, error) { // nolin
 		cmd.Currency.CID,
 	)
 
-	op, err := dao.NewRegister(fact)
-	if err != nil {
-		return nil, e.Wrap(err)
-	}
-	err = op.HashSign(cmd.Privatekey, cmd.NetworkID.NetworkID())
+	op := dao.NewRegister(fact)
+	err := op.HashSign(cmd.Privatekey, cmd.NetworkID.NetworkID())
 	if err != nil {
 		return nil, e.Wrap(err)
 	}

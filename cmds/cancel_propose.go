@@ -71,11 +71,8 @@ func (cmd *CancelProposalCommand) createOperation() (base.Operation, error) { //
 		cmd.Currency.CID,
 	)
 
-	op, err := dao.NewCancelProposal(fact)
-	if err != nil {
-		return nil, e.Wrap(err)
-	}
-	err = op.HashSign(cmd.Privatekey, cmd.NetworkID.NetworkID())
+	op := dao.NewCancelProposal(fact)
+	err := op.HashSign(cmd.Privatekey, cmd.NetworkID.NetworkID())
 	if err != nil {
 		return nil, e.Wrap(err)
 	}

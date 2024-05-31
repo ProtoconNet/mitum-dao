@@ -173,7 +173,7 @@ func (opp *ExecuteProcessor) Process(
 		return nil, nil, e.Errorf("expected ExecuteFact, not %T", op.Fact())
 	}
 
-	st, err := crcystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "key of proposal", getStateFunc)
+	st, err := crcystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "proposal", getStateFunc)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			"proposal not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err,

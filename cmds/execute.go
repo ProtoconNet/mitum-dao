@@ -71,11 +71,8 @@ func (cmd *ExecuteCommand) createOperation() (base.Operation, error) { // nolint
 		cmd.Currency.CID,
 	)
 
-	op, err := dao.NewExecute(fact)
-	if err != nil {
-		return nil, e.Wrap(err)
-	}
-	err = op.HashSign(cmd.Privatekey, cmd.NetworkID.NetworkID())
+	op := dao.NewExecute(fact)
+	err := op.HashSign(cmd.Privatekey, cmd.NetworkID.NetworkID())
 	if err != nil {
 		return nil, e.Wrap(err)
 	}

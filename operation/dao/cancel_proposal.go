@@ -126,8 +126,8 @@ type CancelProposal struct {
 	common.BaseOperation
 }
 
-func NewCancelProposal(fact CancelProposalFact) (CancelProposal, error) {
-	return CancelProposal{BaseOperation: common.NewBaseOperation(CancelProposalHint, fact)}, nil
+func NewCancelProposal(fact CancelProposalFact) CancelProposal {
+	return CancelProposal{BaseOperation: common.NewBaseOperation(CancelProposalHint, fact)}
 }
 
 func (op *CancelProposal) HashSign(priv base.Privatekey, networkID base.NetworkID) error {

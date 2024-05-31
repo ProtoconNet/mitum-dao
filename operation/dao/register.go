@@ -140,8 +140,8 @@ type Register struct {
 	common.BaseOperation
 }
 
-func NewRegister(fact RegisterFact) (Register, error) {
-	return Register{BaseOperation: common.NewBaseOperation(RegisterHint, fact)}, nil
+func NewRegister(fact RegisterFact) Register {
+	return Register{BaseOperation: common.NewBaseOperation(RegisterHint, fact)}
 }
 
 func (op *Register) HashSign(priv base.Privatekey, networkID base.NetworkID) error {

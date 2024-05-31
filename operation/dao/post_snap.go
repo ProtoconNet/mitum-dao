@@ -130,8 +130,8 @@ type PostSnap struct {
 	common.BaseOperation
 }
 
-func NewPostSnap(fact PostSnapFact) (PostSnap, error) {
-	return PostSnap{BaseOperation: common.NewBaseOperation(PostSnapHint, fact)}, nil
+func NewPostSnap(fact PostSnapFact) PostSnap {
+	return PostSnap{BaseOperation: common.NewBaseOperation(PostSnapHint, fact)}
 }
 
 func (op *PostSnap) HashSign(priv base.Privatekey, networkID base.NetworkID) error {

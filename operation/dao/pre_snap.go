@@ -130,8 +130,8 @@ type PreSnap struct {
 	common.BaseOperation
 }
 
-func NewPreSnap(fact PreSnapFact) (PreSnap, error) {
-	return PreSnap{BaseOperation: common.NewBaseOperation(PreSnapHint, fact)}, nil
+func NewPreSnap(fact PreSnapFact) PreSnap {
+	return PreSnap{BaseOperation: common.NewBaseOperation(PreSnapHint, fact)}
 }
 
 func (op *PreSnap) HashSign(priv base.Privatekey, networkID base.NetworkID) error {

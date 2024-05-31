@@ -224,8 +224,8 @@ type CreateDAO struct {
 	common.BaseOperation
 }
 
-func NewCreateDAO(fact CreateDAOFact) (CreateDAO, error) {
-	return CreateDAO{BaseOperation: common.NewBaseOperation(CreateDAOHint, fact)}, nil
+func NewCreateDAO(fact CreateDAOFact) CreateDAO {
+	return CreateDAO{BaseOperation: common.NewBaseOperation(CreateDAOHint, fact)}
 }
 
 func (op *CreateDAO) HashSign(priv base.Privatekey, networkID base.NetworkID) error {

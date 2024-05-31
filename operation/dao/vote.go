@@ -138,8 +138,8 @@ type Vote struct {
 	common.BaseOperation
 }
 
-func NewVote(fact VoteFact) (Vote, error) {
-	return Vote{BaseOperation: common.NewBaseOperation(VoteHint, fact)}, nil
+func NewVote(fact VoteFact) Vote {
+	return Vote{BaseOperation: common.NewBaseOperation(VoteHint, fact)}
 }
 
 func (op *Vote) HashSign(priv base.Privatekey, networkID base.NetworkID) error {

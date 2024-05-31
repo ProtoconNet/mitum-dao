@@ -226,8 +226,8 @@ type UpdatePolicy struct {
 	common.BaseOperation
 }
 
-func NewUpdatePolicy(fact UpdatePolicyFact) (UpdatePolicy, error) {
-	return UpdatePolicy{BaseOperation: common.NewBaseOperation(UpdatePolicyHint, fact)}, nil
+func NewUpdatePolicy(fact UpdatePolicyFact) UpdatePolicy {
+	return UpdatePolicy{BaseOperation: common.NewBaseOperation(UpdatePolicyHint, fact)}
 }
 
 func (op *UpdatePolicy) HashSign(priv base.Privatekey, networkID base.NetworkID) error {

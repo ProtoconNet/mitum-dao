@@ -128,8 +128,8 @@ type Execute struct {
 	common.BaseOperation
 }
 
-func NewExecute(fact ExecuteFact) (Execute, error) {
-	return Execute{BaseOperation: common.NewBaseOperation(ExecuteHint, fact)}, nil
+func NewExecute(fact ExecuteFact) Execute {
+	return Execute{BaseOperation: common.NewBaseOperation(ExecuteHint, fact)}
 }
 
 func (op *Execute) HashSign(priv base.Privatekey, networkID base.NetworkID) error {

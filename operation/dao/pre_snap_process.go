@@ -151,7 +151,7 @@ func (opp *PreSnapProcessor) PreProcess(
 	if err := currencystate.CheckExistsState(state.StateKeyDelegators(fact.Contract(), fact.ProposalID()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
-				Errorf("delegators state not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err)), nil
+				Errorf("delegators, %s, %v: %v", fact.Contract(), fact.ProposalID(), err)), nil
 	}
 
 	if found, err := currencystate.CheckNotExistsState(state.StateKeyVotingPowerBox(fact.Contract(), fact.ProposalID()), getStateFunc); found {
@@ -181,7 +181,7 @@ func (opp *PreSnapProcessor) Process(
 		return nil, nil, e.Errorf("expected PreSnapFact, not %T", op.Fact())
 	}
 
-	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "key of proposal", getStateFunc)
+	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "proposal", getStateFunc)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s, %q: %w", fact.Contract(), fact.ProposalID(), err), nil
 	}

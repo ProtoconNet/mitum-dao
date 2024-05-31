@@ -187,11 +187,8 @@ func (cmd *ProposeCommand) createOperation() (base.Operation, error) { // nolint
 		cmd.Currency.CID,
 	)
 
-	op, err := dao.NewPropose(fact)
-	if err != nil {
-		return nil, e.Wrap(err)
-	}
-	err = op.HashSign(cmd.Privatekey, cmd.NetworkID.NetworkID())
+	op := dao.NewPropose(fact)
+	err := op.HashSign(cmd.Privatekey, cmd.NetworkID.NetworkID())
 	if err != nil {
 		return nil, e.Wrap(err)
 	}

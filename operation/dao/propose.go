@@ -144,8 +144,8 @@ type Propose struct {
 	common.BaseOperation
 }
 
-func NewPropose(fact ProposeFact) (Propose, error) {
-	return Propose{BaseOperation: common.NewBaseOperation(ProposeHint, fact)}, nil
+func NewPropose(fact ProposeFact) Propose {
+	return Propose{BaseOperation: common.NewBaseOperation(ProposeHint, fact)}
 }
 
 func (op *Propose) HashSign(priv base.Privatekey, networkID base.NetworkID) error {

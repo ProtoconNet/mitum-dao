@@ -111,11 +111,9 @@ func (cmd *CreateDAOCommand) createOperation() (base.Operation, error) { // noli
 		cmd.Currency.CID,
 	)
 
-	op, err := dao.NewCreateDAO(fact)
-	if err != nil {
-		return nil, e.Wrap(err)
-	}
-	err = op.HashSign(cmd.Privatekey, cmd.NetworkID.NetworkID())
+	op := dao.NewCreateDAO(fact)
+
+	err := op.HashSign(cmd.Privatekey, cmd.NetworkID.NetworkID())
 	if err != nil {
 		return nil, e.Wrap(err)
 	}

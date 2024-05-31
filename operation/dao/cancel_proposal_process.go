@@ -145,7 +145,7 @@ func (opp *CancelProposalProcessor) PreProcess(
 	} else if p.Status() != types.Proposed {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-				Errorf("cancel-proposal is unavailable, %s, %q", fact.Contract(), fact.ProposalID())), nil
+				Errorf("cancel-proposal is unavailable, %v, %v", fact.Contract(), fact.ProposalID())), nil
 	}
 
 	if err := currencystate.CheckFactSignsByState(fact.Sender(), op.Signs(), getStateFunc); err != nil {
@@ -169,9 +169,9 @@ func (opp *CancelProposalProcessor) Process(
 		return nil, nil, e.Errorf("expected CancelProposalFact, not %T", op.Fact())
 	}
 
-	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "key of proposal", getStateFunc)
+	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "proposal", getStateFunc)
 	if err != nil {
-		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s,%q: %w", fact.Contract(), fact.ProposalID(), err), nil
+		return nil, base.NewBaseOperationProcessReasonError("proposal not found, %s,%v: %w", fact.Contract(), fact.ProposalID(), err), nil
 	}
 
 	p, err := state.StateProposalValue(st)

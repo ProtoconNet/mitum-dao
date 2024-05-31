@@ -73,11 +73,8 @@ func (cmd *VoteCommand) createOperation() (base.Operation, error) { // nolint:du
 		cmd.Currency.CID,
 	)
 
-	op, err := dao.NewVote(fact)
-	if err != nil {
-		return nil, e.Wrap(err)
-	}
-	err = op.HashSign(cmd.Privatekey, cmd.NetworkID.NetworkID())
+	op := dao.NewVote(fact)
+	err := op.HashSign(cmd.Privatekey, cmd.NetworkID.NetworkID())
 	if err != nil {
 		return nil, e.Wrap(err)
 	}

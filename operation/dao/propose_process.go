@@ -100,7 +100,7 @@ func (opp *ProposeProcessor) PreProcess(
 	if found, err := currencystate.CheckNotExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), getStateFunc); found {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMStateE).
-				Errorf("proposal already exists, %s, %q: %w", fact.Contract(), fact.ProposalID(), err)), nil
+				Errorf("proposal already exists, %s, %v: %v", fact.Contract(), fact.ProposalID(), err)), nil
 	}
 
 	required := map[string]common.Big{}
