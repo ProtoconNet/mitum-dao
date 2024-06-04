@@ -116,16 +116,10 @@ func (opp *CreateDAOProcessor) PreProcess(
 				Errorf("%v", err)), nil
 	}
 
-	if st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract()), "design", getStateFunc); err != nil {
+	if found, _ := currencystate.CheckNotExistsState(state.StateKeyDesign(fact.Contract()), getStateFunc); found {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Wrap(common.ErrMServiceNF).Errorf("dao design, %v",
-				fact.Contract(),
-			)), nil
-	} else if _, err := state.StateDesignValue(st); err != nil {
-		return nil, base.NewBaseOperationProcessReasonError(
-			common.ErrMPreProcess.
-				Wrap(common.ErrMServiceNF).Errorf("dao design, %v",
+				Wrap(common.ErrMServiceE).Errorf("dao design, %v",
 				fact.Contract(),
 			)), nil
 	}
