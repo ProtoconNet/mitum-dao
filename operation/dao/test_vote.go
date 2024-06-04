@@ -4,7 +4,6 @@ import (
 	"github.com/ProtoconNet/mitum-currency/v3/operation/test"
 	"github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum2/base"
-	"github.com/ProtoconNet/mitum2/util/encoder"
 	"time"
 )
 
@@ -12,8 +11,10 @@ type TestVoteProcessor struct {
 	*test.BaseTestOperationProcessorNoItem[Vote]
 }
 
-func NewTestVoteProcessor(encs *encoder.Encoders) TestVoteProcessor {
-	t := test.NewBaseTestOperationProcessorNoItem[Vote](encs)
+func NewTestVoteProcessor(
+	tp *test.TestProcessor,
+) TestVoteProcessor {
+	t := test.NewBaseTestOperationProcessorNoItem[Vote](tp)
 	return TestVoteProcessor{BaseTestOperationProcessorNoItem: &t}
 }
 

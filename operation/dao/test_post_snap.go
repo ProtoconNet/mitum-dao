@@ -4,7 +4,6 @@ import (
 	"github.com/ProtoconNet/mitum-currency/v3/operation/test"
 	"github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum2/base"
-	"github.com/ProtoconNet/mitum2/util/encoder"
 	"time"
 )
 
@@ -12,8 +11,10 @@ type TestPostSnapProcessor struct {
 	*test.BaseTestOperationProcessorNoItem[PostSnap]
 }
 
-func NewTestPostSnapProcessor(encs *encoder.Encoders) TestPostSnapProcessor {
-	t := test.NewBaseTestOperationProcessorNoItem[PostSnap](encs)
+func NewTestPostSnapProcessor(
+	tp *test.TestProcessor,
+) TestPostSnapProcessor {
+	t := test.NewBaseTestOperationProcessorNoItem[PostSnap](tp)
 	return TestPostSnapProcessor{BaseTestOperationProcessorNoItem: &t}
 }
 

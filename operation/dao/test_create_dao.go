@@ -6,7 +6,6 @@ import (
 	"github.com/ProtoconNet/mitum-currency/v3/types"
 	daotypes "github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/base"
-	"github.com/ProtoconNet/mitum2/util/encoder"
 	"time"
 )
 
@@ -27,8 +26,10 @@ type TestCreateDAOProcessor struct {
 	quorum               daotypes.PercentRatio
 }
 
-func NewTestCreateDAOProcessor(encs *encoder.Encoders) TestCreateDAOProcessor {
-	t := test.NewBaseTestOperationProcessorNoItem[CreateDAO](encs)
+func NewTestCreateDAOProcessor(
+	tp *test.TestProcessor,
+) TestCreateDAOProcessor {
+	t := test.NewBaseTestOperationProcessorNoItem[CreateDAO](tp)
 	return TestCreateDAOProcessor{BaseTestOperationProcessorNoItem: &t}
 }
 

@@ -4,7 +4,6 @@ import (
 	"github.com/ProtoconNet/mitum-currency/v3/operation/test"
 	"github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum2/base"
-	"github.com/ProtoconNet/mitum2/util/encoder"
 	"time"
 )
 
@@ -30,8 +29,10 @@ type TestCancelProposalProcessor struct {
 	*test.BaseTestOperationProcessorNoItem[CancelProposal]
 }
 
-func NewTestCancelProposalProcessor(encs *encoder.Encoders) TestCancelProposalProcessor {
-	t := test.NewBaseTestOperationProcessorNoItem[CancelProposal](encs)
+func NewTestCancelProposalProcessor(
+	tp *test.TestProcessor,
+) TestCancelProposalProcessor {
+	t := test.NewBaseTestOperationProcessorNoItem[CancelProposal](tp)
 	return TestCancelProposalProcessor{BaseTestOperationProcessorNoItem: &t}
 }
 

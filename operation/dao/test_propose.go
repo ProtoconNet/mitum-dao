@@ -5,7 +5,6 @@ import (
 	"github.com/ProtoconNet/mitum-currency/v3/types"
 	daotypes "github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/base"
-	"github.com/ProtoconNet/mitum2/util/encoder"
 	"time"
 )
 
@@ -13,8 +12,10 @@ type TestProposeProcessor struct {
 	*test.BaseTestOperationProcessorNoItem[Propose]
 }
 
-func NewTestProposeProcessor(encs *encoder.Encoders) TestProposeProcessor {
-	t := test.NewBaseTestOperationProcessorNoItem[Propose](encs)
+func NewTestProposeProcessor(
+	tp *test.TestProcessor,
+) TestProposeProcessor {
+	t := test.NewBaseTestOperationProcessorNoItem[Propose](tp)
 	return TestProposeProcessor{BaseTestOperationProcessorNoItem: &t}
 }
 

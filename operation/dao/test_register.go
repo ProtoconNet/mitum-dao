@@ -4,7 +4,6 @@ import (
 	"github.com/ProtoconNet/mitum-currency/v3/operation/test"
 	"github.com/ProtoconNet/mitum-currency/v3/types"
 	"github.com/ProtoconNet/mitum2/base"
-	"github.com/ProtoconNet/mitum2/util/encoder"
 	"time"
 )
 
@@ -12,8 +11,10 @@ type TestRegisterProcessor struct {
 	*test.BaseTestOperationProcessorNoItem[Register]
 }
 
-func NewTestRegisterProcessor(encs *encoder.Encoders) TestRegisterProcessor {
-	t := test.NewBaseTestOperationProcessorNoItem[Register](encs)
+func NewTestRegisterProcessor(
+	tp *test.TestProcessor,
+) TestRegisterProcessor {
+	t := test.NewBaseTestOperationProcessorNoItem[Register](tp)
 	return TestRegisterProcessor{BaseTestOperationProcessorNoItem: &t}
 }
 
