@@ -19,7 +19,7 @@ func NewTestProposeProcessor(
 	return TestProposeProcessor{BaseTestOperationProcessorNoItem: &t}
 }
 
-func (t *TestProposeProcessor) Create(bm []base.BlockMap) *TestProposeProcessor {
+func (t *TestProposeProcessor) Create() *TestProposeProcessor {
 	t.Opr, _ = NewProposeProcessor()(
 		base.GenesisHeight,
 		t.GetStateFunc,
@@ -95,7 +95,9 @@ func (t *TestProposeProcessor) Print(fileName string,
 }
 
 func (t *TestProposeProcessor) MakeOperation(
-	sender base.Address, privatekey base.Privatekey, contract base.Address, proposalID string, proposal daotypes.Proposal, currency types.CurrencyID,
+	sender base.Address, privatekey base.Privatekey,
+	contract base.Address, proposalID string,
+	proposal daotypes.Proposal, currency types.CurrencyID,
 ) *TestProposeProcessor {
 	op := NewPropose(
 		NewProposeFact(

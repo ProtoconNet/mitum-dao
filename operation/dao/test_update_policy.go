@@ -33,7 +33,7 @@ func NewTestUpdatePolicyProcessor(
 	return TestUpdatePolicyProcessor{BaseTestOperationProcessorNoItem: &t}
 }
 
-func (t *TestUpdatePolicyProcessor) Create(bm []base.BlockMap) *TestUpdatePolicyProcessor {
+func (t *TestUpdatePolicyProcessor) Create() *TestUpdatePolicyProcessor {
 	t.Opr, _ = NewUpdatePolicyProcessor()(
 		base.GenesisHeight,
 		t.GetStateFunc,
@@ -153,8 +153,7 @@ func (t *TestUpdatePolicyProcessor) Print(fileName string,
 
 func (t *TestUpdatePolicyProcessor) MakeOperation(
 	sender base.Address, privatekey base.Privatekey,
-	contract base.Address, proposalID string,
-	proposal daotypes.Proposal, currency types.CurrencyID,
+	contract base.Address, currency types.CurrencyID,
 ) *TestUpdatePolicyProcessor {
 	op := NewUpdatePolicy(
 		NewUpdatePolicyFact(

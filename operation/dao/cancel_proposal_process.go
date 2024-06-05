@@ -145,7 +145,7 @@ func (opp *CancelProposalProcessor) PreProcess(
 	} else if p.Status() != types.Proposed {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-				Errorf("cancel-proposal is unavailable, %v, %v", fact.Contract(), fact.ProposalID())), nil
+				Errorf("proposal is unavailable, %v, %v", fact.Contract(), fact.ProposalID())), nil
 	}
 
 	if err := currencystate.CheckFactSignsByState(fact.Sender(), op.Signs(), getStateFunc); err != nil {

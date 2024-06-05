@@ -33,7 +33,7 @@ func NewTestCreateDAOProcessor(
 	return TestCreateDAOProcessor{BaseTestOperationProcessorNoItem: &t}
 }
 
-func (t *TestCreateDAOProcessor) Create(bm []base.BlockMap) *TestCreateDAOProcessor {
+func (t *TestCreateDAOProcessor) Create() *TestCreateDAOProcessor {
 	t.Opr, _ = NewCreateDAOProcessor()(
 		base.GenesisHeight,
 		t.GetStateFunc,
@@ -144,8 +144,7 @@ func (t *TestCreateDAOProcessor) Print(fileName string,
 
 func (t *TestCreateDAOProcessor) MakeOperation(
 	sender base.Address, privatekey base.Privatekey,
-	contract base.Address, proposalID string,
-	proposal daotypes.Proposal, currency types.CurrencyID,
+	contract base.Address, currency types.CurrencyID,
 ) *TestCreateDAOProcessor {
 	op := NewCreateDAO(
 		NewCreateDAOFact(

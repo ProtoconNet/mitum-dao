@@ -1,7 +1,6 @@
 package state
 
 import (
-	"fmt"
 	"github.com/ProtoconNet/mitum-currency/v3/common"
 	"github.com/ProtoconNet/mitum-dao/types"
 	"github.com/ProtoconNet/mitum2/base"
@@ -104,7 +103,7 @@ func (s *VotersStateValueMerger) closeValue() (base.StateValue, error) {
 	sort.Slice(nvoters, func(i, j int) bool { // NOTE sort by address
 		return strings.Compare(nvoters[i].Account().String(), nvoters[j].Account().String()) < 0
 	})
-	fmt.Println(nvoters)
+
 	return NewVotersStateValue(
 		nvoters,
 	), nil
