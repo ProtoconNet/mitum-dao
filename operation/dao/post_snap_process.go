@@ -80,7 +80,7 @@ func (opp *PostSnapProcessor) PreProcess(
 
 	if err := currencystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.Currency()), getStateFunc); err != nil {
 		return ctx, base.NewBaseOperationProcessReasonError(
-			common.ErrMPreProcess.Wrap(common.ErrMCurrencyNF).Errorf("currency id, %v", fact.Currency())), nil
+			common.ErrMPreProcess.Wrap(common.ErrMCurrencyNF).Errorf("currency id %v", fact.Currency())), nil
 	}
 
 	if _, _, aErr, cErr := currencystate.ExistsCAccount(fact.Sender(), "sender", true, false, getStateFunc); aErr != nil {
@@ -106,14 +106,14 @@ func (opp *PostSnapProcessor) PreProcess(
 
 	if st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract()), "design", getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
-			common.ErrMPreProcess.
-				Wrap(common.ErrMServiceNF).Errorf("dao design, %v",
+			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
+				Wrap(common.ErrMServiceNF).Errorf("dao design for contract account %v",
 				fact.Contract(),
 			)), nil
 	} else if _, err := state.StateDesignValue(st); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
-			common.ErrMPreProcess.
-				Wrap(common.ErrMServiceNF).Errorf("dao design, %v",
+			common.ErrMPreProcess.Wrap(common.ErrMStateValInvalid).
+				Wrap(common.ErrMServiceNF).Errorf("dao design for contract account %v",
 				fact.Contract(),
 			)), nil
 	}
@@ -122,36 +122,40 @@ func (opp *PostSnapProcessor) PreProcess(
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Wrap(common.ErrMStateNF).Errorf("proposal, %s,%v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+				Wrap(common.ErrMStateNF).Errorf("proposal %v for contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	p, err := state.StateProposalValue(st)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Wrap(common.ErrMStateValInvalid).Errorf("proposal, %s,%v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+				Wrap(common.ErrMStateValInvalid).Errorf("proposal %v for contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	if p.Status() == types.Canceled {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-				Errorf("already canceled proposal, %s, %q", fact.Contract(), fact.ProposalID())), nil
+				Errorf("already canceled proposal %v for contract account %v", fact.ProposalID(), fact.Contract())), nil
 	} else if p.Status() == types.PostSnapped {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-				Errorf("already post snapped, %s, %q", fact.Contract(), fact.ProposalID())), nil
+				Errorf("already post snapped proposal %v for contract account %v", fact.ProposalID(), fact.Contract())), nil
+	} else if p.Status() == types.Completed {
+		return ctx, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
+				Errorf("already post snapped proposal %v for contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	if err := currencystate.CheckExistsState(state.StateKeyVoters(fact.Contract(), fact.ProposalID()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
-				Errorf("voters, %s, %v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+				Errorf("voters for proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	if err := currencystate.CheckExistsState(state.StateKeyVotingPowerBox(fact.Contract(), fact.ProposalID()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
-				Errorf("voting power box, %s, %v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+				Errorf("voting power box for proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	if err := currencystate.CheckFactSignsByState(fact.Sender(), op.Signs(), getStateFunc); err != nil {

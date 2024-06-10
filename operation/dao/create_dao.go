@@ -117,6 +117,7 @@ func (fact CreateDAOFact) IsValid(b []byte) error {
 	if err := util.CheckIsValiders(nil, false,
 		fact.sender,
 		fact.contract,
+		fact.option,
 		fact.votingPowerToken,
 		fact.fee,
 		fact.threshold,
@@ -128,8 +129,50 @@ func (fact CreateDAOFact) IsValid(b []byte) error {
 		return common.ErrFactInvalid.Wrap(err)
 	}
 
+	if !fact.fee.Big().OverNil() {
+		return common.ErrFactInvalid.Wrap(
+			common.ErrValOOR.Wrap(errors.Errorf("fee amount must be bigger than or equal to zero, got %v", fact.fee.Big())))
+	}
+
+	if !fact.threshold.OverZero() {
+		return common.ErrFactInvalid.Wrap(
+			common.ErrValOOR.Wrap(errors.Errorf("threshold must be bigger than zero, got %v", fact.threshold)))
+	}
+
+	if fact.registrationPeriod == 0 {
+		return common.ErrFactInvalid.Wrap(
+			common.ErrValOOR.Wrap(
+				errors.Errorf("registrationPeriod must be bigger than zero, got %v", fact.registrationPeriod)))
+	}
+
+	if fact.preSnapshotPeriod == 0 {
+		return common.ErrFactInvalid.Wrap(
+			common.ErrValOOR.Wrap(
+				errors.Errorf("registrationPeriod must be bigger than zero, got %v", fact.preSnapshotPeriod)))
+	}
+
+	if fact.votingPeriod == 0 {
+		return common.ErrFactInvalid.Wrap(
+			common.ErrValOOR.Wrap(
+				errors.Errorf("registrationPeriod must be bigger than zero, got %v", fact.votingPeriod)))
+	}
+
+	if fact.postSnapshotPeriod == 0 {
+		return common.ErrFactInvalid.Wrap(
+			common.ErrValOOR.Wrap(
+				errors.Errorf("registrationPeriod must be bigger than zero, got %v", fact.postSnapshotPeriod)))
+	}
+
 	if fact.sender.Equal(fact.contract) {
-		return common.ErrFactInvalid.Wrap(common.ErrSelfTarget.Wrap(errors.Errorf("contract address is same with sender, %q", fact.sender)))
+		return common.ErrFactInvalid.Wrap(
+			common.ErrSelfTarget.Wrap(errors.Errorf("sender %v is same with contract account", fact.sender)))
+	}
+
+	for i := range fact.whitelist.Accounts() {
+		if fact.whitelist.Accounts()[i].Equal(fact.contract) {
+			return common.ErrFactInvalid.Wrap(
+				common.ErrSelfTarget.Wrap(errors.Errorf("whitelist account %v is same with contract account", fact.whitelist.Accounts()[i])))
+		}
 	}
 
 	if err := common.IsValidOperationFact(fact, b); err != nil {

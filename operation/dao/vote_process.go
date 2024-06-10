@@ -80,7 +80,7 @@ func (opp *VoteProcessor) PreProcess(
 
 	if err := currencystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.Currency()), getStateFunc); err != nil {
 		return ctx, base.NewBaseOperationProcessReasonError(
-			common.ErrMPreProcess.Wrap(common.ErrMCurrencyNF).Errorf("currency id, %v", fact.Currency())), nil
+			common.ErrMPreProcess.Wrap(common.ErrMCurrencyNF).Errorf("currency id %v", fact.Currency())), nil
 	}
 
 	if _, _, aErr, cErr := currencystate.ExistsCAccount(fact.Sender(), "sender", true, false, getStateFunc); aErr != nil {
@@ -107,19 +107,19 @@ func (opp *VoteProcessor) PreProcess(
 	if err := currencystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.Currency()), getStateFunc); err != nil {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Wrap(common.ErrMCurrencyNF).Errorf("fee currency id, %v", fact.Currency())), nil
+				Wrap(common.ErrMCurrencyNF).Errorf("fee currency id %v", fact.Currency())), nil
 	}
 
 	if st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract()), "design", getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Wrap(common.ErrMServiceNF).Errorf("dao design, %v",
+				Wrap(common.ErrMServiceNF).Errorf("dao design for contract account %v",
 				fact.Contract(),
 			)), nil
 	} else if _, err := state.StateDesignValue(st); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Wrap(common.ErrMServiceNF).Errorf("dao design, %v",
+				Wrap(common.ErrMServiceNF).Errorf("dao design for contract account %v",
 				fact.Contract(),
 			)), nil
 	}
@@ -128,43 +128,43 @@ func (opp *VoteProcessor) PreProcess(
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Wrap(common.ErrMStateNF).Errorf("proposal, %s,%v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+				Wrap(common.ErrMStateNF).Errorf("proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	p, err := state.StateProposalValue(st)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Wrap(common.ErrMStateValInvalid).Errorf("proposal, %s,%v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+				Wrap(common.ErrMStateValInvalid).Errorf("proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	if p.Status() == types.Canceled {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-				Errorf("already canceled proposal, %s, %v", fact.Contract(), fact.ProposalID())), nil
+				Errorf("already canceled proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	if p.Status() != types.PreSnapped {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-				Errorf("proposal not in pre-snapped status, %s, %v, %v", fact.Contract(), fact.ProposalID(), p.Status())), nil
+				Errorf("proposal %v in contract account %v is not in pre-snapped status, got %v", fact.ProposalID(), fact.Contract(), p.Status())), nil
 	}
 
 	switch st, found, err := getStateFunc(state.StateKeyVoters(fact.Contract(), fact.ProposalID())); {
 	case err != nil:
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
-				Errorf("voters, %s, %v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+				Errorf("voters for proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
 	case !found:
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
-				Errorf("voters, %s, %v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+				Errorf("voters for proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
 	default:
 		voters, err := state.StateVotersValue(st)
 		if err != nil {
 			return nil, base.NewBaseOperationProcessReasonError(
 				common.ErrMPreProcess.Wrap(common.ErrMStateValInvalid).
-					Errorf("voters, %s, %v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+					Errorf("voters for proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
 		}
 
 		for i, v := range voters {
@@ -175,7 +175,8 @@ func (opp *VoteProcessor) PreProcess(
 			if i == len(voters)-1 {
 				return nil, base.NewBaseOperationProcessReasonError(
 					common.ErrMPreProcess.Wrap(common.ErrMAccountNAth).
-						Errorf("sender, %v is not registered as voter, %v, %v", fact.Sender(), fact.Contract(), fact.ProposalID())), nil
+						Errorf("sender %v is not registered as voter for proposal %v in contract account %v",
+							fact.Sender(), fact.ProposalID(), fact.Contract())), nil
 			}
 		}
 	}
@@ -184,26 +185,28 @@ func (opp *VoteProcessor) PreProcess(
 	case err != nil:
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
-				Errorf("voting power box, %v, %v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+				Errorf("voting power box for proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
 	case found:
 		vpb, err := state.StateVotingPowerBoxValue(st)
 		if err != nil {
 			return nil, base.NewBaseOperationProcessReasonError(
 				common.ErrMPreProcess.Wrap(common.ErrMStateValInvalid).
-					Errorf("voting power box, %v, %v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+					Errorf("voting power box for proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
 		}
 
 		vp, found := vpb.VotingPowers()[fact.Sender().String()]
 		if !found {
 			return nil, base.NewBaseOperationProcessReasonError(
 				common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-					Errorf("sender, $v has no voting power, %v, %v", fact.Contract(), fact.ProposalID())), nil
+					Errorf("sender %v has no voting power for proposal %v in contract account %v",
+						fact.sender, fact.ProposalID(), fact.Contract())), nil
 		}
 
 		if vp.Voted() {
 			return nil, base.NewBaseOperationProcessReasonError(
 				common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-					Errorf("sender, $v already voted, %v, %v", fact.Contract(), fact.ProposalID())), nil
+					Errorf("sender %v already voted for proposal %v in contract account %v",
+						fact.sender, fact.ProposalID(), fact.Contract())), nil
 		}
 	}
 

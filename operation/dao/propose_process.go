@@ -97,10 +97,10 @@ func (opp *ProposeProcessor) PreProcess(
 				Errorf("%v", cErr)), nil
 	}
 
-	if found, err := currencystate.CheckNotExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), getStateFunc); found {
+	if found, _ := currencystate.CheckNotExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), getStateFunc); found {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMStateE).
-				Errorf("proposal already exists, %s, %v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+				Errorf("proposal %v already exists in contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	required := map[string]common.Big{}
@@ -108,14 +108,14 @@ func (opp *ProposeProcessor) PreProcess(
 	currencyPolicy, err := currencystate.ExistsCurrencyPolicy(fact.Currency(), getStateFunc)
 	if err != nil {
 		return ctx, base.NewBaseOperationProcessReasonError(
-			common.ErrMPreProcess.Wrap(common.ErrMCurrencyNF).Errorf("currency id, %v", fact.Currency())), nil
+			common.ErrMPreProcess.Wrap(common.ErrMCurrencyNF).Errorf("currency id %v", fact.Currency())), nil
 	}
 
 	fee, err := currencyPolicy.Feeer().Fee(common.ZeroBig)
 	if err != nil {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMStateValInvalid).
-				Errorf("check fee of currency, %q: %v", fact.Currency(), err)), nil
+				Errorf("get fee of currency id %v", fact.Currency())), nil
 	}
 
 	required[fact.currency.String()] = fee
@@ -123,20 +123,20 @@ func (opp *ProposeProcessor) PreProcess(
 	st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract()), "design", getStateFunc)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
-			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
-				Errorf("dao design not found, %s: %w", fact.Contract(), err)), nil
+			common.ErrMPreProcess.Wrap(common.ErrMStateNF).Wrap(common.ErrMServiceNF).
+				Errorf("dao design for contract account %v", fact.Contract())), nil
 	}
 
 	design, err := state.StateDesignValue(st)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
-			common.ErrMPreProcess.Wrap(common.ErrMStateValInvalid).
-				Errorf("dao design, %s: %v", fact.Contract(), err)), nil
+			common.ErrMPreProcess.Wrap(common.ErrMStateValInvalid).Wrap(common.ErrMServiceNF).
+				Errorf("dao design for contract account %v", fact.Contract())), nil
 	}
 
 	if design.Option() != fact.Proposal().Option() {
 		return nil, base.NewBaseOperationProcessReasonError(
-			common.ErrMPreProcess.
+			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
 				Errorf("dao option != proposal option, dao(%s) != proposal(%s)", design.Option(), fact.Proposal().Option())), nil
 	}
 
@@ -157,22 +157,22 @@ func (opp *ProposeProcessor) PreProcess(
 	required[proposeFee.Currency().String()] = required[proposeFee.Currency().String()].Add(proposeFee.Big())
 
 	for k, v := range required {
-		st, err = currencystate.ExistsState(currency.StateKeyBalance(fact.Sender(), currencytypes.CurrencyID(k)), "key of sender balance", getStateFunc)
+		st, err = currencystate.ExistsState(currency.StateKeyBalance(fact.Sender(), currencytypes.CurrencyID(k)), "sender balance", getStateFunc)
 		if err != nil {
 			return nil, base.NewBaseOperationProcessReasonError(
 				common.ErrMPreProcess.Wrap(common.ErrMStateNF).
-					Errorf("sender balance, %s, %v: %v", fact.Sender(), fact.Currency(), err)), nil
+					Errorf("sender %v balance for currency id %v", fact.Sender(), fact.Currency())), nil
 		}
 
 		switch b, err := currency.StateBalanceValue(st); {
 		case err != nil:
 			return nil, base.NewBaseOperationProcessReasonError(
 				common.ErrMPreProcess.Wrap(common.ErrMStateValInvalid).
-					Errorf("failed to get balance value, %s, %v: %v", fact.Sender(), fact.Currency(), err)), nil
+					Errorf("sender %v balance for currency id %v", fact.Sender(), fact.Currency())), nil
 		case b.Big().Compare(v) < 0:
 			return nil, base.NewBaseOperationProcessReasonError(
-				common.ErrMPreProcess.Wrap(common.ErrMValOOR).
-					Errorf("not enough balance of sender, %s, %q", fact.Sender(), fact.Currency())), nil
+				common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
+					Errorf("not enough balance of sender %v for currency id %v", fact.Sender(), fact.Currency())), nil
 		}
 	}
 

@@ -33,7 +33,7 @@ type CryptoProposalJSONUnmarshaler struct {
 }
 
 func (p *CryptoProposal) DecodeJSON(b []byte, enc encoder.Encoder) error {
-	e := util.StringError("failed to decode json of CryptoProposal")
+	e := util.StringError("decode json of CryptoProposal")
 
 	var up CryptoProposalJSONUnmarshaler
 	if err := enc.Unmarshal(b, &up); err != nil {
@@ -73,7 +73,7 @@ type BizProposalJSONUnmarshaler struct {
 }
 
 func (p *BizProposal) DecodeJSON(b []byte, enc encoder.Encoder) error {
-	e := util.StringError("failed to decode json of BizProposal")
+	e := util.StringError("decode json of BizProposal")
 
 	var up BizProposalJSONUnmarshaler
 	if err := enc.Unmarshal(b, &up); err != nil {

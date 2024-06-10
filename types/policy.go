@@ -6,9 +6,12 @@ import (
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/hint"
+	"github.com/pkg/errors"
 )
 
 var WhitelistHint = hint.MustNewHint("mitum-dao-whitelist-v0.0.1")
+
+const MaxWhitelist = 10
 
 type Whitelist struct {
 	hint.BaseHinter
@@ -50,10 +53,20 @@ func (wl Whitelist) IsValid([]byte) error {
 		return e.Wrap(err)
 	}
 
+	if len(wl.accounts) > MaxWhitelist {
+		return e.Wrap(
+			common.ErrValOOR.Wrap(errors.Errorf("whitelist accounts over max, %d > %d", len(wl.accounts), MaxWhitelist)))
+	}
+
+	duplicated := make(map[string]struct{})
 	for _, ac := range wl.accounts {
 		if err := ac.IsValid(nil); err != nil {
 			return e.Wrap(err)
 		}
+		if _, found := duplicated[ac.String()]; found {
+			return e.Wrap(common.ErrDupVal.Wrap(errors.Errorf("whitelist account %v", ac)))
+		}
+		duplicated[ac.String()] = struct{}{}
 	}
 
 	return nil

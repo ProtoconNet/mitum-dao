@@ -1,15 +1,17 @@
 package types
 
 import (
+	"github.com/ProtoconNet/mitum-currency/v3/common"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/hint"
+	"github.com/pkg/errors"
 )
 
 type DAOOption string
 
 func (op DAOOption) IsValid([]byte) error {
 	if op != "crypto" && op != "biz" {
-		return util.ErrInvalid.Errorf("invalid dao option; 'crypto' | 'biz'")
+		return common.ErrValueInvalid.Wrap(errors.Errorf("dao option must be crypto or biz, got %v", op))
 	}
 
 	return nil

@@ -107,45 +107,48 @@ func (opp *CancelProposalProcessor) PreProcess(
 	if st, err := currencystate.ExistsState(state.StateKeyDesign(fact.Contract()), "design", getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Wrap(common.ErrMServiceNF).Errorf("dao design, %v",
+				Wrap(common.ErrMServiceNF).Errorf("dao design for contract account %v",
 				fact.Contract(),
 			)), nil
 	} else if _, err := state.StateDesignValue(st); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Wrap(common.ErrMServiceNF).Errorf("dao design, %v",
+				Wrap(common.ErrMServiceNF).Errorf("dao design for contract account %v",
 				fact.Contract(),
 			)), nil
 	}
 
-	st, err := currencystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "proposal", getStateFunc)
+	st, err := currencystate.ExistsState(
+		state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "proposal", getStateFunc)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
-			common.ErrMPreProcess.
-				Wrap(common.ErrMStateNF).Errorf("proposal, %s,%v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
+				Errorf("proposal %v for contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	p, err := state.StateProposalValue(st)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
-			common.ErrMPreProcess.
-				Wrap(common.ErrMStateValInvalid).Errorf("proposal, %s,%v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+			common.ErrMPreProcess.Wrap(common.ErrMStateValInvalid).
+				Errorf("proposal %v for contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	if !fact.Sender().Equal(p.Proposal().Proposer()) {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMAccountNAth).
-				Errorf("%v: sender is not proposer of the proposal, %s, %v", fact.Contract(), fact.ProposalID(), err)), nil
+				Errorf("sender %v is not proposer of the proposal %v in contract account %v", fact.Sender(), fact.ProposalID(), fact.Contract())), nil
 	}
 
 	if p.Status() == types.Canceled {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-				Errorf("already canceled proposal, %s, %v", fact.Contract(), fact.ProposalID())), nil
+				Errorf("already canceled proposal %v in contract account %v",
+					fact.ProposalID(), fact.Contract())), nil
 	} else if p.Status() != types.Proposed {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-				Errorf("proposal is unavailable, %v, %v", fact.Contract(), fact.ProposalID())), nil
+				Errorf("status of proposal %v in contract account %v must be 'proposed', got %v",
+					fact.ProposalID(), fact.Contract(), p.Status())), nil
 	}
 
 	if err := currencystate.CheckFactSignsByState(fact.Sender(), op.Signs(), getStateFunc); err != nil {

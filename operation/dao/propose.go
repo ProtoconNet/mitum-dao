@@ -83,11 +83,12 @@ func (fact ProposeFact) IsValid(b []byte) error {
 	if fact.sender.Equal(fact.contract) {
 		return common.ErrFactInvalid.Wrap(
 			common.ErrSelfTarget.Wrap(
-				errors.Errorf("contract address is same with sender, %q", fact.sender)))
+				errors.Errorf("sender %v is same with contract account", fact.sender)))
 	}
 
 	if !fact.sender.Equal(fact.Proposal().Proposer()) {
-		return util.ErrInvalid.Errorf("sender is not same with the proposer")
+		return common.ErrFactInvalid.Wrap(
+			common.ErrValueInvalid.Wrap(errors.Errorf("sender %v is not same with the proposer of proposal", fact.sender)))
 	}
 
 	if len(fact.proposalID) == 0 {
@@ -96,8 +97,8 @@ func (fact ProposeFact) IsValid(b []byte) error {
 
 	if !currencytypes.ReSpcecialChar.Match([]byte(fact.proposalID)) {
 		return common.ErrFactInvalid.Wrap(
-			common.ErrValueInvalid.Wrap(
-				errors.Errorf("proposal ID %s, must match regex `^[^\\s:/?#\\[\\]@]*$`", fact.proposalID)))
+			common.ErrValueInvalid.Wrap(common.ErrValueInvalid.Wrap(
+				errors.Errorf("proposal ID %v must match regex `^[^\\s:/?#\\[\\]@]*$`", fact.proposalID))))
 	}
 
 	if err := common.IsValidOperationFact(fact, b); err != nil {

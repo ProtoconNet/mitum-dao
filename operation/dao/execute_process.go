@@ -107,49 +107,55 @@ func (opp *ExecuteProcessor) PreProcess(
 	if st, err := crcystate.ExistsState(state.StateKeyDesign(fact.Contract()), "design", getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Wrap(common.ErrMServiceNF).Errorf("dao design, %v",
+				Wrap(common.ErrMServiceNF).Errorf("dao design for contract account %v",
 				fact.Contract(),
 			)), nil
 	} else if _, err := state.StateDesignValue(st); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Wrap(common.ErrMServiceNF).Errorf("dao design, %v",
+				Wrap(common.ErrMServiceNF).Errorf("dao design for contract account %v",
 				fact.Contract(),
 			)), nil
 	}
 
-	st, err := crcystate.ExistsState(state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "proposal", getStateFunc)
+	st, err := crcystate.ExistsState(
+		state.StateKeyProposal(fact.Contract(), fact.ProposalID()), "proposal", getStateFunc)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Wrap(common.ErrMStateNF).Errorf("proposal, %s,%v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+				Wrap(common.ErrMStateNF).Errorf(
+				"proposal %v for contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	p, err := state.StateProposalValue(st)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Wrap(common.ErrMStateValInvalid).Errorf("proposal, %s,%v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+				Wrap(common.ErrMStateValInvalid).Errorf(
+				"proposal %v for contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	if p.Status() == types.Canceled {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-				Errorf("already canceled proposal, %s, %q", fact.Contract(), fact.ProposalID())), nil
+				Errorf("already canceled proposal %v for contract account %v",
+					fact.ProposalID(), fact.Contract())), nil
 	} else if p.Status() == types.Rejected {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-				Errorf("rejected proposal, %s, %q", fact.Contract(), fact.ProposalID())), nil
+				Errorf("already rejected proposal %v for contract account %v",
+					fact.ProposalID(), fact.Contract())), nil
 	} else if p.Status() == types.Executed {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-				Errorf("already executed, %s, %q", fact.Contract(), fact.ProposalID())), nil
+				Errorf("already executed proposal %v for contract account %v",
+					fact.ProposalID(), fact.Contract())), nil
 	}
 
 	if err := crcystate.CheckExistsState(state.StateKeyVotingPowerBox(fact.Contract(), fact.ProposalID()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
-				Errorf("voting power box, %s, %v: %v", fact.Contract(), fact.ProposalID(), err)), nil
+				Errorf("voting power box of proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	if err := crcystate.CheckFactSignsByState(fact.Sender(), op.Signs(), getStateFunc); err != nil {

@@ -77,12 +77,14 @@ func (opp *CreateDAOProcessor) PreProcess(
 				Errorf("%v", err)), nil
 	}
 
-	if err := currencystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.Currency()), getStateFunc); err != nil {
+	if err := currencystate.CheckExistsState(
+		currency.StateKeyCurrencyDesign(fact.Currency()), getStateFunc); err != nil {
 		return ctx, base.NewBaseOperationProcessReasonError(
-			common.ErrMPreProcess.Wrap(common.ErrMCurrencyNF).Errorf("currency id, %v", fact.Currency())), nil
+			common.ErrMPreProcess.Wrap(common.ErrMCurrencyNF).Errorf("currency id %v", fact.Currency())), nil
 	}
 
-	if _, _, aErr, cErr := currencystate.ExistsCAccount(fact.Sender(), "sender", true, false, getStateFunc); aErr != nil {
+	if _, _, aErr, cErr := currencystate.ExistsCAccount(
+		fact.Sender(), "sender", true, false, getStateFunc); aErr != nil {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
 				Errorf("%v", aErr)), nil
@@ -92,7 +94,8 @@ func (opp *CreateDAOProcessor) PreProcess(
 				Errorf("%v", cErr)), nil
 	}
 
-	_, cSt, aErr, cErr := currencystate.ExistsCAccount(fact.Contract(), "contract", true, true, getStateFunc)
+	_, cSt, aErr, cErr := currencystate.ExistsCAccount(
+		fact.Contract(), "contract", true, true, getStateFunc)
 	if aErr != nil {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
@@ -103,23 +106,38 @@ func (opp *CreateDAOProcessor) PreProcess(
 				Errorf("%v", cErr)), nil
 	}
 
+	for i := range fact.Whitelist().Accounts() {
+		if _, _, aErr, cErr := currencystate.ExistsCAccount(
+			fact.Whitelist().Accounts()[i], "whitelist", true, false, getStateFunc); aErr != nil {
+			return ctx, base.NewBaseOperationProcessReasonError(
+				common.ErrMPreProcess.
+					Errorf("%v", aErr)), nil
+		} else if cErr != nil {
+			return ctx, base.NewBaseOperationProcessReasonError(
+				common.ErrMPreProcess.Wrap(common.ErrMCAccountNA).
+					Errorf("%v", cErr)), nil
+		}
+	}
+
 	ca, err := stateextension.CheckCAAuthFromState(cSt, fact.Sender())
 	if err != nil {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
+				Wrap(common.ErrMValueInvalid).
 				Errorf("%v", err)), nil
 	}
 
 	if ca.IsActive() {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Errorf("%v", err)), nil
+				Wrap(common.ErrMServiceE).Errorf(
+				"contract account %v has already been activated", fact.Contract())), nil
 	}
 
 	if found, _ := currencystate.CheckNotExistsState(state.StateKeyDesign(fact.Contract()), getStateFunc); found {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Wrap(common.ErrMServiceE).Errorf("dao design, %v",
+				Wrap(common.ErrMServiceE).Errorf("dao design for contract account %v",
 				fact.Contract(),
 			)), nil
 	}
@@ -127,7 +145,19 @@ func (opp *CreateDAOProcessor) PreProcess(
 	if err := currencystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.VotingPowerToken()), getStateFunc); err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
-				Errorf("voting power token design not found, %v: %v", fact.VotingPowerToken(), err)), nil
+				Errorf("voting power token %v", fact.VotingPowerToken())), nil
+	}
+
+	if err := currencystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.fee.Currency()), getStateFunc); err != nil {
+		return nil, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
+				Errorf("proposal fee currency %v", fact.fee.Currency())), nil
+	}
+
+	if err := currencystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.VotingPowerToken()), getStateFunc); err != nil {
+		return nil, base.NewBaseOperationProcessReasonError(
+			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
+				Errorf("voting power token %v", fact.VotingPowerToken())), nil
 	}
 
 	if err := currencystate.CheckFactSignsByState(fact.Sender(), op.Signs(), getStateFunc); err != nil {

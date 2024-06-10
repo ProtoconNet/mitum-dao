@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/ProtoconNet/mitum-currency/v3/common"
 	"github.com/ProtoconNet/mitum2/base"
 	"github.com/ProtoconNet/mitum2/util"
 	"github.com/ProtoconNet/mitum2/util/encoder"
@@ -9,22 +10,20 @@ import (
 )
 
 func (p *CryptoProposal) unpack(enc encoder.Encoder, ht hint.Hint, pr string, st uint64, bcd []byte) error {
-	e := util.StringError("failed to unmarshal CryptoProposal")
-
 	p.BaseHinter = hint.NewBaseHinter(ht)
 	p.startTime = st
 
 	switch a, err := base.DecodeAddress(pr, enc); {
 	case err != nil:
-		return e.Wrap(err)
+		return err
 	default:
 		p.proposer = a
 	}
 
 	if hinter, err := enc.Decode(bcd); err != nil {
-		return e.Wrap(err)
+		return err
 	} else if cd, ok := hinter.(CallData); !ok {
-		return e.Wrap(errors.Errorf("expected CallData, not %T", hinter))
+		return common.ErrTypeMismatch.Wrap(errors.Errorf("expected CallData, not %T", hinter))
 	} else {
 		p.callData = cd
 	}
