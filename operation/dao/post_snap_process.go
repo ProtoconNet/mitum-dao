@@ -288,7 +288,10 @@ func (opp *PostSnapProcessor) Process(
 			a := info.Account().String()
 
 			if !ovpb.VotingPowers()[a].Voted() {
-				nvps[a] = ovpb.VotingPowers()[a]
+				nvp := types.NewVotingPower(info.Account(), common.ZeroBig)
+				nvp.SetVoted(ovpb.VotingPowers()[a].Voted())
+				nvp.SetVoteFor(ovpb.VotingPowers()[a].VoteFor())
+				nvps[a] = nvp
 				continue
 			}
 
