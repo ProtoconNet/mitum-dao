@@ -80,7 +80,7 @@ func (opp *RegisterProcessor) PreProcess(
 
 	if err := currencystate.CheckExistsState(currency.StateKeyCurrencyDesign(fact.Currency()), getStateFunc); err != nil {
 		return ctx, base.NewBaseOperationProcessReasonError(
-			common.ErrMPreProcess.Wrap(common.ErrMCurrencyNF).Errorf("currency id %v", fact.Currency())), nil
+			common.ErrMPreProcess.Wrap(common.ErrMCurrencyNF).Errorf("currency id %q", fact.Currency())), nil
 	}
 
 	if _, _, aErr, cErr := currencystate.ExistsCAccount(fact.Sender(), "sender", true, false, getStateFunc); aErr != nil {
@@ -122,7 +122,7 @@ func (opp *RegisterProcessor) PreProcess(
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
-				Wrap(common.ErrMStateNF).Errorf("proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
+				Wrap(common.ErrMStateNF).Errorf("proposal %q in contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	p, err := state.StateProposalValue(st)
@@ -130,26 +130,26 @@ func (opp *RegisterProcessor) PreProcess(
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.
 				Wrap(common.ErrMStateValInvalid).Errorf(
-				"proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
+				"proposal %q in contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	if p.Status() == types.Canceled {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-				Errorf("already canceled proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
+				Errorf("already canceled proposal %q in contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	switch st, found, err := getStateFunc(state.StateKeyVoters(fact.Contract(), fact.ProposalID())); {
 	case err != nil:
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
-				Errorf("voters for proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
+				Errorf("voters for proposal %q in contract account %v", fact.ProposalID(), fact.Contract())), nil
 	case found:
 		voters, err := state.StateVotersValue(st)
 		if err != nil {
 			return nil, base.NewBaseOperationProcessReasonError(
 				common.ErrMPreProcess.Wrap(common.ErrMStateValInvalid).
-					Errorf("voters for proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
+					Errorf("voters for proposal %q in contract account %v", fact.ProposalID(), fact.Contract())), nil
 		}
 
 		voter := types.VoterInfo{}
@@ -162,7 +162,7 @@ func (opp *RegisterProcessor) PreProcess(
 				if fact.Sender().Equal(d) {
 					return nil, base.NewBaseOperationProcessReasonError(
 						common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-							Errorf("sender %v already delegates the account %s",
+							Errorf("sender %v already delegates the account %v",
 								fact.Sender(),
 								fact.Delegated(),
 							)), nil
@@ -175,20 +175,20 @@ func (opp *RegisterProcessor) PreProcess(
 	case err != nil:
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
-				Errorf("delegators for proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
+				Errorf("delegators for proposal %q in contract account %v", fact.ProposalID(), fact.Contract())), nil
 	case found:
 		delegators, err := state.StateDelegatorsValue(st)
 		if err != nil {
 			return nil, base.NewBaseOperationProcessReasonError(
 				common.ErrMPreProcess.Wrap(common.ErrMStateValInvalid).
-					Errorf("delegators for proposal %v in contract account %v", fact.ProposalID(), fact.Contract())), nil
+					Errorf("delegators for proposal %q in contract account %v", fact.ProposalID(), fact.Contract())), nil
 		}
 
 		for _, delegator := range delegators {
 			if delegator.Account().Equal(fact.Sender()) {
 				return nil, base.NewBaseOperationProcessReasonError(
 					common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-						Errorf("sender %v has already registered itself as voter for proposal %v in contract account %v",
+						Errorf("sender %v has already registered itself as voter for proposal %q in contract account %v",
 							fact.Sender(), fact.ProposalID(), fact.Contract())), nil
 			}
 		}

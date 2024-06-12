@@ -123,31 +123,31 @@ func (opp *CancelProposalProcessor) PreProcess(
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMStateNF).
-				Errorf("proposal %v for contract account %v", fact.ProposalID(), fact.Contract())), nil
+				Errorf("proposal %q for contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	p, err := state.StateProposalValue(st)
 	if err != nil {
 		return nil, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMStateValInvalid).
-				Errorf("proposal %v for contract account %v", fact.ProposalID(), fact.Contract())), nil
+				Errorf("proposal %q for contract account %v", fact.ProposalID(), fact.Contract())), nil
 	}
 
 	if !fact.Sender().Equal(p.Proposal().Proposer()) {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMAccountNAth).
-				Errorf("sender %v is not proposer of the proposal %v in contract account %v", fact.Sender(), fact.ProposalID(), fact.Contract())), nil
+				Errorf("sender %v is not proposer of the proposal %q in contract account %v", fact.Sender(), fact.ProposalID(), fact.Contract())), nil
 	}
 
 	if p.Status() == types.Canceled {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-				Errorf("already canceled proposal %v in contract account %v",
+				Errorf("already canceled proposal %q in contract account %v",
 					fact.ProposalID(), fact.Contract())), nil
 	} else if p.Status() != types.Proposed {
 		return ctx, base.NewBaseOperationProcessReasonError(
 			common.ErrMPreProcess.Wrap(common.ErrMValueInvalid).
-				Errorf("status of proposal %v in contract account %v must be 'proposed', got %v",
+				Errorf("proposal %q in contract account %v is %q, but can only be canceled at \"proposed\" status",
 					fact.ProposalID(), fact.Contract(), p.Status())), nil
 	}
 

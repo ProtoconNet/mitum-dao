@@ -4,6 +4,7 @@
 *.out
 *.sh
 *.json
+._*
 .*.sw?
 .sw?
 .DS_Store
